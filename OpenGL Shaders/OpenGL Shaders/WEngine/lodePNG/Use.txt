@@ -1,0 +1,7 @@
+/*
+Converts PNG file from disk to raw pixel data in memory.
+Same as the other decode functions, but instead takes a filename as input.
+*/
+unsigned decode(std::vector<unsigned char>& out, unsigned& w, unsigned& h,
+                const std::string& filename,
+                LodePNGColorType colortype = LCT_RGBA, unsigned bitdepth = 8);
