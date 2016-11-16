@@ -162,6 +162,10 @@ void renderShadowTexture(Light *shadowLight)
 
 void renderWaterCubeMap()
 {
+	//Add normalmapped models to renderer list
+	normalModelRenderer.addToRenderList(&model);
+	normalModelRenderer.addToRenderList(&model2);
+
 	glm::vec3 reflectionPosition = glm::vec3(0, 0, 0);
 	const glm::vec3 faceRotations[6] = {
 		glm::vec3(0, 90, 0),
@@ -175,14 +179,20 @@ void renderWaterCubeMap()
 	waterReflection.bindFrameBuffer();
 	for (unsigned int i = 0; i < 6; i++) {
 		waterReflection.bindFrameBufferRenderTexture(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i);
-		//normalModelRenderer.renderUpdated(lights, &camera, glm::vec4(0, -1, 0, 100000), 90.0f, reflectionPosition, faceRotations[i]); //Normal render
-		glEnable(GL_CLIP_DISTANCE0);
-		normalModelRenderer.renderUpdated(lights, &camera, glm::vec4(0, 1, 0, -water.getWaterTile()->getPosition().y + 1.0f), 90.0f, reflectionPosition, faceRotations[i]); //Reflection render
+
+		//skybox.renderUpdated(&camera, 90.0f, reflectionPosition, faceRotations[i]);
+
+		normalModelRenderer.renderUpdated(lights, &camera, glm::vec4(0, -1, 0, 100000), 90.0f, reflectionPosition, faceRotations[i]); //Normal render
+
+		//glEnable(GL_CLIP_DISTANCE0);
+		//normalModelRenderer.renderUpdated(lights, &camera, glm::vec4(0, 1, 0, -water.getWaterTile()->getPosition().y + 1.0f), 90.0f, reflectionPosition, faceRotations[i]); //Reflection render
 		//normalModelRenderer.renderUpdated(lights, &camera, glm::vec4(0, -1, 0, water.getWaterTile()->getPosition().y + 1.0f), 90.0f, reflectionPosition, faceRotations[i]); //Refraction render
-		glDisable(GL_CLIP_DISTANCE0);
+		//glDisable(GL_CLIP_DISTANCE0);
 	}
 	waterReflection.unbindFrameBuffer(SCREEN_WIDTH, SCREEN_HEIGHT);
 	waterReflection.deleteBuffers(); //Only if we dont want to use the framebuffer ever again
+
+	normalModelRenderer.clearRenderPass();
 }
 
 int main() {
@@ -351,6 +361,9 @@ int main() {
 	water.getWaterTile()->setShadowMap(shadowRenderer.getShadowDepthTexture());
 
 	lights[0]->setPosition(glm::vec3(sin((float)frame / 100.0f) * 100.0f, 100.0f, cos((float)frame / 100.0f) * 100.0f));
+
+	renderWaterCubeMap();
+	skybox.cubeMap.textureid = waterReflection.textureid;
 
 	do {
 		//Prepare rendering on default framebuffer
