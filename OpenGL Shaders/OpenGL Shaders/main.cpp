@@ -165,25 +165,28 @@ void renderWaterCubeMap()
 	//Add normalmapped models to renderer list
 	normalModelRenderer.addToRenderList(&model);
 	normalModelRenderer.addToRenderList(&model2);
-
+	//Add terrain models to renderer list
 	terrainRenderer.addToRenderList(terrains[0].getModel());
 	terrainRenderer.addToRenderList(terrains[1].getModel());
 
-	glm::vec3 reflectionPosition = camera.position;
+	glm::vec3 reflectionPosition = camera.position; //Has to be a vec3 of the position
 	const glm::vec3 faceRotations[6] = {
 		glm::vec3(0, glm::radians(-90.0f), glm::radians(180.0f)),
-		glm::vec3(0, glm::radians(90.0f), glm::radians(180.0f)),
+		glm::vec3(0, glm::radians(90.0f),  glm::radians(180.0f)),
 		glm::vec3(glm::radians(-90.0f), 0, 0),//
-		glm::vec3(glm::radians(90.0f), 0, 0),//
+		glm::vec3(glm::radians(90.0f),  0, 0),//
 		glm::vec3(0, glm::radians(180.0f), glm::radians(180.0f)),
-		glm::vec3(0, 0, glm::radians(180.0f))
+		glm::vec3(0, 0,	glm::radians(180.0f))
 	};
 
 	waterReflection.bindFrameBuffer();
 	for (unsigned int i = 0; i < 6; i++) {
-		//if (i == 2 || i == 3) continue;
+		//Bind the right side
 		waterReflection.bindFrameBufferRenderTexture(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i);
+		//Clear the buffer
 		MasterRenderer::prepare();
+		//Render
+
 		skybox.renderUpdated(&camera, 90.0f, reflectionPosition, faceRotations[i]);
 
 		normalModelRenderer.renderUpdated(lights, &camera, glm::vec4(0, -1, 0, 100000), 90.0f, reflectionPosition, faceRotations[i]); //Normal render
@@ -422,11 +425,11 @@ int main() {
 			if(glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS) skybox.render(&camera);
 			else skybox2.render(&camera);
 
-			//terrainRenderer.render(lights, &camera, glm::vec4(0, -1, 0, 100000));
-			//waterRenderer.render(lights, &camera);
+			terrainRenderer.render(lights, &camera, glm::vec4(0, -1, 0, 100000));
+			waterRenderer.render(lights, &camera);
 
-			//modelRenderer.render(lights, &camera, glm::vec4(0, -1, 0, 100000));
-			//normalModelRenderer.render(lights, &camera, glm::vec4(0, -1, 0, 100000));
+			modelRenderer.render(lights, &camera, glm::vec4(0, -1, 0, 100000));
+			normalModelRenderer.render(lights, &camera, glm::vec4(0, -1, 0, 100000));
 		
 		sceneRenderer.unbindFrameBuffer();
 
