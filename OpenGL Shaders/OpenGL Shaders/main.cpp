@@ -2,7 +2,7 @@
 #include "ReactPhysics3D/reactphysics3d.h"
 
 #define WAVE_SPEED 0.03
-//Test if this commit is in my own repository
+
 #define MSAA 1
 #define SSAA 2
 #define FXAA 3
