@@ -183,6 +183,7 @@
     <ClCompile Include="WEngine\Renderer\ShaderProgram.cpp" />
     <ClCompile Include="WEngine\Shadows\ShadowBox.cpp" />
     <ClCompile Include="WEngine\Shadows\ShadowMasterRenderer.cpp" />
+    <ClCompile Include="WEngine\Texture\Material.cpp" />
     <ClCompile Include="WEngine\Texture\texture2D.cpp" />
     <ClCompile Include="WEngine\Texture\textureCubemap.cpp" />
     <ClCompile Include="WEngine\Utils\File.cpp" />
@@ -208,6 +209,7 @@
     <ClInclude Include="WEngine\Renderer\ShaderProgram.h" />
     <ClInclude Include="WEngine\Shadows\ShadowBox.h" />
     <ClInclude Include="WEngine\Shadows\ShadowMasterRenderer.h" />
+    <ClInclude Include="WEngine\Texture\Material.h" />
     <ClInclude Include="WEngine\Texture\texture2D.h" />
     <ClInclude Include="WEngine\Texture\textureCubemap.h" />
     <ClInclude Include="WEngine\Usage.h" />

@@ -6,6 +6,7 @@ in vec3 toLightVector[4];
 in vec3 toCameraVector;
 in float visibility;
 in vec4 FragPosLightSpace;
+in vec3 viewVector;
 
 out vec4 out_Color;
 
@@ -14,6 +15,12 @@ uniform sampler2D normalMap;
 uniform sampler2D shadowMap;
 uniform sampler2D specularMap;
 uniform float usesSpecularMap;
+
+uniform samplerCube enviromentCubeMap;
+uniform float usesReflectionCubeMap;
+uniform float usesRefractionCubeMap;
+uniform float reflectionRefractionRatio;
+uniform float reflectionColourRatio;
 
 uniform vec3 lightColour[4];
 uniform vec3 attenuation[4];
@@ -136,4 +143,19 @@ void main(void){
 	//out_Color = vec4(vec3(shadow), 1.0);
 	out_Color = mix(vec4(skyColour, 1.0), out_Color, visibility);
 	//out_Color = vec4(vec3(tangent),1.0);
+
+	vec3 reflectedVector = reflect(viewVector, unitNormal);
+	vec3 refractedVector = refract(viewVector, unitNormal, 1.0/1.33);
+
+	vec4 reflecRefractColour;
+	if(usesReflectionCubeMap > 0.5){
+		reflecRefractColour = texture(enviromentCubeMap, reflectedVector);
+	}
+	if(usesRefractionCubeMap > 0.5){
+		vec4 refractedColour = texture(enviromentCubeMap, refractedVector);
+		reflecRefractColour = mix(reflecRefractColour, refractedColour, reflectionRefractionRatio);
+	}
+	if(usesReflectionCubeMap > 0.5) out_Color = mix(out_Color, reflecRefractColour, reflectionColourRatio);
+	//out_Color = reflecRefractColour;
+	//out_Color = vec4(reflectedVector, 1.0);
 }

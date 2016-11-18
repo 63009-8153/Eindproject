@@ -169,7 +169,7 @@ void renderWaterCubeMap()
 	terrainRenderer.addToRenderList(terrains[0].getModel());
 	terrainRenderer.addToRenderList(terrains[1].getModel());
 
-	glm::vec3 reflectionPosition = camera.position; //Has to be a vec3 of the position
+	glm::vec3 reflectionPosition = glm::vec3(0.0f, 10.0f, 0.0f); //Has to be a vec3 of the position
 	const glm::vec3 faceRotations[6] = {
 		glm::vec3(0, glm::radians(-90.0f), glm::radians(180.0f)),
 		glm::vec3(0, glm::radians(90.0f),  glm::radians(180.0f)),
@@ -189,7 +189,7 @@ void renderWaterCubeMap()
 
 		skybox.renderUpdated(&camera, 90.0f, reflectionPosition, faceRotations[i]);
 
-		normalModelRenderer.renderUpdated(lights, &camera, glm::vec4(0, -1, 0, 100000), 90.0f, reflectionPosition, faceRotations[i]); //Normal render
+		//normalModelRenderer.renderUpdated(lights, &camera, glm::vec4(0, -1, 0, 100000), 90.0f, reflectionPosition, faceRotations[i]); //Normal render
 		terrainRenderer.renderUpdated(lights, &camera, glm::vec4(0, -1, 0, 100000), 90.0f, reflectionPosition, faceRotations[i]); //Normal render
 
 		//glEnable(GL_CLIP_DISTANCE0);
@@ -325,13 +325,19 @@ int main() {
 	//Set the normal map texture to the model
 	model.setNormalMap(barrelNormal);
 	//Initialise the models position, rotation and scale.
-	model.init(glm::vec3(12, terrains[1].getHeight(0, -10), 0), glm::vec3(0, 0, 0), glm::vec3(1.5f, 1.5f, 1.5f));
+	model.init(glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1.5f, 1.5f, 1.5f));
 	//Set shinyness to model
 	model.setShineDamper(100);
 	model.setReflectivity(1);
 	//Set model ambient light
 	model.setAmbientLight(0.1f);
 	model.setShadowMap(shadowRenderer.getShadowDepthTexture());
+
+	model.setEnviromentCubeMapID(waterReflection.textureid);
+	model.hasReflectionCubeMap = true;
+	model.hasRefractionCubeMap = false;
+	model.reflectionRatio = 0.5f;
+	model.reflectionRefractionRatio = 0.5f;
 
 	//Load the texture for the model and give it to the model.
 	model2.addTexture(barrelTexture);
@@ -373,7 +379,7 @@ int main() {
 	lights[0]->setPosition(glm::vec3(sin((float)frame / 100.0f) * 100.0f, 100.0f, cos((float)frame / 100.0f) * 100.0f));
 
 	renderWaterCubeMap();
-	skybox2.cubeMap.textureid = waterReflection.textureid;
+	//skybox2.cubeMap.textureid = waterReflection.textureid;
 
 	do {
 		renderWaterCubeMap();
@@ -422,8 +428,9 @@ int main() {
 			MasterRenderer::prepare();
 
 			//Render everything
-			if(glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS) skybox.render(&camera);
-			else skybox2.render(&camera);
+			//if(glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS) skybox.render(&camera);
+			//else skybox2.render(&camera);
+			skybox.render(&camera);
 
 			terrainRenderer.render(lights, &camera, glm::vec4(0, -1, 0, 100000));
 			waterRenderer.render(lights, &camera);

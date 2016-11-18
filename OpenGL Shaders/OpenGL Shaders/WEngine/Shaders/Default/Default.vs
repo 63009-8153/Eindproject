@@ -10,6 +10,8 @@ out vec3 toLightVector[4];
 out vec3 toCameraVector;
 out float visibility;
 out vec4 FragPosLightSpace;
+out vec3 reflectedVector;
+out vec3 refractedVector;
 
 uniform mat4 transformationMatrix;
 uniform mat4 projectionMatrix;
@@ -26,8 +28,10 @@ uniform vec4 plane;
 
 uniform mat4 lightSpaceMatrix;
 
-const float density = 0.00035;
-const float gradient = 1.5;
+uniform vec3 cameraPosition;
+
+const float density = 0.0005;
+const float gradient = 4.5;
 
 void main(void){
 
@@ -40,7 +44,7 @@ void main(void){
 	gl_Position = projectionMatrix * positionRelativeToCam;
 	pass_textureCoords = (textureCoords / numberOfRows) + offset;
 
-	vec3 originalNormal = normal;
+	vec3 originalNormal = normalize(normal);
 	if(useFakeLighting > 0.5) originalNormal = vec3(0.0, 1.0, 0.0);
 
 	surfaceNormal = (transformationMatrix * vec4(originalNormal, 0.0f)).xyz;
@@ -49,7 +53,11 @@ void main(void){
 	}
 	toCameraVector = (inverse(viewMatrix) * vec4(0.0, 0.0, 0.0, 1.0)).xyz - worldPosition.xyz;
 
-	//float distance = length(positionRelativeToCam.xyz);
-	//visibility = exp(-pow((distance * density), gradient));
-	//visibility = clamp(visibility, 0.0, 1.0);
+	vec3 viewVector = normalize(worldPosition.xyz - cameraPosition);
+	reflectedVector = reflect(viewVector, originalNormal);
+	refractedVector = refract(viewVector, originalNormal, 1.0/1.33);
+
+	float distance = length(positionRelativeToCam.xyz);
+	visibility = exp(-pow((distance * density), gradient));
+	visibility = clamp(visibility, 0.0, 1.0);
 }

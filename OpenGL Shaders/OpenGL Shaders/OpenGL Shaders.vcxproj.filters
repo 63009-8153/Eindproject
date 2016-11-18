@@ -84,6 +84,9 @@
     <ClCompile Include="WEngine\Texture\textureCubemap.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="WEngine\Texture\Material.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="WEngine\Usage.h">
@@ -159,6 +162,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="WEngine\Texture\textureCubemap.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="WEngine\Texture\Material.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
