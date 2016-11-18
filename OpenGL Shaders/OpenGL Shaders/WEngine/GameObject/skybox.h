@@ -17,7 +17,8 @@ public:
 	void load(char vertexfile[], char fragmentfile[], Camera *camera, std::string *filenames);
 	void render(Camera *camera);
 	void renderUpdated(Camera *camera, float fov, glm::vec3 newCameraPosition, glm::vec3 newCameraRotation);
-textureCubemap cubeMap;
+
+	textureCubemap cubeMap;
 private:
 	gameobject object;
 	
