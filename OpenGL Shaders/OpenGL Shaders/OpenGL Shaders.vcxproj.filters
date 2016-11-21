@@ -87,6 +87,12 @@
     <ClCompile Include="WEngine\Texture\Material.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="WEngine\Renderer\GuiRenderer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="WEngine\Renderer\GuiShaderProgram.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="WEngine\Usage.h">
@@ -167,6 +173,12 @@
     <ClInclude Include="WEngine\Texture\Material.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="WEngine\Renderer\GuiRenderer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="WEngine\Renderer\GuiShaderProgram.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="WEngine\Shaders\Water\WaterShader.fs" />
@@ -192,5 +204,7 @@
     <None Include="WEngine\Shaders\AntiAliasing\AAVertex.vs" />
     <None Include="WEngine\Shaders\AntiAliasing\FXAA.fs" />
     <None Include="WEngine\Shaders\AntiAliasing\SSAA.fs" />
+    <None Include="WEngine\Shaders\Gui\GuiShader.fs" />
+    <None Include="WEngine\Shaders\Gui\GuiShader.vs" />
   </ItemGroup>
 </Project>

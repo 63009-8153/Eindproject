@@ -17,11 +17,14 @@ MasterRenderer modelRenderer,
 			   normalModelRenderer;
 WaterMasterRenderer waterRenderer;
 ShadowMasterRenderer shadowRenderer;
+GuiRenderer guiRenderer;
 
 //Only render scene to sceneRenderer framebuffer. Then retrieve this texture for use.
 PostProcessRenderer sceneRenderer, antiAliasedRenderer;
 //Post Process image 
 PostProcessRenderer Contrast, VBlur, HBlur, brightFilter, combineFilter;
+
+std::vector<texture2D> GuiElements;
 
 Terrain terrains[2];
 
@@ -35,6 +38,8 @@ gameobject model, model2, model3;
 Skybox skybox, skybox2;
 
 textureCubemap waterReflection;
+
+texture2D GuiCherry;
 
 glm::vec3 clearColor = glm::vec3(0, 0, 0);
 
@@ -255,6 +260,7 @@ int main() {
 	combineFilter.shader.stop();
 
 	//Load and initialise all masterRenderers
+	guiRenderer.load("WEngine/Shaders/Gui/GuiShader.vs", "WEngine/Shaders/Gui/GuiShader.fs");
 	modelRenderer.load("WEngine/Shaders/Default/Default.vs", "WEngine/Shaders/Default/Default.fs", &camera);
 	normalModelRenderer.load("WEngine/Shaders/NormalMaps/NormalMap.vs", "WEngine/Shaders/NormalMaps/NormalMap.fs", &camera);
 	terrainRenderer.load("WEngine/Shaders/Terrain/Terrain.vs", "WEngine/Shaders/Terrain/Terrain.fs", &camera);
@@ -271,6 +277,11 @@ int main() {
 	};
 	skybox.load("WEngine/Shaders/Skybox/Skybox.vs", "WEngine/Shaders/Skybox/Skybox.fs", &camera, skyboxTextures);
 	skybox2.load("WEngine/Shaders/Skybox/Skybox.vs", "WEngine/Shaders/Skybox/Skybox.fs", &camera, skyboxTextures);
+
+	GuiCherry.loadImage("res/Cherry/cherry.bmp", true, false);
+	GuiCherry.rotation = glm::radians(10.0f);
+	GuiCherry.scale = glm::vec2(0.5f);
+	GuiCherry.position = glm::vec2(-0.5f, 0.5f);
 	
 	//Set input mode
 	glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
@@ -333,11 +344,11 @@ int main() {
 	model.setAmbientLight(0.1f);
 	model.setShadowMap(shadowRenderer.getShadowDepthTexture());
 
-	model.setEnviromentCubeMapID(waterReflection.textureid);
-	model.hasReflectionCubeMap = true;
+	/*model.setEnviromentCubeMapID(waterReflection.textureid);
+	model.hasReflectionCubeMap = false;
 	model.hasRefractionCubeMap = false;
 	model.reflectionRatio = 0.5f;
-	model.reflectionRefractionRatio = 0.5f;
+	model.reflectionRefractionRatio = 0.5f;*/
 
 	//Load the texture for the model and give it to the model.
 	model2.addTexture(barrelTexture);
@@ -381,10 +392,14 @@ int main() {
 	renderWaterCubeMap();
 	//skybox2.cubeMap.textureid = waterReflection.textureid;
 
+	GuiElements.push_back(GuiCherry);
+
 	do {
 		renderWaterCubeMap();
 		//Prepare rendering on default framebuffer
 		MasterRenderer::prepare();
+
+		GuiElements[0].rotation = (float)frame / 100.0f;
 
 		//Change WaterMoveFactor for random(ish) water movement
 		float currentWaterMoveFactor = waterRenderer.getMoveFactor();
@@ -478,6 +493,8 @@ int main() {
 
 		//Render contrast framebuffer to the screen
 		Contrast.renderToScreen();
+
+		guiRenderer.render(&GuiElements);
 		
 		//Swap Buffers (Send image to the screen)
 		glfwSwapBuffers(window);
