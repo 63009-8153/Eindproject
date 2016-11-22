@@ -25,6 +25,10 @@ public:
 	void setVelocity(glm::vec3 vel);
 	//Draw the model
 	void draw();
+
+	//get the pointer to the gameobject
+	gameobject* getModel();
+
 	// Initialise the model
 	void Init(glm::vec3 pos, glm::vec3 rot, glm::vec3 scal);
 	// Set the models gameobject

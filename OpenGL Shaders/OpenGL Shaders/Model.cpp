@@ -51,6 +51,11 @@ void Model::setVelocity(glm::vec3 vel)
 	velocity = vel;
 }
 
+gameobject* Model::getModel()
+{
+	return &model;
+}
+
 // Initialise the model
 void Model::Init(glm::vec3 pos, glm::vec3 rot, glm::vec3 scal)
 {
