@@ -21,6 +21,8 @@ void GuiRenderer::load(char vertexFile[], char fragmentFile[])
 
 void GuiRenderer::render(std::vector<texture2D> *textures)
 {
+	if (textures->size() == 0) return;
+
 	shader.start();
 	glBindVertexArray(quad.getVaoID());
 	glEnableVertexAttribArray(0);

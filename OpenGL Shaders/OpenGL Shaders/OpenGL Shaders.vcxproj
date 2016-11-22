@@ -166,7 +166,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Enemy.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Model.cpp" />
+    <ClCompile Include="Player.cpp" />
     <ClCompile Include="WEngine\Camera\camera.cpp" />
     <ClCompile Include="WEngine\Display\DisplayManager.cpp" />
     <ClCompile Include="WEngine\FrameBuffers\framebuffer.cpp" />
@@ -194,6 +197,12 @@
     <ClCompile Include="WEngine\Water\WaterShaderProgram.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Enemy.h" />
+    <ClInclude Include="Header.h" />
+    <ClInclude Include="NetworkHeader.h" />
+    <ClInclude Include="Model.h" />
+    <ClInclude Include="NetworkServices.h" />
+    <ClInclude Include="Player.h" />
     <ClInclude Include="WEngine\Camera\camera.h" />
     <ClInclude Include="WEngine\Display\DisplayManager.h" />
     <ClInclude Include="WEngine\FrameBuffers\framebuffer.h" />

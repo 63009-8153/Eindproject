@@ -345,7 +345,7 @@ int main() {
 	model.setShadowMap(shadowRenderer.getShadowDepthTexture());
 
 	/*model.setEnviromentCubeMapID(waterReflection.textureid);
-	model.hasReflectionCubeMap = false;
+	model.hasReflectionCubeMap = true;
 	model.hasRefractionCubeMap = false;
 	model.reflectionRatio = 0.5f;
 	model.reflectionRefractionRatio = 0.5f;*/
@@ -392,14 +392,14 @@ int main() {
 	renderWaterCubeMap();
 	//skybox2.cubeMap.textureid = waterReflection.textureid;
 
-	GuiElements.push_back(GuiCherry);
+	//GuiElements.push_back(GuiCherry);
 
 	do {
-		renderWaterCubeMap();
+		//renderWaterCubeMap();
+		//GuiElements[0].rotation = (float)frame / 100.0f;
+
 		//Prepare rendering on default framebuffer
 		MasterRenderer::prepare();
-
-		GuiElements[0].rotation = (float)frame / 100.0f;
 
 		//Change WaterMoveFactor for random(ish) water movement
 		float currentWaterMoveFactor = waterRenderer.getMoveFactor();
