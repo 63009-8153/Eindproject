@@ -2,9 +2,11 @@
 
 #include "Model.h"
 
+//Constructor
 Model::Model()
 {
 }
+//Destructor
 Model::~Model()
 {
 }
@@ -33,7 +35,7 @@ void Model::setRotation(glm::vec3 rot)
 	rotation = rot;
 }
 
-// get the models scale
+// Get the models scale
 glm::vec3 Model::getScale()
 {
 	return scale;
@@ -52,7 +54,7 @@ void Model::setVelocity(glm::vec3 vel)
 }
 
 // Initialise the model
-void Model::Init(glm::vec3 pos, glm::vec3 rot, glm::vec3 scal)
+void Model::Initialise(glm::vec3 pos, glm::vec3 rot, glm::vec3 scal)
 {
 	position = pos;
 	rotation = rot;
@@ -65,12 +67,13 @@ void Model::setModel(gameobject * object)
 {
 	model = gameobject(object);
 }
+// Get the pointer to the models gameobject
 gameobject* Model::getModel()
 {
 	return &model;
 }
 
-//Draw the model
+// Draw the model
 void Model::draw()
 {
 	
