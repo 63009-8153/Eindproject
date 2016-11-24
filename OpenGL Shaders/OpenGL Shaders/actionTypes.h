@@ -1,0 +1,19 @@
+#pragma once
+
+enum actionTypes {
+	ACTION_NONE		= 0,
+
+	LOBBY_JOIN		= 10,
+	LOBBY_UPDATE	= 11,
+
+	GAME_START		= 20,
+	GAmE_DISCONNECT = 21,
+
+	MOVE_FORWARD	= 30,
+	MOVE_BACKWARD	= 31,
+	MOVE_LEFT		= 32,
+	MOVE_RIGHT		= 33,
+
+	SHOOT_ONCE		= 40,
+	SHOOT_HOLD		= 41
+};

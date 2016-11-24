@@ -132,6 +132,12 @@
     <ClCompile Include="Player.cpp">
       <Filter>Game\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ClientNetwork.cpp">
+      <Filter>Network\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ClientGame.cpp">
+      <Filter>Network\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="WEngine\Camera\camera.h">
@@ -227,14 +233,41 @@
     <ClInclude Include="Player.h">
       <Filter>Game\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="NetworkHeader.h">
+    <ClInclude Include="Header.h">
       <Filter>Game\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="NetworkServices.h">
-      <Filter>Game\Header Files</Filter>
+      <Filter>Network\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Header.h">
-      <Filter>Game\Header Files</Filter>
+    <ClInclude Include="NetworkHeader.h">
+      <Filter>Network\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="playerData.h">
+      <Filter>Network\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="enemyData.h">
+      <Filter>Network\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="packetTypes.h">
+      <Filter>Network\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="actionTypes.h">
+      <Filter>Network\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ClientPackage.h">
+      <Filter>Network\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ClientPacketLobby.h">
+      <Filter>Network\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="networkData.h">
+      <Filter>Network\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ClientNetwork.h">
+      <Filter>Network\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ClientGame.h">
+      <Filter>Network\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
