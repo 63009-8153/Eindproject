@@ -1,5 +1,6 @@
-#include "Header.h"
 #include "NetworkHeader.h"
+
+#include "Header.h"
 
 #include "networkData.h"
 #include "ClientNetwork.h"
@@ -38,5 +39,5 @@ void ClientGame::sendPlayerData(playerData &player)
 //Resets to 0 after call
 int ClientGame::getError()
 {
-
+	return 0;
 }

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Header.h"
 #include "NetworkHeader.h"
+#include "Header.h"
 
 typedef struct {
 	glm::vec3 position, rotation, scale;

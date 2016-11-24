@@ -1,14 +1,6 @@
+#include "NetworkHeader.h"
+
 #include "Header.h"
-
-#include <winsock2.h>
-#include <Windows.h>
-#include "NetworkServices.h"
-#include <ws2tcpip.h>
-#include "networkData.h"
-
-#pragma comment (lib, "Ws2_32.lib")
-#pragma comment (lib, "Mswsock.lib")
-#pragma comment (lib, "AdvApi32.lib")
 
 #include "ClientNetwork.h"
 
