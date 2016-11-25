@@ -107,7 +107,9 @@ ClientNetwork::ClientNetwork(char _ipAddress[39], char _port[5])
 //Destructor
 ClientNetwork::~ClientNetwork()
 {
-
+	printf("Connection closed by destructor\n");
+	closesocket(ConnectSocket);
+	WSACleanup();
 }
 
 //Get packets from server and put data in buffer
@@ -128,6 +130,12 @@ int ClientNetwork::receivePackets(char * recvbuf)
 	}
 
 	return iResult;
+}
+
+//Get the server socket the client has connected to.
+SOCKET ClientNetwork::getSocket()
+{
+	return ConnectSocket;
 }
 
 //Get last error

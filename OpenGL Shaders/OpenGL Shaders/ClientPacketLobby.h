@@ -5,10 +5,10 @@
 #include "playerData.h"
 
 typedef struct {
-	unsigned int packet_type;
+	packetTypes packet_type;
 
 	float startTimer;
-	unsigned int action_types[MAX_ACTIONS];
+	actionTypes action_types[MAX_ACTIONS];
 
 	playerData players[MAX_LOBBYSIZE];
 
@@ -21,10 +21,10 @@ typedef struct {
 } ClientReceivePacketLobby;
 
 typedef struct {
-	unsigned int packet_type;
+	packetTypes packet_type;
 
 	playerData player;
-	unsigned int action_types[MAX_ACTIONS];
+	actionTypes action_types[MAX_ACTIONS];
 
 	void serialize(char * data) {
 		memcpy(data, this, sizeof(ClientSendPacketLobby));

@@ -6,7 +6,7 @@
 #include "enemyData.h"
 
 typedef struct {
-	unsigned int packet_type;
+	packetTypes packet_type;
 
 	unsigned int lobbySize;
 	playerData players[MAX_LOBBYSIZE];
@@ -22,11 +22,10 @@ typedef struct {
 } ClientReceivePacket;
 
 typedef struct {
-	unsigned int packet_type;
+	packetTypes packet_type;
 
-	unsigned int action_types[MAX_ACTIONS];
-
-	glm::vec3 rotation;
+	playerData player;
+	actionTypes action_types[MAX_ACTIONS];
 
 	void serialize(char * data) {
 		memcpy(data, this, sizeof(ClientSendPacket));

@@ -1,5 +1,3 @@
-#pragma once
-
 #ifndef _NETWORK_HEADER_
 #define _NETWORK_HEADER_
 

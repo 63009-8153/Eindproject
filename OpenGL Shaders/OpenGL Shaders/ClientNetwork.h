@@ -11,6 +11,9 @@ public:
 	//Get packets from server and put data in buffer
 	int receivePackets(char * recvbuf);
 
+	//Get the server socket the client has connected to.
+	SOCKET getSocket();
+
 	//Get last error
 	//Sets error back to 0 afterward.
 	int getError();

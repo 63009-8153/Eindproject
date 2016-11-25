@@ -4,8 +4,11 @@ class ClientGame
 public:
 	//Constructor
 	ClientGame();
+	ClientGame(char ipAddress[39], char port[5]);
 	//Destructor
 	~ClientGame();
+
+	void setNetworkAddress(char ipAddress[39], char port[5]);
 
 	//Update the client with server data.
 	void updateClient();
@@ -14,6 +17,9 @@ public:
 
 	//Send playerData to the server.
 	void sendPlayerData(playerData &player);
+
+	//Add an actionType to the next packet send to the server.
+	void addActionType(actionTypes type);
 
 	//Get the network error.
 	//Resets to 0 after call
@@ -27,5 +33,6 @@ private:
 
 	char network_data[MAX_PACKET_SIZE];
 
+	std::vector<actionTypes> nextActionTypes;
 };
 
