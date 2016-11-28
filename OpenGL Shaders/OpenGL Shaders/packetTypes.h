@@ -3,5 +3,7 @@
 enum packetTypes {
 	LOBBY_PACKET = 0,
 
-	GAME_PACKET = 1
+	GAME_PACKET = 1,
+
+	INITALISATION_PACKET = 2
 };

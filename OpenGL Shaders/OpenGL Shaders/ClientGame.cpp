@@ -64,18 +64,27 @@ void ClientGame::updateClient()
 
 		case LOBBY_PACKET:
 		{
-			ClientReceivePacketLobby packetLobby;
-			packetLobby.deserialize(&(network_data[i]));
+			ClientReceivePacketLobby packet;
+			packet.deserialize(&(network_data[i]));
 			i += sizeof(ClientReceivePacketLobby);
 
-			if (packetLobby.action_types[0] == LOBBY_JOIN) printf("Hello from server!");
+			if (packet.action_types[0] == LOBBY_JOIN) printf("Hello from server!\n");
 		}
 			break;
 		case GAME_PACKET:
 		{
-			ClientReceivePacket packetGame;
-			packetGame.deserialize(&(network_data[i]));
+			ClientReceivePacket packet;
+			packet.deserialize(&(network_data[i]));
 			i += sizeof(ClientReceivePacket);
+		}
+			break;
+		case INITALISATION_PACKET:
+		{
+			ClientReceivePacketLobby packet;
+			packet.deserialize(&(network_data[i]));
+			i += sizeof(ClientReceivePacket);
+
+			printf("Client accepted by server! We got clientID: %d\n", packet.players[0].playerID);
 		}
 			break;
 		default:
