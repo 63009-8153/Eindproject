@@ -1,3 +1,5 @@
+#include "ClientGame.h"
+
 #include "WEngine/Usage.h"
 #include "ReactPhysics3D/reactphysics3d.h"
 
@@ -6,6 +8,13 @@
 #define MSAA 1
 #define SSAA 2
 #define FXAA 3
+
+#define UPDATE_CYCLES_PER_SECOND 144
+
+// ============  Client Handle Variables ===========
+bool clientRunning = false;
+ClientGame client;
+void clientLoop(void *);
 
 GLFWwindow* window;
 
@@ -209,7 +218,50 @@ void renderWaterCubeMap()
 	terrainRenderer.clearRenderPass();
 }
 
+void initialiseClient()
+{
+	client = ClientGame("", "6881");
+
+	// Start a new thread and run the serverLoop function.
+	_beginthread(clientLoop, 0, NULL);
+}
+
+void clientLoop(void *)
+{
+	double clientLoopDeltaTime = 0,
+		clientLoopLastRenderTime = 0;
+
+	clientRunning = true;
+	bool inLobby = true;
+
+	while (clientRunning) {
+
+		// Accept new connections
+		client.updateClient();
+
+		//Send game packets
+		if (inLobby) {
+			
+		}
+		else {
+			//Send game packets if game has started
+			//client.sendPlayerData();
+		}
+
+		// Limit update cycle amount to UPDATE_CYCLES_PER_SECOND
+		while (glfwGetTime() < (last_render_time + (1.0f / (float)UPDATE_CYCLES_PER_SECOND))) {}
+
+		clientLoopDeltaTime = glfwGetTime() - clientLoopLastRenderTime; //Time in seconds it took for the last update cycle.
+		clientLoopLastRenderTime = glfwGetTime();
+	}
+
+	// End of function, end the thread and release its memory.
+	_endthread();
+}
+
 int main() {
+	
+
 	// Initialise GLFW and throw error if it failed
 	if (!glfwInit()){
 		throw std::runtime_error("Failed to initialize GLFW");

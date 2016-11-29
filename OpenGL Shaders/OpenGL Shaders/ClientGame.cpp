@@ -1,31 +1,10 @@
-#include "NetworkHeader.h"
-
-#include "Header.h"
-
-#include "networkData.h"
-#include "ClientNetwork.h"
-
 #include "ClientGame.h"
 
 //Constructor
 ClientGame::ClientGame() {
-
 }
 ClientGame::ClientGame(char ipAddress[39], char port[5])
 {
-	network = new ClientNetwork(ipAddress, port);
-	error = network->getError();
-}
-//Destructor
-ClientGame::~ClientGame()
-{
-}
-
-void ClientGame::setNetworkAddress(char ipAddress[39], char port[5])
-{
-	//Remove existing clientNetwork
-	network->~ClientNetwork();
-
 	//Create a new clientNetwork with IP-Address and Port
 	network = new ClientNetwork(ipAddress, port);
 	error = network->getError();
@@ -40,6 +19,11 @@ void ClientGame::setNetworkAddress(char ipAddress[39], char port[5])
 		sendPlayerData(player);
 	}
 }
+//Destructor
+ClientGame::~ClientGame()
+{
+}
+
 
 //Update the client with server data.
 void ClientGame::updateClient()
@@ -58,7 +42,7 @@ void ClientGame::updateClient()
 		packetTypes packetType;
 		memcpy(&packetType, &(network_data[i]), sizeof(packetTypes));
 
-		printf("PacketType: %ud", packetType);
+		printf("Packet received with Type: %ud\n", packetType);
 
 		switch (packetType) {
 
@@ -84,11 +68,11 @@ void ClientGame::updateClient()
 			packet.deserialize(&(network_data[i]));
 			i += sizeof(ClientReceivePacket);
 
-			printf("Client accepted by server! We got clientID: %d\n", packet.players[0].playerID);
+			printf("INFO: -- Client accepted by server! We got clientID: %d\n", packet.players[0].playerID);
 		}
 			break;
 		default:
-			printf("Unknown packetType!!");
+			printf("ERROR: -- Packet received with Unknown packetType!!\n");
 			break;
 		}
 	}

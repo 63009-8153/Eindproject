@@ -1,4 +1,13 @@
 #pragma once
+
+#include "NetworkHeader.h"
+
+#include "Header.h"
+
+#include "networkData.h"
+#include "ClientNetwork.h"
+
+
 class ClientGame
 {
 public:
@@ -7,8 +16,6 @@ public:
 	ClientGame(char ipAddress[39], char port[5]);
 	//Destructor
 	~ClientGame();
-
-	void setNetworkAddress(char ipAddress[39], char port[5]);
 
 	//Update the client with server data.
 	void updateClient();
