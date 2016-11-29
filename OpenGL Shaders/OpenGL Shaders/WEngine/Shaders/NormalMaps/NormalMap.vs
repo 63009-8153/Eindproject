@@ -11,6 +11,7 @@ out vec3 toCameraVector;
 out float visibility;
 out vec3 pass_tangent;
 out vec4 FragPosLightSpace;
+out vec3 viewVector;
 
 uniform mat4 transformationMatrix;
 uniform mat4 projectionMatrix;
@@ -26,6 +27,8 @@ uniform vec2 offset;
 uniform vec4 plane;
 
 uniform mat4 lightSpaceMatrix;
+
+uniform vec3 cameraPosition;
 
 const float density = 0.0005;
 const float gradient = 4.5;
@@ -53,4 +56,6 @@ void main(void){
 	float distance = length(positionRelativeToCam.xyz);
 	visibility = exp(-pow((distance * density), gradient));
 	visibility = clamp(visibility, 0.0, 1.0);
+
+	viewVector = normalize(position - cameraPosition);
 }

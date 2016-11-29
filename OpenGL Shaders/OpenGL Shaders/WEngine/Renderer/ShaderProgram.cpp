@@ -72,9 +72,16 @@ void ShaderProgram::load(char vertexFile[], char fragmentFile[])
 	location_normalMap = getUniformLocation("normalMap");
 	location_shadowMap = getUniformLocation("shadowMap");
 
+	location_enviromentCubeMap = getUniformLocation("enviromentCubeMap");
+	location_usesReflectionCubeMap = getUniformLocation("usesReflectionCubeMap");
+	location_usesRefractionCubeMap = getUniformLocation("usesRefractionCubeMap");
+	location_reflectionRefractionRatio = getUniformLocation("reflectionRefractionRatio");
+	location_reflectionColourRatio = getUniformLocation("reflectionColourRatio");
+
 	location_plane = getUniformLocation("plane");
 	
 	location_lightSpaceMatrix = getUniformLocation("lightSpaceMatrix");
+	location_cameraPosition = getUniformLocation("cameraPosition");
 
 	for (int i = 0; i < MAX_LIGHTS; i++) {
 		location_lightPosition[i] = getUniformLocation("lightPosition[" + std::to_string(i) + "]");
@@ -176,6 +183,27 @@ void ShaderProgram::loadUseSpecularMap(bool useSpecularMap)
 {
 	loadBoolean(location_usesSpecularMap, useSpecularMap);
 }
+void ShaderProgram::loadUseReflectionCubeMap(bool useReflectionCubeMap)
+{
+	loadBoolean(location_usesReflectionCubeMap, useReflectionCubeMap);
+}
+void ShaderProgram::loadUseRefractionCubeMap(bool useRefractionCubeMap)
+{
+	loadBoolean(location_usesRefractionCubeMap, useRefractionCubeMap);
+}
+void ShaderProgram::loadReflectionRefractionRatio(float value)
+{
+	loadFloat(location_reflectionRefractionRatio, value);
+}
+void ShaderProgram::loadReflectionColourRatio(float value)
+{
+	loadFloat(location_reflectionColourRatio, value);
+}
+
+void ShaderProgram::loadCameraPosition(glm::vec3 pos)
+{
+	loadVector(location_cameraPosition, pos);
+}
 
 void ShaderProgram::connectTextureUnits() {
 	loadInt(location_texture0, 0);
@@ -186,6 +214,8 @@ void ShaderProgram::connectTextureUnits() {
 	loadInt(location_normalMap, 5);
 	loadInt(location_shadowMap, 6);
 	loadInt(location_specularMap, 7);
+
+	loadInt(location_enviromentCubeMap, 8);
 }
 
 void ShaderProgram::loadClipPlane(glm::vec4 plane) {

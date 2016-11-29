@@ -27,6 +27,12 @@ public:
 	void setSpecularMap(GLuint textID);
 	GLuint getSpecularMapID();
 
+	void setEnviromentCubeMapID(GLuint textID);
+	GLuint getEnviromentCubeMapID();
+
+	void setReflectionRatio(float value);
+	void setReflectionRefractionRatio(float value);
+
 	void setTextureAtlasTexture(GLuint textID, int nrRows, int textIndex);
 	
 	float getTextureXOffset();
@@ -37,7 +43,11 @@ public:
 	bool useFakeLighting, cullFaces;
 	float ambientLight;
 	int numberOfRows, textureIndex;
-	bool hasNormalMap, hasShadowMap, hasSpecularMap;
+	bool hasNormalMap, hasShadowMap, hasSpecularMap, 
+		 hasReflectionCubeMap, hasRefractionCubeMap;
+
+	float reflectionRatio,
+		  reflectionRefractionRatio;
 
 	void init(glm::vec3 pos, glm::vec3 rot, glm::vec3 scal);
 
@@ -71,7 +81,8 @@ private:
 	std::vector<GLuint> textureID;
 	GLuint normalMapID,
 		shadowMapID,
-		specularMapID;
+		specularMapID,
+		enviromentCubeMap;
 
 	float shineDamper;
 	float reflectivity;
