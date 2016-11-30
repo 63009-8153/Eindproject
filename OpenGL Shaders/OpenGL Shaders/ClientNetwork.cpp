@@ -25,7 +25,7 @@ ClientNetwork::ClientNetwork(char _ipAddress[39], char _port[5])
 	//Check if it didn't create an error.
 	if (iResult != 0) {
 		printf("WSAStartup failed with error: %d\n", iResult);
-		error = -1;
+		errors.push_back(WSA_STARTUP_ERROR);
 	}
 
 	// Set address info
@@ -42,7 +42,7 @@ ClientNetwork::ClientNetwork(char _ipAddress[39], char _port[5])
 	{
 		printf("getaddrinfo failed with error: %d\n", iResult);
 		WSACleanup();
-		error = -2;
+		errors.push_back(GET_ADDR_INFO_ERROR);
 	}
 
 	// Attempt to connect to an address until one succeeds.
@@ -55,7 +55,7 @@ ClientNetwork::ClientNetwork(char _ipAddress[39], char _port[5])
 		if (ConnectSocket == INVALID_SOCKET) {
 			printf("socket failed with error: %ld\n", WSAGetLastError());
 			WSACleanup();
-			error = -3;
+			errors.push_back(CREATE_SOCKET_ERROR);
 		}
 
 		// Connect to the server.
@@ -67,7 +67,7 @@ ClientNetwork::ClientNetwork(char _ipAddress[39], char _port[5])
 			closesocket(ConnectSocket);
 			ConnectSocket = INVALID_SOCKET;
 			printf("The server is down... did not connect\n");
-			error = -4;
+			errors.push_back(CONNECT_SOCKET_ERROR);
 		}
 	}
 
@@ -79,7 +79,7 @@ ClientNetwork::ClientNetwork(char _ipAddress[39], char _port[5])
 	{
 		printf("Unable to connect to server!\n");
 		WSACleanup();
-		error = -5;
+		errors.push_back(ALL_CONNECTING_SOCKETS_ERROR);
 	}
 
 	// Set the socket I/O mode: In this case FIONBIO
@@ -97,7 +97,7 @@ ClientNetwork::ClientNetwork(char _ipAddress[39], char _port[5])
 		printf("ioctlsocket failed with error: %d\n", WSAGetLastError());
 		closesocket(ConnectSocket);
 		WSACleanup();
-		error = -6;
+		errors.push_back(SET_NONBLOCKING_ERROR);
 	}
 
 	// Disable nagle.
@@ -121,12 +121,12 @@ int ClientNetwork::receivePackets(char * recvbuf)
 	//If the connection was closed.
 	if (iResult == 0)
 	{
-		printf("Connection closed\n");
+		printf("INFO: Connection error, Socket was possibly closed!\n");
 
 		closesocket(ConnectSocket);
 		WSACleanup();
 
-		error = -10;
+		errors.push_back(CONNECT_SOCKET_ERROR);
 	}
 
 	return iResult;
@@ -138,11 +138,12 @@ SOCKET ClientNetwork::getSocket()
 	return ConnectSocket;
 }
 
-//Get last error
-//Sets error back to 0 afterward.
-int ClientNetwork::getError()
+//Get last errors
+//Removes all errors afterward.
+std::vector<networkingErrors> ClientNetwork::getErrors()
 {
-	int tmpError = error;
-	error = 0;
-	return tmpError;
+	std::vector<networkingErrors> tmpErrors = errors;
+	errors.clear();
+
+	return tmpErrors;
 }

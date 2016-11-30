@@ -30,13 +30,13 @@ public:
 
 	//Get the network error.
 	//Resets to 0 after call
-	int getError();
+	std::vector<networkingErrors> getErrors();
 
 	//ClientNetwork that controls the connection to the server.
 	ClientNetwork* network;
 
 private:
-	int error;
+	std::vector<networkingErrors> errors;
 
 	char network_data[MAX_PACKET_SIZE];
 

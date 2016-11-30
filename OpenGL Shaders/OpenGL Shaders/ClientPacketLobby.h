@@ -5,7 +5,7 @@
 #include "playerData.h"
 
 typedef struct {
-	packetTypes packet_type;
+	unsigned int packet_type;
 
 	float startTimer;
 	actionTypes action_types[MAX_ACTIONS];

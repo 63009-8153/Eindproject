@@ -14,13 +14,13 @@ public:
 	//Get the server socket the client has connected to.
 	SOCKET getSocket();
 
-	//Get last error
-	//Sets error back to 0 afterward.
-	int getError();
+	//Get last errors
+	//Removes all errors afterward..
+	std::vector<networkingErrors> getErrors();
 
 private:
 	int iResult;
-	int error;
+	std::vector<networkingErrors> errors;
 
 	char ipAddress[39];
 	char port[5];

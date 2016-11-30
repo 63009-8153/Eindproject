@@ -9,6 +9,7 @@
 #include <SDKDDKVer.h>
 
 #include "NetworkServices.h"
+#include "networkingErrors.h"
 
 #pragma comment (lib, "Ws2_32.lib")
 #pragma comment (lib, "Mswsock.lib")

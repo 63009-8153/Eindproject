@@ -220,7 +220,7 @@ void renderWaterCubeMap()
 
 void initialiseClient()
 {
-	client = ClientGame("", "6881");
+	client = ClientGame("127.0.0.1", "6881");
 
 	// Start a new thread and run the serverLoop function.
 	_beginthread(clientLoop, 0, NULL);
@@ -254,13 +254,14 @@ void clientLoop(void *)
 		clientLoopDeltaTime = glfwGetTime() - clientLoopLastRenderTime; //Time in seconds it took for the last update cycle.
 		clientLoopLastRenderTime = glfwGetTime();
 	}
+	//TODO: End thread on end program
 
 	// End of function, end the thread and release its memory.
 	_endthread();
 }
 
 int main() {
-	
+	initialiseClient();
 
 	// Initialise GLFW and throw error if it failed
 	if (!glfwInit()){

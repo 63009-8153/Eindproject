@@ -7,9 +7,9 @@ ClientGame::ClientGame(char ipAddress[39], char port[5])
 {
 	//Create a new clientNetwork with IP-Address and Port
 	network = new ClientNetwork(ipAddress, port);
-	error = network->getError();
+	errors = network->getErrors();
 
-	if (error == 0) {
+	if (errors.size() != 0) {
 		char name[10] = "Wouter140";
 
 		playerData player;
@@ -42,7 +42,7 @@ void ClientGame::updateClient()
 		packetTypes packetType;
 		memcpy(&packetType, &(network_data[i]), sizeof(packetTypes));
 
-		printf("Packet received with Type: %ud\n", packetType);
+		printf("INFO:  -- Packet received with Type: %u\n", packetType);
 
 		switch (packetType) {
 
@@ -66,9 +66,9 @@ void ClientGame::updateClient()
 		{
 			ClientReceivePacketLobby packet;
 			packet.deserialize(&(network_data[i]));
-			i += sizeof(ClientReceivePacket);
+			i += sizeof(ClientReceivePacketLobby);
 
-			printf("INFO: -- Client accepted by server! We got clientID: %d\n", packet.players[0].playerID);
+			printf("INFO:  -- Client accepted by server! We got clientID: %d\n", packet.players[0].playerID);
 		}
 			break;
 		default:
@@ -127,9 +127,10 @@ void ClientGame::addActionType(actionTypes type)
 
 //Get the network error.
 //Resets to 0 after call
-int ClientGame::getError()
+std::vector<networkingErrors> ClientGame::getErrors()
 {
-	int tmperror = error;
-	error = 0;
-	return tmperror;
+	std::vector<networkingErrors> tmperrors = errors;
+	errors.clear();
+
+	return tmperrors;
 }
