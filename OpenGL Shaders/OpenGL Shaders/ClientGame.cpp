@@ -10,13 +10,13 @@ ClientGame::ClientGame(char ipAddress[39], char port[5])
 	errors = network->getErrors();
 
 	if (errors.size() != 0) {
-		char name[10] = "Wouter140";
+		char name[] = "Wouter140\0";
 
 		playerData player;
 		memcpy(&player.playerName, name, strlen(name));
 		addActionType(LOBBY_JOIN);
 
-		sendPlayerData(player);
+		sendPlayerData(player, LOBBY_PACKET);
 	}
 }
 //Destructor
@@ -52,7 +52,6 @@ void ClientGame::updateClient()
 			packet.deserialize(&(network_data[i]));
 			i += sizeof(ClientReceivePacketLobby);
 
-			if (packet.action_types[0] == LOBBY_JOIN) printf("Hello from server!\n");
 		}
 			break;
 		case GAME_PACKET:
@@ -93,13 +92,13 @@ void ClientGame::disconnect()
 }
 
 //Send playerData to the server.
-void ClientGame::sendPlayerData(playerData &player)
+void ClientGame::sendPlayerData(playerData &player, packetTypes type)
 {
 	const unsigned int packet_size = sizeof(ClientSendPacket);
 	char packet_data[packet_size];
 
 	ClientSendPacket packet;
-	packet.packet_type = GAME_PACKET;
+	packet.packet_type = type;
 	packet.player = player;
 
 	//Add all set actionTypes to the packet
@@ -110,6 +109,8 @@ void ClientGame::sendPlayerData(playerData &player)
 	nextActionTypes.clear();
 
 	packet.serialize(packet_data);
+
+	printf("Sending player data\n");
 
 	NetworkServices::sendMessage(network->getSocket(), packet_data, packet_size);
 }

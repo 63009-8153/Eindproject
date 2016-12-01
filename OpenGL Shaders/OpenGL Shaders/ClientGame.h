@@ -23,7 +23,7 @@ public:
 	void disconnect();
 
 	//Send playerData to the server.
-	void sendPlayerData(playerData &player);
+	void sendPlayerData(playerData &player, packetTypes type);
 
 	//Add an actionType to the next packet send to the server.
 	void addActionType(actionTypes type);

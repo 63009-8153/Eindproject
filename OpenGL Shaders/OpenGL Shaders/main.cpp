@@ -9,7 +9,8 @@
 #define SSAA 2
 #define FXAA 3
 
-#define UPDATE_CYCLES_PER_SECOND 144
+#define UPDATE_CYCLES_PER_SECOND 10
+clock_t programStartClock = std::clock();
 
 // ============  Client Handle Variables ===========
 bool clientRunning = false;
@@ -222,6 +223,8 @@ void initialiseClient()
 {
 	client = ClientGame("127.0.0.1", "6881");
 
+	//TODO: Check if there was an error connecting!!
+
 	// Start a new thread and run the serverLoop function.
 	_beginthread(clientLoop, 0, NULL);
 }
@@ -241,20 +244,24 @@ void clientLoop(void *)
 
 		//Send game packets
 		if (inLobby) {
-			
+			playerData player;
+			client.addActionType(LOBBY_JOIN);
+
+			client.sendPlayerData(player, LOBBY_PACKET);
 		}
 		else {
 			//Send game packets if game has started
 			//client.sendPlayerData();
 		}
 
-		// Limit update cycle amount to UPDATE_CYCLES_PER_SECOND
-		while (glfwGetTime() < (last_render_time + (1.0f / (float)UPDATE_CYCLES_PER_SECOND))) {}
+		printf("Cycle Loop\n");
 
-		clientLoopDeltaTime = glfwGetTime() - clientLoopLastRenderTime; //Time in seconds it took for the last update cycle.
-		clientLoopLastRenderTime = glfwGetTime();
+		// Limit update cycle amount to UPDATE_CYCLES_PER_SECOND
+		while ((((float)(std::clock() - programStartClock)) / (float)CLOCKS_PER_SEC) < (clientLoopLastRenderTime + (1.0f / (float)UPDATE_CYCLES_PER_SECOND))) {}
+
+		clientLoopDeltaTime = (((float)(std::clock() - programStartClock) / (float)CLOCKS_PER_SEC)) - clientLoopLastRenderTime; //Time in miliseconds it took for the last update cycle.
+		clientLoopLastRenderTime = (((float)(std::clock() - programStartClock) / (float)CLOCKS_PER_SEC));
 	}
-	//TODO: End thread on end program
 
 	// End of function, end the thread and release its memory.
 	_endthread();
@@ -591,6 +598,8 @@ int main() {
 	terrainRenderer.cleanUp(); 
 	waterRenderer.cleanUp();
 	shadowRenderer.cleanUp();
+
+	clientRunning = false;
 
 	loader.cleanUp();
 
