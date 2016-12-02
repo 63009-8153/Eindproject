@@ -19,12 +19,15 @@ public:
 	std::vector<networkingErrors> getErrors();
 
 private:
+	// Error checking
 	int iResult;
 	std::vector<networkingErrors> errors;
 
+	// Ip address and port we are connected to
 	char ipAddress[39];
 	char port[5];
 
+	// The socket we are connected to
 	SOCKET ConnectSocket;
 };
 

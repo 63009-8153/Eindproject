@@ -14,6 +14,8 @@ class ClientGame
 public:
 	//Constructor
 	ClientGame();
+	// Constructor
+	// Connect to the server on ipAddress and port
 	ClientGame(char ipAddress[39], char port[5]);
 	//Destructor
 	~ClientGame();
@@ -40,13 +42,16 @@ public:
 	ClientNetwork* network;
 
 private:
+	// Error checking
 	std::vector<networkingErrors> errors;
 
+	// Network buffer
 	char network_data[MAX_PACKET_SIZE];
 
+	// Action types to be send in next packet
 	std::vector<actionTypes> nextActionTypes;
 
-	//All clients
+	// All clients
 	playerData allClients[MAX_LOBBYSIZE];
 	unsigned int myClientID;
 };

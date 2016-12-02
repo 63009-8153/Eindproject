@@ -6,11 +6,15 @@
 #include "enemyData.h"
 
 typedef struct {
+	// Packet Type, type of the packet
 	packetTypes packet_type;
 
+	// Lobby size
 	unsigned int lobbySize;
+	// All player data
 	playerData players[MAX_LOBBYSIZE];
 
+	// All enemy data
 	enemyData enemies[MAX_ENEMIES];
 
 	void serialize(char * data) {
@@ -22,9 +26,12 @@ typedef struct {
 } ClientReceivePacket;
 
 typedef struct {
+	// Packet Type, type of the packet
 	packetTypes packet_type;
 
+	// My player data
 	playerData player;
+	// My actions
 	actionTypes action_types[MAX_ACTIONS];
 
 	void serialize(char * data) {

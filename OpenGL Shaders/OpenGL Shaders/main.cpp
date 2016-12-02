@@ -17,6 +17,9 @@ bool clientRunning = false;
 ClientGame client;
 void clientLoop(void *);
 
+
+// ============  GAME PROGRAM VARIABLES ============
+
 GLFWwindow* window;
 void (*networkUpdateFunction)(void) = nullptr;
 
@@ -35,6 +38,8 @@ PostProcessRenderer sceneRenderer, antiAliasedRenderer;
 //Post Process image 
 PostProcessRenderer Contrast, VBlur, HBlur, brightFilter, combineFilter;
 
+
+// == RENDER ELEMENTS ==
 std::vector<texture2D> GuiElements;
 
 Terrain terrains[2];
@@ -52,6 +57,7 @@ textureCubemap waterReflection;
 
 texture2D GuiCherry;
 
+// == GAME INFO ==
 glm::vec3 clearColor = glm::vec3(0, 0, 0);
 
 double last_render_time = 0;
@@ -62,6 +68,9 @@ float fps = 0;
 int frame = 0;
 int gameState = 0;
 
+int Max_Fps = 60;
+bool limit_fps = true;
+
 /* The Anti-Aliasing type used in the program.
    Can be one of the following:
    * MSAA - MultiSampled Anti-Aliasing
@@ -70,16 +79,28 @@ int gameState = 0;
 */
 int AAType = FXAA;
 
+// ==  FUNCTIONS  ==
+
+// If trapMouseInWindow it returns the changed amount of pixels since last update
+// Else if returns the position the mouse is on
 glm::vec2 handleMouseInput(bool trapMouseInWindow);
+// Handle user input
 void handleInput();
+// Update time stuff
 void updateTime();
+// Render water textures
 void renderWaterTextures();
+// Render shadow textures
 void renderShadowTexture(Light *shadowLight);
+// Render water cubemap : WORK IN PROGRESS :
 void renderWaterCubeMap();
 
+// Initialise the client
 void initialiseClient(char ipAddress[39], char port[5]);
+// Client loop
 void clientLoop(void *);
 
+// Network functions
 void SendInitData();
 void SendLobbyData();
 void SendGameData();
@@ -350,6 +371,7 @@ int main() {
 
 		/* =================== Post processing below! ============== */
 
+		// Handle antialiasing
 		if (AAType == MSAA) {
 			//Resolve multisampled framebuffer to antialiased framebuffer
 			sceneRenderer.resolveTo(&antiAliasedRenderer);
@@ -384,12 +406,15 @@ int main() {
 		//Render contrast framebuffer to the screen
 		Contrast.renderToScreen();
 
+		// =====  GUI ELEMENTS =====
+
+		// Render GuiElements
 		guiRenderer.render(&GuiElements);
 		
 		//Swap Buffers (Send image to the screen)
 		glfwSwapBuffers(window);
 	
-		/* ================== End of rendering =======================*/
+		/* ================== End of rendering ======================= */
 
 		//Clear all objects from renderlists.
 		modelRenderer.clearRenderPass();
@@ -401,8 +426,10 @@ int main() {
 		//Update all time related variables.
 		updateTime();
 
-		// Limit fps to FPSLIMIT
-		while (glfwGetTime() < (last_render_time + (1.0f / (float)FPSLIMIT))) {}
+		if (limit_fps) {
+			// Limit fps to FPSLIMIT
+			while (glfwGetTime() < (last_render_time + (1.0f / (float)Max_Fps))) {}
+		}
 
 		//Update input
 		handleInput();
@@ -462,7 +489,7 @@ glm::vec2 handleMouseInput(bool trapMouseInWindow) {
 
 	return difference;
 }
-
+// Handle user input
 void handleInput()
 {
 	//Poll all events
@@ -489,7 +516,7 @@ void handleInput()
 		if (camera.position.y < 4.0f) camera.position.y = 4.0f;
 	}
 }
-
+// Update time stuff
 void updateTime()
 {
 	// Calculate delta time
@@ -502,7 +529,7 @@ void updateTime()
 
 	frame++;
 }
-
+// Render water textures
 void renderWaterTextures()
 {
 	//Enable clipdistance 0
@@ -542,7 +569,7 @@ void renderWaterTextures()
 	//Disable clipdistance 0
 	glDisable(GL_CLIP_DISTANCE0);
 }
-
+// Render shadow textures
 void renderShadowTexture(Light *shadowLight)
 {
 	//Render all objects that have to cast a shadow to the shadowmap
@@ -556,6 +583,7 @@ void renderShadowTexture(Light *shadowLight)
 	shadowRenderer.unbindCurrentFrameBuffer();
 }
 
+// Render water cubemap : WORK IN PROGRESS :
 void renderWaterCubeMap()
 {
 	//Add normalmapped models to renderer list
@@ -600,6 +628,7 @@ void renderWaterCubeMap()
 	terrainRenderer.clearRenderPass();
 }
 
+// Intialise the client and connect to the server on ipAddress and port
 void initialiseClient(char ipAddress[39], char port[5])
 {
 	// Initialise the client, create a connection and try to connect to the ip and port of the server.
@@ -642,7 +671,7 @@ void initialiseClient(char ipAddress[39], char port[5])
 	// Start a new thread and run the serverLoop function.
 	_beginthread(clientLoop, 0, NULL);
 }
-
+// The client loop
 void clientLoop(void *)
 {
 	double clientLoopDeltaTime = 0,
@@ -670,6 +699,11 @@ void clientLoop(void *)
 	_endthread();
 }
 
+
+// ======  SERVER HANDLE FUNCTIONS  ======
+
+// Send intitialisation data
+// When just connected to the server and need to send name.
 void SendInitData()
 {
 	char name[] = "Wouter140";
@@ -681,10 +715,15 @@ void SendInitData()
 
 	client.sendPlayerData(player, LOBBY_PACKET);
 }
+// Send lobby data
+// When in lobby
 void SendLobbyData()
 {
 
 }
+
+// Send game data
+// When in game
 void SendGameData()
 {
 

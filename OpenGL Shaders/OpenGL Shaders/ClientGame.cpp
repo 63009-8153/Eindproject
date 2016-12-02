@@ -1,38 +1,38 @@
 #include "ClientGame.h"
 
-//Constructor
+// Constructor
 ClientGame::ClientGame() {
 }
+// Constructor
+// Connect to the server on ipAddress and port
 ClientGame::ClientGame(char ipAddress[39], char port[5])
 {
 	//Create a new clientNetwork with IP-Address and Port
 	network = new ClientNetwork(ipAddress, port);
 	errors = network->getErrors();
 }
-//Destructor
+// Destructor
 ClientGame::~ClientGame()
 {
 }
 
 
-//Update the client with server data.
+// Update the client with server data.
 void ClientGame::updateClient()
 {
 	int data_length = network->receivePackets(network_data);
 
-    //no data recieved
+    // No data recieved
 	if (data_length <= 0) {
 		return;
 	}
 
-	//Loop through packets
+	// Loop through packets
 	unsigned int i = 0;
 	while (i < (unsigned int)data_length)
 	{
 		packetTypes packetType;
 		memcpy(&packetType, &(network_data[i]), sizeof(packetTypes));
-
-		printf("INFO:  -- Packet received with Type: %u\n", packetType);
 
 		switch (packetType) {
 
@@ -42,11 +42,13 @@ void ClientGame::updateClient()
 			packet.deserialize(&(network_data[i]));
 			i += sizeof(ClientReceivePacketLobby);
 
+			// Save all clients
 			for (unsigned int l = 0; l < MAX_LOBBYSIZE; l++)
 			{
 				allClients[l] = packet.players[l];
 			}
 			
+			// Check the action types
 			for (unsigned int t = 0; t < MAX_ACTIONS; t++)
 			{
 				switch (packet.action_types[t])
@@ -73,28 +75,28 @@ void ClientGame::updateClient()
 			packet.deserialize(&(network_data[i]));
 			i += sizeof(ClientReceivePacketLobby);
 
+			// We got accepted by the server and received our clientID
 			myClientID = (unsigned int)packet.players[0].playerID;
 
 			printf("INFO:  -- Client accepted by server! We got clientID: %d\n", packet.players[0].playerID);
-
-			
 		}
 			break;
 		case HEARTBEAT_PACKET:
 		{
 			i += sizeof(ClientReceivePacketLobby);
 
+			// We received a heartbeat packet from the server, instantly send one back
 			printf("INFO:  -- Sending Heartbeat response!\n");
 			sendHeartbeatPacket();
 		}
 			break;
 		default:
-			printf("ERROR: -- Packet received with Unknown packetType!!\n");
+			printf("ERROR: -- Packet received with Unknown packetType %u!!\n", packetType);
 			break;
 		}
 	}
 }
-//Disconnect from the server.
+// Disconnect from the server.
 void ClientGame::disconnect()
 {
 	const unsigned int packet_size = sizeof(ClientSendPacket);
@@ -109,7 +111,7 @@ void ClientGame::disconnect()
 	NetworkServices::sendMessage(network->getSocket(), packet_data, packet_size);
 }
 
-//Send playerData to the server.
+// Send playerData to the server.
 void ClientGame::sendPlayerData(playerData &player, packetTypes type)
 {
 	const unsigned int packet_size = sizeof(ClientSendPacket);
@@ -119,12 +121,12 @@ void ClientGame::sendPlayerData(playerData &player, packetTypes type)
 	packet.packet_type = type;
 	packet.player = player;
 
-	//Add all set actionTypes to the packet
+	// Add all set actionTypes to the packet
 	for (int i = 0; i < MAX_ACTIONS; i++) {
 		if(i < (int)nextActionTypes.size()) packet.action_types[i] = nextActionTypes[i];
 		else packet.action_types[i] = ACTION_NONE;
 	}
-
+	// Clear the actions
 	nextActionTypes.clear();
 
 	packet.serialize(packet_data);
@@ -146,9 +148,10 @@ void ClientGame::sendHeartbeatPacket()
 	NetworkServices::sendMessage(network->getSocket(), packet_data, packet_size);
 }
 
-//Add an actionType to the next packet send to the server.
+// Add an actionType to the next packet send to the server.
 void ClientGame::addActionType(actionTypes type)
 {
+	// If we are not at MAX_ACTIONS add the action, else dont add it.
 	if (nextActionTypes.size() < MAX_ACTIONS) {
 		nextActionTypes.push_back(type);
 	}
@@ -157,10 +160,11 @@ void ClientGame::addActionType(actionTypes type)
 	}
 }
 
-//Get the network error.
-//Resets to 0 after call
+// Get the network error.
+// Resets to 0 after call
 std::vector<networkingErrors> ClientGame::getErrors()
 {
+	// Return the errors
 	std::vector<networkingErrors> tmperrors = errors;
 	errors.clear();
 

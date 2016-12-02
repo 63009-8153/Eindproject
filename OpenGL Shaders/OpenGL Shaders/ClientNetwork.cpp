@@ -22,9 +22,9 @@ ClientNetwork::ClientNetwork(char _ipAddress[39], char _port[5])
 	// Initialize Winsock
 	iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
 
-	//Check if it didn't create an error.
+	// Check if it didn't create an error.
 	if (iResult != 0) {
-		printf("WSAStartup failed with error: %d\n", iResult);
+		printf("ERROR: -- WSAStartup failed with error: %d\n", iResult);
 		errors.push_back(WSA_STARTUP_ERROR);
 	}
 
@@ -37,10 +37,10 @@ ClientNetwork::ClientNetwork(char _ipAddress[39], char _port[5])
 	// Resolve ipaddress and port.
 	iResult = getaddrinfo(_ipAddress, _port, &hints, &result);
 
-	//Check if resolving didn't create an error.
+	// Check if resolving didn't create an error.
 	if (iResult != 0)
 	{
-		printf("getaddrinfo failed with error: %d\n", iResult);
+		printf("ERROR: -- getaddrinfo failed with error: %d\n", iResult);
 		WSACleanup();
 		errors.push_back(GET_ADDR_INFO_ERROR);
 	}
@@ -53,7 +53,7 @@ ClientNetwork::ClientNetwork(char _ipAddress[39], char _port[5])
 
 		//Check if the socket is not an INVALID_SOCKET.
 		if (ConnectSocket == INVALID_SOCKET) {
-			printf("socket failed with error: %ld\n", WSAGetLastError());
+			printf("ERROR: -- socket failed with error: %ld\n", WSAGetLastError());
 			WSACleanup();
 			errors.push_back(CREATE_SOCKET_ERROR);
 		}
@@ -61,12 +61,12 @@ ClientNetwork::ClientNetwork(char _ipAddress[39], char _port[5])
 		// Connect to the server.
 		iResult = connect(ConnectSocket, ptr->ai_addr, (int)ptr->ai_addrlen);
 
-		//Check if connecting to the server didn't create an error.
+		// Check if connecting to the server didn't create an error.
 		if (iResult == SOCKET_ERROR)
 		{
 			closesocket(ConnectSocket);
 			ConnectSocket = INVALID_SOCKET;
-			printf("The server is down... did not connect\n");
+			printf("ERROR: -- The server is down or was unable to connect\n");
 			errors.push_back(CONNECT_SOCKET_ERROR);
 		}
 	}
@@ -77,7 +77,7 @@ ClientNetwork::ClientNetwork(char _ipAddress[39], char _port[5])
 	// Check if creating the socket didn't fail.
 	if (ConnectSocket == INVALID_SOCKET)
 	{
-		printf("Unable to connect to server!\n");
+		printf("ERROR: -- Unable to connect to server!\n");
 		WSACleanup();
 		errors.push_back(ALL_CONNECTING_SOCKETS_ERROR);
 	}
@@ -94,7 +94,7 @@ ClientNetwork::ClientNetwork(char _ipAddress[39], char _port[5])
 	// Check if the socket didnt create an error.
 	if (iResult == SOCKET_ERROR)
 	{
-		printf("ioctlsocket failed with error: %d\n", WSAGetLastError());
+		printf("ERROR: -- ioctlsocket failed with error: %d\n", WSAGetLastError());
 		closesocket(ConnectSocket);
 		WSACleanup();
 		errors.push_back(SET_NONBLOCKING_ERROR);
@@ -104,24 +104,24 @@ ClientNetwork::ClientNetwork(char _ipAddress[39], char _port[5])
 	char value = 1;
 	setsockopt(ConnectSocket, IPPROTO_TCP, TCP_NODELAY, &value, sizeof(value));
 }
-//Destructor
+// Destructor
 ClientNetwork::~ClientNetwork()
 {
-	printf("Connection closed by destructor\n");
+	printf("INFO:  -- Connection closed by destructor\n");
 	closesocket(ConnectSocket);
 	WSACleanup();
 }
 
-//Get packets from server and put data in buffer
+// Get packets from server and put data in buffer
 int ClientNetwork::receivePackets(char * recvbuf)
 {
-	//Receive message from the server and put the data in recvbuf
+	// Receive message from the server and put the data in recvbuf
 	iResult = NetworkServices::receiveMessage(ConnectSocket, recvbuf, MAX_PACKET_SIZE);
 
-	//If the connection was closed.
+	// If the connection was closed or we got another error.
 	if (iResult == 0)
 	{
-		printf("INFO: Connection error, Socket was possibly closed!\n");
+		printf("INFO:  -- Connection error, Socket was possibly closed!\n");
 
 		closesocket(ConnectSocket);
 		WSACleanup();
@@ -132,14 +132,14 @@ int ClientNetwork::receivePackets(char * recvbuf)
 	return iResult;
 }
 
-//Get the server socket the client has connected to.
+// Get the server socket the client has connected to.
 SOCKET ClientNetwork::getSocket()
 {
 	return ConnectSocket;
 }
 
-//Get last errors
-//Removes all errors afterward.
+// Get last errors
+// Removes all errors afterward.
 std::vector<networkingErrors> ClientNetwork::getErrors()
 {
 	std::vector<networkingErrors> tmpErrors = errors;
