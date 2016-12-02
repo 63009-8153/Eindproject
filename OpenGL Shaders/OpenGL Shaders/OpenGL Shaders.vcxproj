@@ -166,7 +166,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="ClientGame.cpp" />
+    <ClCompile Include="ClientNetwork.cpp" />
+    <ClCompile Include="Enemy.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Model.cpp" />
+    <ClCompile Include="Player.cpp" />
     <ClCompile Include="WEngine\Camera\camera.cpp" />
     <ClCompile Include="WEngine\Display\DisplayManager.cpp" />
     <ClCompile Include="WEngine\FrameBuffers\framebuffer.cpp" />
@@ -178,6 +183,8 @@
     <ClCompile Include="WEngine\lodePNG\lodepng.cpp" />
     <ClCompile Include="WEngine\PostProcessing\PostProcessRenderer.cpp" />
     <ClCompile Include="WEngine\PostProcessing\PostProcessShaderProgram.cpp" />
+    <ClCompile Include="WEngine\Renderer\GuiRenderer.cpp" />
+    <ClCompile Include="WEngine\Renderer\GuiShaderProgram.cpp" />
     <ClCompile Include="WEngine\Renderer\MasterRenderer.cpp" />
     <ClCompile Include="WEngine\Renderer\renderer.cpp" />
     <ClCompile Include="WEngine\Renderer\ShaderProgram.cpp" />
@@ -192,6 +199,22 @@
     <ClCompile Include="WEngine\Water\WaterShaderProgram.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="actionTypes.h" />
+    <ClInclude Include="ClientGame.h" />
+    <ClInclude Include="ClientNetwork.h" />
+    <ClInclude Include="ClientPackage.h" />
+    <ClInclude Include="ClientPacketLobby.h" />
+    <ClInclude Include="Enemy.h" />
+    <ClInclude Include="enemyData.h" />
+    <ClInclude Include="Header.h" />
+    <ClInclude Include="networkData.h" />
+    <ClInclude Include="NetworkHeader.h" />
+    <ClInclude Include="Model.h" />
+    <ClInclude Include="networkingErrors.h" />
+    <ClInclude Include="NetworkServices.h" />
+    <ClInclude Include="packetTypes.h" />
+    <ClInclude Include="Player.h" />
+    <ClInclude Include="playerData.h" />
     <ClInclude Include="WEngine\Camera\camera.h" />
     <ClInclude Include="WEngine\Display\DisplayManager.h" />
     <ClInclude Include="WEngine\FrameBuffers\framebuffer.h" />
@@ -204,6 +227,8 @@
     <ClInclude Include="WEngine\lodePNG\lodepng.h" />
     <ClInclude Include="WEngine\PostProcessing\PostProcessRenderer.h" />
     <ClInclude Include="WEngine\PostProcessing\PostProcessShaderProgram.h" />
+    <ClInclude Include="WEngine\Renderer\GuiRenderer.h" />
+    <ClInclude Include="WEngine\Renderer\GuiShaderProgram.h" />
     <ClInclude Include="WEngine\Renderer\MasterRenderer.h" />
     <ClInclude Include="WEngine\Renderer\renderer.h" />
     <ClInclude Include="WEngine\Renderer\ShaderProgram.h" />
@@ -225,6 +250,8 @@
     <None Include="WEngine\Shaders\AntiAliasing\SSAA.fs" />
     <None Include="WEngine\Shaders\Default\Default.fs" />
     <None Include="WEngine\Shaders\Default\Default.vs" />
+    <None Include="WEngine\Shaders\Gui\GuiShader.fs" />
+    <None Include="WEngine\Shaders\Gui\GuiShader.vs" />
     <None Include="WEngine\Shaders\NormalMaps\NormalMap.fs" />
     <None Include="WEngine\Shaders\NormalMaps\NormalMap.vs" />
     <None Include="WEngine\Shaders\PostProcessing\brightFilter.fs" />
