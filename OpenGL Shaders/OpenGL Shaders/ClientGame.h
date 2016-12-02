@@ -7,6 +7,7 @@
 #include "networkData.h"
 #include "ClientNetwork.h"
 
+extern void(*networkUpdateFunction)(void);
 
 class ClientGame
 {
@@ -25,6 +26,9 @@ public:
 	//Send playerData to the server.
 	void sendPlayerData(playerData &player, packetTypes type);
 
+	// Send an heartbeat response packet to the server
+	void sendHeartbeatPacket();
+
 	//Add an actionType to the next packet send to the server.
 	void addActionType(actionTypes type);
 
@@ -41,5 +45,9 @@ private:
 	char network_data[MAX_PACKET_SIZE];
 
 	std::vector<actionTypes> nextActionTypes;
+
+	//All clients
+	playerData allClients[MAX_LOBBYSIZE];
+	unsigned int myClientID;
 };
 

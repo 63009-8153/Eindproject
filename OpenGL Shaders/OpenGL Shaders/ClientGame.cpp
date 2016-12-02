@@ -8,16 +8,6 @@ ClientGame::ClientGame(char ipAddress[39], char port[5])
 	//Create a new clientNetwork with IP-Address and Port
 	network = new ClientNetwork(ipAddress, port);
 	errors = network->getErrors();
-
-	if (errors.size() != 0) {
-		char name[] = "Wouter140\0";
-
-		playerData player;
-		memcpy(&player.playerName, name, strlen(name));
-		addActionType(LOBBY_JOIN);
-
-		sendPlayerData(player, LOBBY_PACKET);
-	}
 }
 //Destructor
 ClientGame::~ClientGame()
@@ -52,6 +42,21 @@ void ClientGame::updateClient()
 			packet.deserialize(&(network_data[i]));
 			i += sizeof(ClientReceivePacketLobby);
 
+			for (unsigned int l = 0; l < MAX_LOBBYSIZE; l++)
+			{
+				allClients[l] = packet.players[l];
+			}
+			
+			for (unsigned int t = 0; t < MAX_ACTIONS; t++)
+			{
+				switch (packet.action_types[t])
+				{
+					// If the server has received our initialisation packet, stop sending it.
+					case GAME_RECEIVED_INIT:
+						networkUpdateFunction = nullptr;
+						break;
+				}
+			}
 		}
 			break;
 		case GAME_PACKET:
@@ -59,6 +64,7 @@ void ClientGame::updateClient()
 			ClientReceivePacket packet;
 			packet.deserialize(&(network_data[i]));
 			i += sizeof(ClientReceivePacket);
+
 		}
 			break;
 		case INITALISATION_PACKET:
@@ -67,7 +73,19 @@ void ClientGame::updateClient()
 			packet.deserialize(&(network_data[i]));
 			i += sizeof(ClientReceivePacketLobby);
 
+			myClientID = (unsigned int)packet.players[0].playerID;
+
 			printf("INFO:  -- Client accepted by server! We got clientID: %d\n", packet.players[0].playerID);
+
+			
+		}
+			break;
+		case HEARTBEAT_PACKET:
+		{
+			i += sizeof(ClientReceivePacketLobby);
+
+			printf("INFO:  -- Sending Heartbeat response!\n");
+			sendHeartbeatPacket();
 		}
 			break;
 		default:
@@ -102,15 +120,28 @@ void ClientGame::sendPlayerData(playerData &player, packetTypes type)
 	packet.player = player;
 
 	//Add all set actionTypes to the packet
-	for (int i = 0; i < std::min((int)nextActionTypes.size(), MAX_ACTIONS); i++) {
-		packet.action_types[i] = nextActionTypes[i];
+	for (int i = 0; i < MAX_ACTIONS; i++) {
+		if(i < (int)nextActionTypes.size()) packet.action_types[i] = nextActionTypes[i];
+		else packet.action_types[i] = ACTION_NONE;
 	}
 
 	nextActionTypes.clear();
 
 	packet.serialize(packet_data);
 
-	printf("Sending player data\n");
+	NetworkServices::sendMessage(network->getSocket(), packet_data, packet_size);
+}
+
+// Send an heartbeat response packet to the server
+void ClientGame::sendHeartbeatPacket()
+{
+	const unsigned int packet_size = sizeof(ClientSendPacket);
+	char packet_data[packet_size];
+
+	ClientSendPacket packet;
+	packet.packet_type = HEARTBEAT_PACKET;
+
+	packet.serialize(packet_data);
 
 	NetworkServices::sendMessage(network->getSocket(), packet_data, packet_size);
 }
@@ -122,7 +153,7 @@ void ClientGame::addActionType(actionTypes type)
 		nextActionTypes.push_back(type);
 	}
 	else {
-		printf("Already added %d actionTypes.\nThis is the maximum to be send!\nLosing last actionType!\n", MAX_ACTIONS);
+		printf("WARNING -- Already added %d actionTypes.\nThis is the maximum to be send!\nLosing last actionType!\n", MAX_ACTIONS);
 	}
 }
 

@@ -8,6 +8,8 @@ enum actionTypes {
 
 	GAME_START		= 20,
 	GAME_DISCONNECT = 21,
+	GAME_RECEIVED_INIT = 22,
+	GAME_INITIALISATION = 23,
 
 	MOVE_FORWARD	= 30,
 	MOVE_BACKWARD	= 31,
@@ -15,5 +17,5 @@ enum actionTypes {
 	MOVE_RIGHT		= 33,
 
 	SHOOT_ONCE		= 40,
-	SHOOT_HOLD		= 41
+	SHOOT_HOLD		= 41,
 };
