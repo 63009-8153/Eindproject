@@ -40,6 +40,18 @@ PostProcessRenderer Contrast, VBlur, HBlur, brightFilter, combineFilter;
 
 
 // == RENDER ELEMENTS ==
+GLuint	floorTextureGrass,
+		floorTextureR,
+		floorTextureG,
+		floorTextureB,
+		floorBlendMap;
+
+GLuint	lampTexture,
+		lampSpecularMap;
+
+GLuint	barrelTexture,
+		barrelNormal;
+
 std::vector<texture2D> GuiElements;
 
 Terrain terrains[2];
@@ -51,13 +63,13 @@ WaterTile water;
 gameobject lamps[4];
 gameobject model, model2, model3;
 
-Skybox skybox, skybox2;
+Skybox skybox;
 
 textureCubemap waterReflection;
 
 texture2D GuiCherry;
 
-// == GAME INFO ==
+// ===  GAME INFO  ===
 glm::vec3 clearColor = glm::vec3(0, 0, 0);
 
 double last_render_time = 0;
@@ -79,7 +91,21 @@ bool limit_fps = true;
 */
 int AAType = FXAA;
 
-// ==  FUNCTIONS  ==
+// ===  FUNCTIONS  ===
+
+// Load a model with only a texture
+void loadModel(gameobject &model, std::string modelFilename, glm::vec3 pos, glm::vec3 rot, glm::vec3 scale, GLuint textureID, float shineDamper, float reflectivity, float ambientLight);
+// Load a model with a texture and normalMap
+void loadModel(gameobject &model, std::string modelFilename, glm::vec3 pos, glm::vec3 rot, glm::vec3 scale, GLuint textureID, GLuint normalTextureID, float shineDamper, float reflectivity, float ambientLight);
+// Load a model with a texture, normalMap and a shadowMap
+void loadModel(gameobject &model, std::string modelFilename, glm::vec3 pos, glm::vec3 rot, glm::vec3 scale, GLuint textureID, GLuint normalTextureID, GLuint shadowMapID, float shineDamper, float reflectivity, float ambientLight);
+
+// Set a model with only a texture
+void loadModel(gameobject &model, gameobject &oriModel, glm::vec3 pos, glm::vec3 rot, glm::vec3 scale, GLuint textureID, float shineDamper, float reflectivity, float ambientLight);
+// Set a model with a texture and normalMap
+void loadModel(gameobject &model, gameobject &oriModel, glm::vec3 pos, glm::vec3 rot, glm::vec3 scale, GLuint textureID, GLuint normalTextureID, float shineDamper, float reflectivity, float ambientLight);
+// Set a model with a texture, normalMap and a shadowMap
+void loadModel(gameobject &model, gameobject &oriModel, glm::vec3 pos, glm::vec3 rot, glm::vec3 scale, GLuint textureID, GLuint normalTextureID, GLuint shadowMapID, float shineDamper, float reflectivity, float ambientLight);
 
 // If trapMouseInWindow it returns the changed amount of pixels since last update
 // Else if returns the position the mouse is on
@@ -105,6 +131,11 @@ void SendInitData();
 void SendLobbyData();
 void SendGameData();
 
+// Load all graphics
+void loadGraphics();
+// Load all models
+void loadModels();
+
 int main() {
 
 	// ============  NETWORKING LOGIC =================
@@ -112,34 +143,31 @@ int main() {
 	// Initialise, set the client and connect to the server.
 	initialiseClient("127.0.0.1", "6881");
 
+
 	// ===============  GAME LOGIC ====================
 
 	// Initialise GLFW and throw error if it failed
 	if (!glfwInit()){
 		throw std::runtime_error("Failed to initialize GLFW");
-		return -1;
+		exit(-1);
 	}
 
 	// ========  Initialise  ==========
 	last_render_time = glfwGetTime();
 
-	// ==== DISPLAY ====
-
+	// ===  DISPLAY  ===
 	//Create a display and initialise GLEW
 	DisplayManager::createDisplay(SCREEN_WIDTH, SCREEN_HEIGHT, PROGRAM_NAME, false);
 
-	//Just disable vsync for max fps.
+	//Just disable vsync for max fps :).
 	DisplayManager::disableVsync();
 
-	//glfwSetKeyCallback(window, keyfun);
-
-	// ==== CAMERA ====
-
-	//Intialise the camera and set its position
+	// ===  CAMERA  ===
+	//Intialise the camera and set its position and rotation
 	camera.Initalise(75.0f, SCREEN_WIDTH, SCREEN_HEIGHT, 0.01f, 1000.0f);
 	camera.Set(glm::vec3(0, 10, -50), glm::vec3(0, _PI, 0));
 
-	// ==== Framebuffers ====
+	// ===  Framebuffers  ===
 
 	//Initialise framebuffer for cubemap texture waterReflection
 	waterReflection.initialseFrameBuffer(1280);
@@ -177,122 +205,52 @@ int main() {
 	waterRenderer.load("WEngine/Shaders/Water/WaterShader.vs", "WEngine/Shaders/Water/WaterShader.fs", &camera);
 	shadowRenderer.load("WEngine/Shaders/Shadows/ShadowShader.vs", "WEngine/Shaders/Shadows/ShadowShader.fs");
 
-	// ==== SKYBOX ====
-
+	// ===  SKYBOX  ===
 	std::string skyboxTextures[6] = {
-		"res/Skybox/hw_desertnight/desert_night_right.bmp",
-		"res/Skybox/hw_desertnight/desert_night_left.bmp",
-		"res/Skybox/hw_desertnight/desert_night_top.bmp",
-		"res/Skybox/hw_desertnight/desert_night_bottom.bmp",
-		"res/Skybox/hw_desertnight/desert_night_back.bmp",
-		"res/Skybox/hw_desertnight/desert_night_front.bmp",
+		"res/Skybox/hw_desertnight/desert_night_right.bmp", // RIGHT
+		"res/Skybox/hw_desertnight/desert_night_left.bmp",  // LEFT
+		"res/Skybox/hw_desertnight/desert_night_top.bmp",	// TOP
+		"res/Skybox/hw_desertnight/desert_night_bottom.bmp",// BOTTOM
+		"res/Skybox/hw_desertnight/desert_night_back.bmp",	// BACK
+		"res/Skybox/hw_desertnight/desert_night_front.bmp",	// FRONT
 	};
 	skybox.load("WEngine/Shaders/Skybox/Skybox.vs", "WEngine/Shaders/Skybox/Skybox.fs", &camera, skyboxTextures);
-	skybox2.load("WEngine/Shaders/Skybox/Skybox.vs", "WEngine/Shaders/Skybox/Skybox.fs", &camera, skyboxTextures);
 
-	// ==== GUI ====
-
+	// ===  GUI  ===
 	GuiCherry.loadImage("res/Cherry/cherry.bmp", true, false);
 	GuiCherry.rotation = glm::radians(10.0f);
 	GuiCherry.scale = glm::vec2(0.5f);
 	GuiCherry.position = glm::vec2(-0.5f, 0.5f);
 	
-	// ==== INPUT ====
-
+	// ===  INPUT  ===
 	//Set input mode
 	glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
 
-	//Initialise gameState
-	gameState = 1;
+	//Set input callback
+	//glfwSetKeyCallback(window, keyfun);
 
-	// ==== MODELS ====
+	// ===  LOAD AND INITIALISE MODELS  ===
+	// Load all graphics
+	loadGraphics();
 
-	//Load all multitexture textures
-	GLuint	floorTextureGrass = loader.loadTexture("res/Terrain/grassy2.bmp", true),
-			floorTextureR	  = loader.loadTexture("res/Terrain/mud.bmp", true),
-			floorTextureG	  = loader.loadTexture("res/Terrain/grassFlowers.bmp", true),
-			floorTextureB	  = loader.loadTexture("res/Terrain/path.bmp", true),
-			floorBlendMap	  = loader.loadTexture("res/Terrain/blendMap.bmp", true);
-	//Create terrains with a heightmap, set position and all multitexture textures
-	terrains[0].createWithHeightmap("res/heightmap.bmp", -1, -1, &loader, floorTextureGrass, floorTextureR, floorTextureG, floorTextureB, floorBlendMap);
-	terrains[1].createWithHeightmap("res/heightmap.bmp",  0, -1, &loader, floorTextureGrass, floorTextureR, floorTextureG, floorTextureB, floorBlendMap);
-	//Set ambientLight on the terrain models
-	terrains[0].getModel()->setAmbientLight(0.2f);
-	terrains[1].getModel()->setAmbientLight(0.2f);
-	//Set shadowmap texture on the terrain
-	terrains[0].getModel()->setShadowMap(shadowRenderer.getShadowDepthTexture());
-	terrains[1].getModel()->setShadowMap(shadowRenderer.getShadowDepthTexture());
+	// Load all models and initialise
+	loadModels();
 
-	//Load lamp models and texture
-	GLuint lampTexture = loader.loadTexture("res/Lantern/lantern.bmp", true);
-	GLuint lampSpecularMap = loader.loadTexture("res/Lantern/lanternS.bmp", false);
-	gameobject lampModel = loader.loadObjFile("res/Lantern/lantern.obj", true, false);
-
-	//Set lamp model and texture
-	for (int i = 0; i < 4; i++){
-		lamps[i] = gameobject(&lampModel);
-		lamps[i].addTexture(lampTexture);
-		lamps[i].setSpecularMap(lampSpecularMap);
-	}
-
-	//Initialise the models position, rotation and scale.
-	lamps[0].init(glm::vec3(20, terrains[1].getHeight(20, -30), -30), glm::vec3(0, 0, 0), glm::vec3(1.3f, 1.3f, 1.3f));
-	lamps[1].init(glm::vec3(370, terrains[1].getHeight(370, -300), -300), glm::vec3(0, 0, 0), glm::vec3(1.3f, 1.3f, 1.3f));
-	lamps[2].init(glm::vec3(293, terrains[1].getHeight(293, -305), -305), glm::vec3(0, 0, 0), glm::vec3(1.3f, 1.3f, 1.3f));
-	lamps[3].init(glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1.3f, 1.3f, 1.3f));
-
-	//Create a model with a .obj file
-	model = gameobject(&loader.loadObjFile("res/Barrel/barrel.obj", true, false));
-	model2 = gameobject(&model);
-
-	//Load the texture and normalmap for the barrel model
-	GLuint barrelTexture = loader.loadTexture("res/Barrel/barrel.bmp", true);
-	GLuint barrelNormal = loader.loadTexture("res/Barrel/barrelNormal.bmp", true);
-
-	//Load the texture for the model and give it to the model.
-	model.addTexture(barrelTexture);
-	//Set the normal map texture to the model
-	model.setNormalMap(barrelNormal);
-	//Initialise the models position, rotation and scale.
-	model.init(glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1.5f, 1.5f, 1.5f));
-	//Set shinyness to model
-	model.setShineDamper(100);
-	model.setReflectivity(1);
-	//Set model ambient light
-	model.setAmbientLight(0.1f);
-	model.setShadowMap(shadowRenderer.getShadowDepthTexture());
-
-	/*model.setEnviromentCubeMapID(waterReflection.textureid);
-	model.hasReflectionCubeMap = true;
-	model.hasRefractionCubeMap = false;
-	model.reflectionRatio = 0.5f;
-	model.reflectionRefractionRatio = 0.5f;*/
-
-	//Load the texture for the model and give it to the model.
-	model2.addTexture(barrelTexture);
-	//Set the normal map texture to the model
-	model2.setNormalMap(barrelNormal);
-	//Initialise the models position, rotation and scale.
-	model2.init(glm::vec3(20, terrains[1].getHeight(20, -10), -300), glm::vec3(0, 0, 0), glm::vec3(1.5f, 1.5f, 1.5f));
-	//Set shinyness to model
-	model2.setShineDamper(100);
-	model2.setReflectivity(1);
-	//Set model ambient light
-	model2.setAmbientLight(0.1f);
-	model2.setShadowMap(shadowRenderer.getShadowDepthTexture());
-	
-	//Create lights
+	// ===  LIGHTS  ===
+	//Create lights and add them to the light list
 	Light sun(glm::vec3(0, 1000, -7000), glm::vec3(0.35f, 0.35f, 0.35f));
-	Light light0(glm::vec3(185, terrains[1].getHeight(185, -293) + 13.2f, -293), glm::vec3(2, 0, 0), glm::vec3(1, 0.01f, 0.002f)); //Red
-	Light light1(glm::vec3(370, terrains[1].getHeight(370, -300) + 13.2f, -300), glm::vec3(0, 2, 2), glm::vec3(1, 0.01f, 0.002f));
-	Light light2(glm::vec3(293, terrains[1].getHeight(293, -305) + 13.2f, -305), glm::vec3(2, 2, 0), glm::vec3(1, 0.01f, 0.002f));
-
-	//Add lights to the list
 	lights.push_back(&sun);
-	lights.push_back(&light0);
-	lights.push_back(&light1);
-	lights.push_back(&light2);
 
+	Light light0(glm::vec3(185, terrains[1].getHeight(185, -293) + 13.2f, -293), glm::vec3(2, 0, 0), glm::vec3(1, 0.01f, 0.002f)); //Red
+	lights.push_back(&light0);
+
+	Light light1(glm::vec3(370, terrains[1].getHeight(370, -300) + 13.2f, -300), glm::vec3(0, 2, 2), glm::vec3(1, 0.01f, 0.002f));
+	lights.push_back(&light1);
+
+	Light light2(glm::vec3(293, terrains[1].getHeight(293, -305) + 13.2f, -305), glm::vec3(2, 2, 0), glm::vec3(1, 0.01f, 0.002f));
+	lights.push_back(&light2);
+	
+	// ===  WATER  ===
 	//Create a waterTile and set its attributes
 	water = WaterTile(glm::vec3(0, 2, -400), glm::vec3(0, 0, 0), glm::vec3(800, 500, 400));
 	water.setReflectionTexture(waterRenderer.getReflectionTexture());
@@ -305,11 +263,12 @@ int main() {
 	water.getWaterTile()->setAmbientLight(0.5f);
 	water.getWaterTile()->setShadowMap(shadowRenderer.getShadowDepthTexture());
 
-	lights[0]->setPosition(glm::vec3(sin((float)frame / 100.0f) * 100.0f, 100.0f, cos((float)frame / 100.0f) * 100.0f));
-
-	renderWaterCubeMap();
+	//renderWaterCubeMap();
 
 	//GuiElements.push_back(GuiCherry);
+
+	//Initialise gameState
+	gameState = 1;
 
 	do {
 		//renderWaterCubeMap();
@@ -529,6 +488,110 @@ void updateTime()
 
 	frame++;
 }
+
+//  =========  Initialise a model  ===========
+
+// Load a model with only a texture
+void loadModel(gameobject &model, // Variable to set
+	std::string modelFilename, // Model filename
+	glm::vec3 pos, glm::vec3 rot, glm::vec3 scale, // Initial Position, rotation and scale
+	GLuint textureID,  // Textures
+	float shineDamper, float reflectivity,
+	float ambientLight) // Reflectivity
+{
+	// Load modeldata and set the variable.
+	model = gameobject(loader.loadObjFile(modelFilename.c_str(), false, false));
+	// Initialise model
+	model.init(pos, rot, scale);
+
+	// Add a texture
+	model.addTexture(textureID);
+
+	// Set the shineDamper
+	model.setShineDamper(shineDamper);
+	// Set the reflectivity
+	model.setReflectivity(reflectivity);
+
+	// Set the ambientLight
+	model.setAmbientLight(ambientLight);
+}
+// Load a model with a texture and normalMap
+void loadModel(gameobject &model, // Variable to set
+	std::string modelFilename, // Model filename
+	glm::vec3 pos, glm::vec3 rot, glm::vec3 scale, // Initial Position, rotation and scale
+	GLuint textureID, GLuint normalTextureID, // Textures
+	float shineDamper, float reflectivity,
+	float ambientLight) // Reflectivity
+{
+	loadModel(model, modelFilename, pos, rot, scale, textureID, shineDamper, reflectivity, ambientLight);
+
+	// Set the normalmap
+	model.setNormalMap(normalTextureID);
+}
+// Load a model with a texture, normalMap and a shadowMap
+void loadModel(gameobject &model, // Variable to set
+	std::string modelFilename, // Model filename
+	glm::vec3 pos, glm::vec3 rot, glm::vec3 scale, // Initial Position, rotation and scale
+	GLuint textureID, GLuint normalTextureID, GLuint shadowMapID, // Textures
+	float shineDamper, float reflectivity,
+	float ambientLight)
+{
+	// Load the model
+	loadModel(model, modelFilename, pos, rot, scale, textureID, normalTextureID, shineDamper, reflectivity, ambientLight);
+
+	// Set the shadowmap
+	model.setShadowMap(shadowMapID);
+}
+
+// Set a model with only a texture
+void loadModel(gameobject &model, gameobject &oriModel, // Variable to set
+	glm::vec3 pos, glm::vec3 rot, glm::vec3 scale, // Initial Position, rotation and scale
+	GLuint textureID,  // Textures
+	float shineDamper, float reflectivity,
+	float ambientLight) // Reflectivity
+{
+	model = gameobject(oriModel);
+
+	// Initialise model
+	model.init(pos, rot, scale);
+
+	// Add a texture
+	model.addTexture(textureID);
+
+	// Set the shineDamper
+	model.setShineDamper(shineDamper);
+	// Set the reflectivity
+	model.setReflectivity(reflectivity);
+
+	// Set the ambientLight
+	model.setAmbientLight(ambientLight);
+}
+// Set a model with a texture and normalMap
+void loadModel(gameobject &model, gameobject &oriModel,// Variable to set
+	glm::vec3 pos, glm::vec3 rot, glm::vec3 scale, // Initial Position, rotation and scale
+	GLuint textureID, GLuint normalTextureID, // Textures
+	float shineDamper, float reflectivity,
+	float ambientLight) // Reflectivity
+{
+	loadModel(model, oriModel, pos, rot, scale, textureID, shineDamper, reflectivity, ambientLight);
+
+	// Set the normalmap
+	model.setNormalMap(normalTextureID);
+}
+// Set a model with a texture, normalMap and a shadowMap
+void loadModel(gameobject &model, gameobject &oriModel,// Variable to set
+	glm::vec3 pos, glm::vec3 rot, glm::vec3 scale, // Initial Position, rotation and scale
+	GLuint textureID, GLuint normalTextureID, GLuint shadowMapID, // Textures
+	float shineDamper, float reflectivity,
+	float ambientLight)
+{
+	// Load the model
+	loadModel(model, oriModel, pos, rot, scale, textureID, normalTextureID, shineDamper, reflectivity, ambientLight);
+
+	// Set the shadowmap
+	model.setShadowMap(shadowMapID);
+}
+
 // Render water textures
 void renderWaterTextures()
 {
@@ -727,4 +790,65 @@ void SendLobbyData()
 void SendGameData()
 {
 
+}
+
+// Load all graphics
+void loadGraphics()
+{
+	floorTextureGrass = loader.loadTexture("res/Terrain/grassy2.bmp", true);
+	floorTextureR = loader.loadTexture("res/Terrain/mud.bmp", true);
+	floorTextureG = loader.loadTexture("res/Terrain/grassFlowers.bmp", true);
+	floorTextureB = loader.loadTexture("res/Terrain/path.bmp", true);
+	floorBlendMap = loader.loadTexture("res/Terrain/blendMap.bmp", true);
+
+	//Load the texture and normalmap for the lamp model
+	lampTexture = loader.loadTexture("res/Lantern/lantern.bmp", true);
+	lampSpecularMap = loader.loadTexture("res/Lantern/lanternS.bmp", false);
+
+	//Load the texture and normalmap for the barrel model
+	barrelTexture = loader.loadTexture("res/Barrel/barrel.bmp", true);
+	barrelNormal = loader.loadTexture("res/Barrel/barrelNormal.bmp", true);
+}
+// Load all models
+void loadModels()
+{
+	// ===  TERRAIN  ===
+	//Create terrains with a heightmap, set position and all multitexture textures
+	terrains[0].createWithHeightmap("res/heightmap.bmp", -1, -1, &loader, floorTextureGrass, floorTextureR, floorTextureG, floorTextureB, floorBlendMap);
+	terrains[0].getModel()->setAmbientLight(0.2f);
+	terrains[0].getModel()->setShadowMap(shadowRenderer.getShadowDepthTexture());
+
+	terrains[1].createWithHeightmap("res/heightmap.bmp", 0, -1, &loader, floorTextureGrass, floorTextureR, floorTextureG, floorTextureB, floorBlendMap);
+	terrains[1].getModel()->setAmbientLight(0.2f);
+	terrains[1].getModel()->setShadowMap(shadowRenderer.getShadowDepthTexture());
+
+	// ===  LAMP  ===
+	// Load the lampModel
+	gameobject lampModel = loader.loadObjFile("res/Lantern/lantern.obj", true, false);
+
+	//Set lamp model and texture for all lamps
+	for (int i = 0; i < 4; i++) {
+		lamps[i] = gameobject(&lampModel);
+		lamps[i].addTexture(lampTexture);
+		lamps[i].setSpecularMap(lampSpecularMap);
+	}
+
+	//Initialise the models position, rotation and scale.
+	lamps[0].init(glm::vec3(20, terrains[1].getHeight(20, -30), -30), glm::vec3(0, 0, 0), glm::vec3(1.3f, 1.3f, 1.3f));
+	lamps[1].init(glm::vec3(370, terrains[1].getHeight(370, -300), -300), glm::vec3(0, 0, 0), glm::vec3(1.3f, 1.3f, 1.3f));
+	lamps[2].init(glm::vec3(293, terrains[1].getHeight(293, -305), -305), glm::vec3(0, 0, 0), glm::vec3(1.3f, 1.3f, 1.3f));
+	lamps[3].init(glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1.3f, 1.3f, 1.3f));
+
+	// ===  BARRELS  ===
+	// Load barrelModel 1
+	loadModel(model, "res/Barrel/barrel.obj",
+		glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1.5f, 1.5f, 1.5f),
+		barrelTexture, barrelNormal, shadowRenderer.getShadowDepthTexture(),
+		100.0f, 1.0f, 0.1f);
+
+	// Load barrelModel 2
+	loadModel(model2, model,
+		glm::vec3(20, terrains[1].getHeight(20, -10), -300), glm::vec3(0, 0, 0), glm::vec3(1.5f, 1.5f, 1.5f),
+		barrelTexture, barrelNormal, shadowRenderer.getShadowDepthTexture(),
+		100.0f, 1.0f, 0.1f);
 }

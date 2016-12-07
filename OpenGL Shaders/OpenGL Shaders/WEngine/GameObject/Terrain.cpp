@@ -19,7 +19,7 @@ void Terrain::create(int gridX, int gridZ, Loader *loader, GLuint textID0, GLuin
 	TerrainObject.addTexture(textID4);
 
 	//Set the position in the world
-	TerrainObject.init(glm::vec3(gridX * SIZE, 0, gridZ * SIZE), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1));
+	TerrainObject.init(glm::vec3(gridX * TERRAINSIZE, 0, gridZ * TERRAINSIZE), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1));
 }
 
 //Create a new terrain with the heights from a heightmap
@@ -36,7 +36,7 @@ void Terrain::createWithHeightmap(const char * heightmapPath, int gridX, int gri
 	TerrainObject.addTexture(textID4);
 
 	//Set the position in the world
-	TerrainObject.init(glm::vec3(gridX * SIZE, 0, gridZ * SIZE), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1));
+	TerrainObject.init(glm::vec3(gridX * TERRAINSIZE, 0, gridZ * TERRAINSIZE), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1));
 }
 
 //Get the gameobject
@@ -58,9 +58,9 @@ gameobject Terrain::generateTerrain(Loader *loader) {
 		for (unsigned int x = 0; x < VERTEX_COUNT; x++) {
 			//For each vertex in the depth
 			vertex.push_back(glm::vec3(
-				((float)x / ((float)VERTEX_COUNT - 1.0f)) * SIZE, //x
+				((float)x / ((float)VERTEX_COUNT - 1.0f)) * TERRAINSIZE, //x
 				0, //y
-				((float)z / ((float)VERTEX_COUNT - 1.0f)) * SIZE  //z
+				((float)z / ((float)VERTEX_COUNT - 1.0f)) * TERRAINSIZE  //z
 				));
 
 			normal.push_back(glm::vec3(0, 1, 0));
@@ -148,9 +148,9 @@ gameobject Terrain::generateTerrainWithHeightmap(Loader *loader, const char * he
 
 			//Create a vertex
 			vertex.push_back(glm::vec3(
-				((float)x / ((float)heightmapHeight - 1.0f)) * SIZE, //x
+				((float)x / ((float)heightmapHeight - 1.0f)) * TERRAINSIZE, //x
 				height - 100.0f, //y
-				((float)z / ((float)heightmapHeight - 1.0f)) * SIZE  //z
+				((float)z / ((float)heightmapHeight - 1.0f)) * TERRAINSIZE  //z
 			));
 
 			//Create normal
@@ -241,7 +241,7 @@ float Terrain::getHeight(float worldX, float worldY)
 	gameobject *T = getModel();
 	float terrainX = worldX - T->getPosition().x;
 	float terrainZ = worldY - T->getPosition().z;
-	float gridSquareSize = SIZE / ((float)heightmapHeight - 1);
+	float gridSquareSize = TERRAINSIZE / ((float)heightmapHeight - 1);
 	int gridX = (int)floor(terrainX / gridSquareSize);
 	int gridZ = (int)floor(terrainZ / gridSquareSize);
 
