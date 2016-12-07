@@ -3,6 +3,10 @@
 #include "WEngine/Usage.h"
 #include "ReactPhysics3D/reactphysics3d.h"
 
+#include "Enemy.h"
+#include "Model.h"
+#include "Player.h"
+
 #define WAVE_SPEED 0.03
 
 #define MSAA 1
@@ -22,6 +26,11 @@ void clientLoop(void *);
 
 GLFWwindow* window;
 void (*networkUpdateFunction)(void) = nullptr;
+
+float mouseSensitivity = 1.0f;
+
+Player player;
+Player otherPlayers[MAX_LOBBYSIZE];
 
 Loader loader;
 Camera camera;
@@ -60,8 +69,8 @@ std::vector<Light*> lights;
 
 WaterTile water;
 
-gameobject lamps[4];
-gameobject model, model2, model3;
+Model lamps[4];
+Model model, model2, model3;
 
 Skybox skybox;
 
@@ -94,24 +103,24 @@ int AAType = FXAA;
 // ===  FUNCTIONS  ===
 
 // Load a model with only a texture
-void loadModel(gameobject &model, std::string modelFilename, glm::vec3 pos, glm::vec3 rot, glm::vec3 scale, GLuint textureID, float shineDamper, float reflectivity, float ambientLight);
+void loadModel(Model &model, std::string modelFilename, glm::vec3 pos, glm::vec3 rot, glm::vec3 scale, GLuint textureID, float shineDamper, float reflectivity, float ambientLight);
 // Load a model with a texture and normalMap
-void loadModel(gameobject &model, std::string modelFilename, glm::vec3 pos, glm::vec3 rot, glm::vec3 scale, GLuint textureID, GLuint normalTextureID, float shineDamper, float reflectivity, float ambientLight);
+void loadModel(Model &model, std::string modelFilename, glm::vec3 pos, glm::vec3 rot, glm::vec3 scale, GLuint textureID, GLuint normalTextureID, float shineDamper, float reflectivity, float ambientLight);
 // Load a model with a texture, normalMap and a shadowMap
-void loadModel(gameobject &model, std::string modelFilename, glm::vec3 pos, glm::vec3 rot, glm::vec3 scale, GLuint textureID, GLuint normalTextureID, GLuint shadowMapID, float shineDamper, float reflectivity, float ambientLight);
+void loadModel(Model &model, std::string modelFilename, glm::vec3 pos, glm::vec3 rot, glm::vec3 scale, GLuint textureID, GLuint normalTextureID, GLuint shadowMapID, float shineDamper, float reflectivity, float ambientLight);
 
 // Set a model with only a texture
-void loadModel(gameobject &model, gameobject &oriModel, glm::vec3 pos, glm::vec3 rot, glm::vec3 scale, GLuint textureID, float shineDamper, float reflectivity, float ambientLight);
+void loadModel(Model &model, Model &oriModel, glm::vec3 pos, glm::vec3 rot, glm::vec3 scale, GLuint textureID, float shineDamper, float reflectivity, float ambientLight);
 // Set a model with a texture and normalMap
-void loadModel(gameobject &model, gameobject &oriModel, glm::vec3 pos, glm::vec3 rot, glm::vec3 scale, GLuint textureID, GLuint normalTextureID, float shineDamper, float reflectivity, float ambientLight);
+void loadModel(Model &model, Model &oriModel, glm::vec3 pos, glm::vec3 rot, glm::vec3 scale, GLuint textureID, GLuint normalTextureID, float shineDamper, float reflectivity, float ambientLight);
 // Set a model with a texture, normalMap and a shadowMap
-void loadModel(gameobject &model, gameobject &oriModel, glm::vec3 pos, glm::vec3 rot, glm::vec3 scale, GLuint textureID, GLuint normalTextureID, GLuint shadowMapID, float shineDamper, float reflectivity, float ambientLight);
+void loadModel(Model &model, Model &oriModel, glm::vec3 pos, glm::vec3 rot, glm::vec3 scale, GLuint textureID, GLuint normalTextureID, GLuint shadowMapID, float shineDamper, float reflectivity, float ambientLight);
 
 // If trapMouseInWindow it returns the changed amount of pixels since last update
 // Else if returns the position the mouse is on
 glm::vec2 handleMouseInput(bool trapMouseInWindow);
 // Handle user input
-void handleInput();
+void handleGameInput();
 // Update time stuff
 void updateTime();
 // Render water textures
@@ -270,6 +279,10 @@ int main() {
 	//Initialise gameState
 	gameState = 1;
 
+	// Hide the cursor
+	DisplayManager::hideCursor();
+	//glfwCreateCursor can set a picture of the cursor
+
 	do {
 		//renderWaterCubeMap();
 		//GuiElements[0].rotation = (float)frame / 100.0f;
@@ -290,11 +303,11 @@ int main() {
 		terrainRenderer.addToRenderList(terrains[1].getModel());
 
 		//Add normalmapped models to renderer list
-		normalModelRenderer.addToRenderList(&model);
-		normalModelRenderer.addToRenderList(&model2);
+		normalModelRenderer.addToRenderList(model.getModel());
+		normalModelRenderer.addToRenderList(model2.getModel());
 
 		//Add lantern models
-		for (int i = 0; i < 4; i++) modelRenderer.addToRenderList(&lamps[i]);
+		for (int i = 0; i < 4; i++) modelRenderer.addToRenderList(lamps[i].getModel());
 
 		//Add water to the renderer list
 		waterRenderer.addToRenderList(&water);
@@ -390,19 +403,40 @@ int main() {
 			while (glfwGetTime() < (last_render_time + (1.0f / (float)Max_Fps))) {}
 		}
 
-		//Update input
-		handleInput();
+		// Update key input
+		handleGameInput();
+		// Update mouse input and lock it in the middle of the screen
+		glm::vec2 changedMousePos = handleMouseInput(true);
+		changedMousePos *= mouseSensitivity;
 
-		lights[0]->setPosition(glm::vec3(sin((float)frame / 100.0f) * 100.0f, 100.0f, cos((float)frame / 100.0f) * 100.0f));
-		lamps[3].setPosition(glm::vec3(sin((float)frame / 100.0f) * 100.0f, 100.0f, cos((float)frame / 100.0f) * 100.0f));
+		// Rotate the x and y axis of the player with the mouse
+		glm::vec3 rot = player.getRotation();
+		rot.y -= changedMousePos.x * 0.1;
+		rot.x -= changedMousePos.y * 0.1;
+		player.setRotation(rot);
+
+		// Get and update the player with its new position, it's health and the rest
+		client.getPlayerData(player);
+
+		// Set the rotation of the player for the next update
+		client.setPlayerData(player);
+		
+		// Set the camera rotation to the players rotation and convert it to radians
+		camera.rotation = glm::radians(player.getRotation());
+		// Set the camera position
+		camera.position = player.getPosition();
+		camera.position.y += 10.0f;
 
 		//Set title to hold fps info
-		std::string fpsStr = std::string(PROGRAM_NAME) + " FPS: " + std::to_string(fps) + " deltaTime: " + std::to_string(deltaTime * 100) + " debugTime: " + std::to_string((debugTime - frameStartTime) * 100);
+		std::string fpsStr = std::string(PROGRAM_NAME) + " FPS: " + std::to_string(fps) + " deltaTime: " + std::to_string(deltaTime * 100) + " Mouse: x: " + std::to_string(rot.x) + " y: " + std::to_string(rot.y);
 		DisplayManager::setDisplayTitle(fpsStr.c_str());
 
 		if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) gameState = 0;
 		if (DisplayManager::updateDisplay() < 0) gameState = 0;
 	}while (gameState >= 1);
+
+	// Show the cursor again
+	DisplayManager::showCursor();
 
 	//Close and Cleanup the display
 	DisplayManager::closeDisplay();
@@ -429,11 +463,12 @@ glm::vec2 handleMouseInput(bool trapMouseInWindow) {
 	// Get mouse position
 	double xpos, ypos;
 	glfwGetCursorPos(window, &xpos, &ypos);
+	ypos += 0.5f;
 
 	glm::vec2 windowPos = DisplayManager::getWindowPosition();
 	glm::vec2 windowSize = DisplayManager::getWindowSize();
 
-	glm::vec2 windowCenter = glm::vec2(windowPos.x + windowSize.x / 2, windowPos.y + windowSize.y / 2);
+	glm::vec2 windowCenter = glm::vec2(windowPos.x + (windowSize.x / 2), windowPos.y + (windowSize.y / 2));
 
 	glm::vec2 difference;
 
@@ -448,32 +483,23 @@ glm::vec2 handleMouseInput(bool trapMouseInWindow) {
 
 	return difference;
 }
-// Handle user input
-void handleInput()
+// Handle user input in game
+void handleGameInput()
 {
-	//Poll all events
+	// Poll all events
 	glfwPollEvents();
 
-	//HandleInput from keys
-	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) camera.position.x -= (deltaTime * 50);
-	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) camera.position.x += (deltaTime * 50);
+	// HandleInput from keys
 
-	if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) camera.position.y -= (deltaTime * 50);
-	if (glfwGetKey(window, GLFW_KEY_LEFT_ALT) == GLFW_PRESS) camera.position.y += (deltaTime * 50);
-
-	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) camera.position.z -= (deltaTime * 50);
-	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) camera.position.z += (deltaTime * 50);
-
-	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) camera.rotation.x -= (deltaTime * 2);
-	if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) camera.rotation.x += (deltaTime * 2);
-
-	if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) camera.rotation.y -= (deltaTime * 2);
-	if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) camera.rotation.y += (deltaTime * 2);
-
-	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
-		camera.position.y = terrains[1].getHeight(camera.position.x, camera.position.z) + 7;
-		if (camera.position.y < 4.0f) camera.position.y = 4.0f;
-	}
+	// Handle input of forward or backward
+	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) client.addActionType(MOVE_FORWARD);
+	else if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) client.addActionType(MOVE_BACKWARD);
+	// Handle input of left or right
+	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) client.addActionType(MOVE_LEFT);
+	else if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) client.addActionType(MOVE_RIGHT);
+	
+	// Handle input of shooting
+	if (glfwGetKey(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) client.addActionType(SHOOT_ONCE);
 }
 // Update time stuff
 void updateTime()
@@ -492,7 +518,7 @@ void updateTime()
 //  =========  Initialise a model  ===========
 
 // Load a model with only a texture
-void loadModel(gameobject &model, // Variable to set
+void loadModel(Model &model, // Variable to set
 	std::string modelFilename, // Model filename
 	glm::vec3 pos, glm::vec3 rot, glm::vec3 scale, // Initial Position, rotation and scale
 	GLuint textureID,  // Textures
@@ -500,23 +526,23 @@ void loadModel(gameobject &model, // Variable to set
 	float ambientLight) // Reflectivity
 {
 	// Load modeldata and set the variable.
-	model = gameobject(loader.loadObjFile(modelFilename.c_str(), false, false));
+	model.setModel(&gameobject(loader.loadObjFile(modelFilename.c_str(), false, false)));
 	// Initialise model
-	model.init(pos, rot, scale);
+	model.Initialise(pos, rot, scale);
 
 	// Add a texture
-	model.addTexture(textureID);
+	model.getModel()->addTexture(textureID);
 
 	// Set the shineDamper
-	model.setShineDamper(shineDamper);
+	model.getModel()->setShineDamper(shineDamper);
 	// Set the reflectivity
-	model.setReflectivity(reflectivity);
+	model.getModel()->setReflectivity(reflectivity);
 
 	// Set the ambientLight
-	model.setAmbientLight(ambientLight);
+	model.getModel()->setAmbientLight(ambientLight);
 }
 // Load a model with a texture and normalMap
-void loadModel(gameobject &model, // Variable to set
+void loadModel(Model &model, // Variable to set
 	std::string modelFilename, // Model filename
 	glm::vec3 pos, glm::vec3 rot, glm::vec3 scale, // Initial Position, rotation and scale
 	GLuint textureID, GLuint normalTextureID, // Textures
@@ -526,10 +552,10 @@ void loadModel(gameobject &model, // Variable to set
 	loadModel(model, modelFilename, pos, rot, scale, textureID, shineDamper, reflectivity, ambientLight);
 
 	// Set the normalmap
-	model.setNormalMap(normalTextureID);
+	model.getModel()->setNormalMap(normalTextureID);
 }
 // Load a model with a texture, normalMap and a shadowMap
-void loadModel(gameobject &model, // Variable to set
+void loadModel(Model &model, // Variable to set
 	std::string modelFilename, // Model filename
 	glm::vec3 pos, glm::vec3 rot, glm::vec3 scale, // Initial Position, rotation and scale
 	GLuint textureID, GLuint normalTextureID, GLuint shadowMapID, // Textures
@@ -540,34 +566,34 @@ void loadModel(gameobject &model, // Variable to set
 	loadModel(model, modelFilename, pos, rot, scale, textureID, normalTextureID, shineDamper, reflectivity, ambientLight);
 
 	// Set the shadowmap
-	model.setShadowMap(shadowMapID);
+	model.getModel()->setShadowMap(shadowMapID);
 }
 
 // Set a model with only a texture
-void loadModel(gameobject &model, gameobject &oriModel, // Variable to set
+void loadModel(Model &model, Model &oriModel, // Variable to set
 	glm::vec3 pos, glm::vec3 rot, glm::vec3 scale, // Initial Position, rotation and scale
 	GLuint textureID,  // Textures
 	float shineDamper, float reflectivity,
 	float ambientLight) // Reflectivity
 {
-	model = gameobject(oriModel);
+	model.setModel(oriModel.getModel());
 
 	// Initialise model
-	model.init(pos, rot, scale);
+	model.Initialise(pos, rot, scale);
 
 	// Add a texture
-	model.addTexture(textureID);
+	model.getModel()->addTexture(textureID);
 
 	// Set the shineDamper
-	model.setShineDamper(shineDamper);
+	model.getModel()->setShineDamper(shineDamper);
 	// Set the reflectivity
-	model.setReflectivity(reflectivity);
+	model.getModel()->setReflectivity(reflectivity);
 
 	// Set the ambientLight
-	model.setAmbientLight(ambientLight);
+	model.getModel()->setAmbientLight(ambientLight);
 }
 // Set a model with a texture and normalMap
-void loadModel(gameobject &model, gameobject &oriModel,// Variable to set
+void loadModel(Model &model, Model &oriModel,// Variable to set
 	glm::vec3 pos, glm::vec3 rot, glm::vec3 scale, // Initial Position, rotation and scale
 	GLuint textureID, GLuint normalTextureID, // Textures
 	float shineDamper, float reflectivity,
@@ -576,10 +602,10 @@ void loadModel(gameobject &model, gameobject &oriModel,// Variable to set
 	loadModel(model, oriModel, pos, rot, scale, textureID, shineDamper, reflectivity, ambientLight);
 
 	// Set the normalmap
-	model.setNormalMap(normalTextureID);
+	model.getModel()->setNormalMap(normalTextureID);
 }
 // Set a model with a texture, normalMap and a shadowMap
-void loadModel(gameobject &model, gameobject &oriModel,// Variable to set
+void loadModel(Model &model, Model &oriModel,// Variable to set
 	glm::vec3 pos, glm::vec3 rot, glm::vec3 scale, // Initial Position, rotation and scale
 	GLuint textureID, GLuint normalTextureID, GLuint shadowMapID, // Textures
 	float shineDamper, float reflectivity,
@@ -589,7 +615,7 @@ void loadModel(gameobject &model, gameobject &oriModel,// Variable to set
 	loadModel(model, oriModel, pos, rot, scale, textureID, normalTextureID, shineDamper, reflectivity, ambientLight);
 
 	// Set the shadowmap
-	model.setShadowMap(shadowMapID);
+	model.getModel()->setShadowMap(shadowMapID);
 }
 
 // Render water textures
@@ -650,8 +676,8 @@ void renderShadowTexture(Light *shadowLight)
 void renderWaterCubeMap()
 {
 	//Add normalmapped models to renderer list
-	normalModelRenderer.addToRenderList(&model);
-	normalModelRenderer.addToRenderList(&model2);
+	normalModelRenderer.addToRenderList(model.getModel());
+	normalModelRenderer.addToRenderList(model2.getModel());
 	//Add terrain models to renderer list
 	terrainRenderer.addToRenderList(terrains[0].getModel());
 	terrainRenderer.addToRenderList(terrains[1].getModel());
@@ -828,16 +854,16 @@ void loadModels()
 
 	//Set lamp model and texture for all lamps
 	for (int i = 0; i < 4; i++) {
-		lamps[i] = gameobject(&lampModel);
-		lamps[i].addTexture(lampTexture);
-		lamps[i].setSpecularMap(lampSpecularMap);
+		lamps[i].setModel(&lampModel);
+		lamps[i].getModel()->addTexture(lampTexture);
+		lamps[i].getModel()->setSpecularMap(lampSpecularMap);
 	}
 
 	//Initialise the models position, rotation and scale.
-	lamps[0].init(glm::vec3(20, terrains[1].getHeight(20, -30), -30), glm::vec3(0, 0, 0), glm::vec3(1.3f, 1.3f, 1.3f));
-	lamps[1].init(glm::vec3(370, terrains[1].getHeight(370, -300), -300), glm::vec3(0, 0, 0), glm::vec3(1.3f, 1.3f, 1.3f));
-	lamps[2].init(glm::vec3(293, terrains[1].getHeight(293, -305), -305), glm::vec3(0, 0, 0), glm::vec3(1.3f, 1.3f, 1.3f));
-	lamps[3].init(glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1.3f, 1.3f, 1.3f));
+	lamps[0].getModel()->init(glm::vec3(20, terrains[1].getHeight(20, -30), -30), glm::vec3(0, 0, 0), glm::vec3(1.3f, 1.3f, 1.3f));
+	lamps[1].getModel()->init(glm::vec3(370, terrains[1].getHeight(370, -300), -300), glm::vec3(0, 0, 0), glm::vec3(1.3f, 1.3f, 1.3f));
+	lamps[2].getModel()->init(glm::vec3(293, terrains[1].getHeight(293, -305), -305), glm::vec3(0, 0, 0), glm::vec3(1.3f, 1.3f, 1.3f));
+	lamps[3].getModel()->init(glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1.3f, 1.3f, 1.3f));
 
 	// ===  BARRELS  ===
 	// Load barrelModel 1

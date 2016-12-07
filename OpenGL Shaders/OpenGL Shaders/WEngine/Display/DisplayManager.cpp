@@ -135,6 +135,18 @@ void DisplayManager::setCursorOption(int value)
 {
 	glfwSetInputMode(window, GLFW_CURSOR, value);
 }
+void DisplayManager::showCursor()
+{
+	setCursorOption(GLFW_CURSOR_NORMAL);
+}
+void DisplayManager::hideCursor()
+{
+	setCursorOption(GLFW_CURSOR_HIDDEN);
+}
+void DisplayManager::gameCursor()
+{
+	setCursorOption(GLFW_CURSOR_DISABLED);
+}
 
 //Update the display
 int DisplayManager::updateDisplay()

@@ -3,7 +3,7 @@
 
 #include "Model.h"
 
-class Enemy : Model
+class Enemy : public Model
 {
 public:
 	Enemy();

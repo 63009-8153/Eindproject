@@ -111,6 +111,33 @@ void ClientGame::disconnect()
 	NetworkServices::sendMessage(network->getSocket(), packet_data, packet_size);
 }
 
+// Update the playerdata of own playerData
+void ClientGame::setPlayerData(Player & player)
+{
+	myPlayerData.rotation = player.getRotation();
+}
+
+// Update the playerdata of own playerData
+void ClientGame::getPlayerData(Player & player)
+{
+	for (unsigned int i = 0; i < MAX_LOBBYSIZE; i++)
+	{
+		if (allClients[i].playerID == myClientID)
+		{
+			// Set the position
+			player.setPosition(allClients[i].position);
+
+			// Set the health
+			player.health = allClients[i].health;
+			player.maxHealth = allClients[i].maxHealth;
+			// Set the velocity
+			player.setVelocity(allClients[i].velocity);
+
+			return;
+		}
+	}
+}
+
 // Send playerData to the server.
 void ClientGame::sendPlayerData(playerData &player, packetTypes type)
 {

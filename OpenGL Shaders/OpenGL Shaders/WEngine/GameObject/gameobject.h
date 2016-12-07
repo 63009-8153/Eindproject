@@ -50,6 +50,7 @@ public:
 		  reflectionRefractionRatio;
 
 	void init(glm::vec3 pos, glm::vec3 rot, glm::vec3 scal);
+	void init();
 
 	void Move(glm::vec3 _movement);
 	void Rotate(glm::vec3 _rotation);

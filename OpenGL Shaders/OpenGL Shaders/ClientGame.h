@@ -7,38 +7,45 @@
 #include "networkData.h"
 #include "ClientNetwork.h"
 
+#include "Player.h"
+
 extern void(*networkUpdateFunction)(void);
 
 class ClientGame
 {
 public:
-	//Constructor
+	// Constructor
 	ClientGame();
 	// Constructor
 	// Connect to the server on ipAddress and port
 	ClientGame(char ipAddress[39], char port[5]);
-	//Destructor
+	// Destructor
 	~ClientGame();
 
-	//Update the client with server data.
+	// Update the client with server data.
 	void updateClient();
-	//Disconnect from the server.
+	// Disconnect from the server.
 	void disconnect();
 
-	//Send playerData to the server.
+	// Update the playerdata of own playerData
+	void setPlayerData(Player &player);
+	// Update the playerdata of own playerData
+	void getPlayerData(Player &player);
+
+	// Send playerData to the server.
 	void sendPlayerData(playerData &player, packetTypes type);
 
 	// Send an heartbeat response packet to the server
 	void sendHeartbeatPacket();
 
-	//Add an actionType to the next packet send to the server.
+	// Add an actionType to the next packet send to the server.
 	void addActionType(actionTypes type);
 
-	//Get the network error.
-	//Resets to 0 after call
+	// Get the network error.
+	// Resets to 0 after call
 	std::vector<networkingErrors> getErrors();
 
-	//ClientNetwork that controls the connection to the server.
+	// ClientNetwork that controls the connection to the server.
 	ClientNetwork* network;
 
 private:
@@ -52,6 +59,7 @@ private:
 	std::vector<actionTypes> nextActionTypes;
 
 	// All clients
+	playerData myPlayerData;
 	playerData allClients[MAX_LOBBYSIZE];
 	unsigned int myClientID;
 };
