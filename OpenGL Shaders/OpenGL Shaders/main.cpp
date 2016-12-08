@@ -1,7 +1,6 @@
 #include "ClientGame.h"
 
 #include "WEngine/Usage.h"
-#include "ReactPhysics3D/reactphysics3d.h"
 
 #include "Enemy.h"
 #include "Model.h"
@@ -21,6 +20,8 @@ bool clientRunning = false;
 ClientGame client;
 void clientLoop(void *);
 
+double	clientLoopDeltaTime		 = 0,
+		clientLoopLastRenderTime = 0;
 
 // ============  GAME PROGRAM VARIABLES ============
 
@@ -78,6 +79,8 @@ textureCubemap waterReflection;
 
 texture2D GuiCherry;
 
+Light sun, light0, light1, light2;
+
 // ===  GAME INFO  ===
 glm::vec3 clearColor = glm::vec3(0, 0, 0);
 
@@ -130,6 +133,19 @@ void renderShadowTexture(Light *shadowLight);
 // Render water cubemap : WORK IN PROGRESS :
 void renderWaterCubeMap();
 
+// Load and initialise all waterTiles
+void loadAndInitialiseWater();
+// Load and initialise all GUI elements
+void loadAndInitialiseGUI();
+// Load and initialise all framebuffers
+void loadAllFrameBuffers();
+// Load and initialise all renderers
+void loadAndInitialiseRenderers();
+// Load and initialise the skybox
+void loadSkybox();
+// Initialise Lights
+void initLights();
+
 // Initialise the client
 void initialiseClient(char ipAddress[39], char port[5]);
 // Client loop
@@ -164,6 +180,9 @@ int main() {
 	// ========  Initialise  ==========
 	last_render_time = glfwGetTime();
 
+
+//TODO: StartScreen Loop here
+
 	// ===  DISPLAY  ===
 	//Create a display and initialise GLEW
 	DisplayManager::createDisplay(SCREEN_WIDTH, SCREEN_HEIGHT, PROGRAM_NAME, false);
@@ -181,55 +200,16 @@ int main() {
 	//Initialise framebuffer for cubemap texture waterReflection
 	waterReflection.initialseFrameBuffer(1280);
 
-	//Load and intialise all postprocessors
-	if (AAType == MSAA) {
-		sceneRenderer.load(glm::vec2(SCREEN_WIDTH, SCREEN_HEIGHT), 8);
-		antiAliasedRenderer.load(glm::vec2(SCREEN_WIDTH, SCREEN_HEIGHT));
-	}
-	else if (AAType == SSAA) {
-		sceneRenderer.load(glm::vec2(SCREEN_WIDTH * 4, SCREEN_HEIGHT * 4));
-		//TODO: create a shader that downsamples the image created!
-		antiAliasedRenderer.load(glm::vec2(SCREEN_WIDTH, SCREEN_HEIGHT));
-	}
-	else if (AAType == FXAA) {
-		sceneRenderer.load(glm::vec2(SCREEN_WIDTH, SCREEN_HEIGHT));
-		antiAliasedRenderer.load("WEngine/Shaders/AntiAliasing/AAVertex.vs", "WEngine/Shaders/AntiAliasing/FXAA.fs", glm::vec2(SCREEN_WIDTH, SCREEN_HEIGHT));
-		antiAliasedRenderer.shader.loadInverseFilterTextureSize(glm::vec3((1.0f / SCREEN_WIDTH), (1.0f / SCREEN_HEIGHT), 0.0f));
-		antiAliasedRenderer.shader.loadFXAAParameters((8.0f), (1.0f / 128.0f), (1.0f / 8.0f));
-	}
-	Contrast.load("WEngine/Shaders/PostProcessing/ContrastEffect.vs", "WEngine/Shaders/PostProcessing/ContrastEffect.fs", glm::vec2(SCREEN_WIDTH, SCREEN_HEIGHT));
-	VBlur.load("WEngine/Shaders/PostProcessing/VerticalGaussionBlur.vs", "WEngine/Shaders/PostProcessing/GaussionBlur.fs", glm::vec2(SCREEN_WIDTH / 5, SCREEN_HEIGHT / 5));
-	HBlur.load("WEngine/Shaders/PostProcessing/HorizontalGaussionBlur.vs", "WEngine/Shaders/PostProcessing/GaussionBlur.fs", glm::vec2(SCREEN_WIDTH / 5, SCREEN_HEIGHT / 5));
-	brightFilter.load("WEngine/Shaders/PostProcessing/simpleVertex.vs", "WEngine/Shaders/PostProcessing/brightFilter.fs", glm::vec2(SCREEN_WIDTH, SCREEN_HEIGHT));
-	combineFilter.load("WEngine/Shaders/PostProcessing/simpleVertex.vs", "WEngine/Shaders/PostProcessing/combineFilter.fs", glm::vec2(SCREEN_WIDTH, SCREEN_HEIGHT));
-	combineFilter.shader.start();
-	combineFilter.shader.connectTextureUnits();
-	combineFilter.shader.stop();
-
-	//Load and initialise all masterRenderers
-	guiRenderer.load("WEngine/Shaders/Gui/GuiShader.vs", "WEngine/Shaders/Gui/GuiShader.fs");
-	modelRenderer.load("WEngine/Shaders/Default/Default.vs", "WEngine/Shaders/Default/Default.fs", &camera);
-	normalModelRenderer.load("WEngine/Shaders/NormalMaps/NormalMap.vs", "WEngine/Shaders/NormalMaps/NormalMap.fs", &camera);
-	terrainRenderer.load("WEngine/Shaders/Terrain/Terrain.vs", "WEngine/Shaders/Terrain/Terrain.fs", &camera);
-	waterRenderer.load("WEngine/Shaders/Water/WaterShader.vs", "WEngine/Shaders/Water/WaterShader.fs", &camera);
-	shadowRenderer.load("WEngine/Shaders/Shadows/ShadowShader.vs", "WEngine/Shaders/Shadows/ShadowShader.fs");
+	// Load and initialise all framebuffers
+	loadAllFrameBuffers();
+	// Load and initialise all renderers
+	loadAndInitialiseRenderers();
 
 	// ===  SKYBOX  ===
-	std::string skyboxTextures[6] = {
-		"res/Skybox/hw_desertnight/desert_night_right.bmp", // RIGHT
-		"res/Skybox/hw_desertnight/desert_night_left.bmp",  // LEFT
-		"res/Skybox/hw_desertnight/desert_night_top.bmp",	// TOP
-		"res/Skybox/hw_desertnight/desert_night_bottom.bmp",// BOTTOM
-		"res/Skybox/hw_desertnight/desert_night_back.bmp",	// BACK
-		"res/Skybox/hw_desertnight/desert_night_front.bmp",	// FRONT
-	};
-	skybox.load("WEngine/Shaders/Skybox/Skybox.vs", "WEngine/Shaders/Skybox/Skybox.fs", &camera, skyboxTextures);
+	loadSkybox();
 
 	// ===  GUI  ===
-	GuiCherry.loadImage("res/Cherry/cherry.bmp", true, false);
-	GuiCherry.rotation = glm::radians(10.0f);
-	GuiCherry.scale = glm::vec2(0.5f);
-	GuiCherry.position = glm::vec2(-0.5f, 0.5f);
+	loadAndInitialiseGUI();
 	
 	// ===  INPUT  ===
 	//Set input mode
@@ -241,48 +221,30 @@ int main() {
 	// ===  LOAD AND INITIALISE MODELS  ===
 	// Load all graphics
 	loadGraphics();
-
 	// Load all models and initialise
 	loadModels();
 
 	// ===  LIGHTS  ===
-	//Create lights and add them to the light list
-	Light sun(glm::vec3(0, 1000, -7000), glm::vec3(0.35f, 0.35f, 0.35f));
-	lights.push_back(&sun);
-
-	Light light0(glm::vec3(185, terrains[1].getHeight(185, -293) + 13.2f, -293), glm::vec3(2, 0, 0), glm::vec3(1, 0.01f, 0.002f)); //Red
-	lights.push_back(&light0);
-
-	Light light1(glm::vec3(370, terrains[1].getHeight(370, -300) + 13.2f, -300), glm::vec3(0, 2, 2), glm::vec3(1, 0.01f, 0.002f));
-	lights.push_back(&light1);
-
-	Light light2(glm::vec3(293, terrains[1].getHeight(293, -305) + 13.2f, -305), glm::vec3(2, 2, 0), glm::vec3(1, 0.01f, 0.002f));
-	lights.push_back(&light2);
+	initLights();
 	
 	// ===  WATER  ===
-	//Create a waterTile and set its attributes
-	water = WaterTile(glm::vec3(0, 2, -400), glm::vec3(0, 0, 0), glm::vec3(800, 500, 400));
-	water.setReflectionTexture(waterRenderer.getReflectionTexture());
-	water.setRefractionTexture(waterRenderer.getRefractionTexture());
-	water.setDuDvTexture(loader.loadTexture("res/Water/WaterDuDvMap.bmp", false));
-	water.setNormalMapTexture(loader.loadTexture("res/Water/WaterNormalMap.bmp", false));
-	water.setRefractionDepthTexture(waterRenderer.getRefractionDepthTexture());
-	water.getWaterTile()->setShineDamper(100);
-	water.getWaterTile()->setReflectivity(1);
-	water.getWaterTile()->setAmbientLight(0.5f);
-	water.getWaterTile()->setShadowMap(shadowRenderer.getShadowDepthTexture());
+	loadAndInitialiseWater();
 
 	//renderWaterCubeMap();
 
+	// ===  Add GUI elements to the renderig list  ===
 	//GuiElements.push_back(GuiCherry);
 
 	//Initialise gameState
 	gameState = 1;
 
 	// Hide the cursor
-	DisplayManager::hideCursor();
-	//glfwCreateCursor can set a picture of the cursor
+	DisplayManager::gameCursor();
+//TODO: glfwCreateCursor can set a picture of the cursor
 
+	// Set the mouse in the middle of the screen at start so there is no unwanted staring rotation
+	handleMouseInput(true);
+	
 	do {
 		//renderWaterCubeMap();
 		//GuiElements[0].rotation = (float)frame / 100.0f;
@@ -292,7 +254,7 @@ int main() {
 
 		//Change WaterMoveFactor for random(ish) water movement
 		float currentWaterMoveFactor = waterRenderer.getMoveFactor();
-		currentWaterMoveFactor += WAVE_SPEED * deltaTime;
+		currentWaterMoveFactor += (float)(WAVE_SPEED * deltaTime);
 		if (currentWaterMoveFactor > 1) currentWaterMoveFactor -= 1;
 		waterRenderer.setMoveFactor(currentWaterMoveFactor);
 		
@@ -403,16 +365,21 @@ int main() {
 			while (glfwGetTime() < (last_render_time + (1.0f / (float)Max_Fps))) {}
 		}
 
-		// Update key input
-		handleGameInput();
+		// Poll all events
+		glfwPollEvents();
+
 		// Update mouse input and lock it in the middle of the screen
 		glm::vec2 changedMousePos = handleMouseInput(true);
 		changedMousePos *= mouseSensitivity;
 
 		// Rotate the x and y axis of the player with the mouse
 		glm::vec3 rot = player.getRotation();
-		rot.y -= changedMousePos.x * 0.1;
-		rot.x -= changedMousePos.y * 0.1;
+		rot.y -= changedMousePos.x * 0.1f;
+		rot.x -= changedMousePos.y * 0.1f;
+
+		if (rot.x < -90.0f) rot.x = -90.0f;
+		else if (rot.x > 90.0f) rot.x = 90.0f;
+		
 		player.setRotation(rot);
 
 		// Get and update the player with its new position, it's health and the rest
@@ -424,8 +391,8 @@ int main() {
 		// Set the camera rotation to the players rotation and convert it to radians
 		camera.rotation = glm::radians(player.getRotation());
 		// Set the camera position
-		camera.position = player.getPosition();
-		camera.position.y += 10.0f;
+		//camera.position = player.getPosition();
+		//camera.position.y += 10.0f;
 
 		//Set title to hold fps info
 		std::string fpsStr = std::string(PROGRAM_NAME) + " FPS: " + std::to_string(fps) + " deltaTime: " + std::to_string(deltaTime * 100) + " Mouse: x: " + std::to_string(rot.x) + " y: " + std::to_string(rot.y);
@@ -457,13 +424,14 @@ int main() {
 	glfwTerminate();
 }
 
+
+
 // If trapMouseInWindow it returns the changed amount of pixels since last update
 // Else if returns the position the mouse is on
 glm::vec2 handleMouseInput(bool trapMouseInWindow) {
 	// Get mouse position
 	double xpos, ypos;
 	glfwGetCursorPos(window, &xpos, &ypos);
-	ypos += 0.5f;
 
 	glm::vec2 windowPos = DisplayManager::getWindowPosition();
 	glm::vec2 windowSize = DisplayManager::getWindowSize();
@@ -497,9 +465,14 @@ void handleGameInput()
 	// Handle input of left or right
 	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) client.addActionType(MOVE_LEFT);
 	else if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) client.addActionType(MOVE_RIGHT);
+
+	// Handle input of sprinting
+	if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) client.addActionType(MOVE_RUN);
 	
 	// Handle input of shooting
 	if (glfwGetKey(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) client.addActionType(SHOOT_ONCE);
+	
+	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) client.addActionType(JUMP);
 }
 // Update time stuff
 void updateTime()
@@ -508,12 +481,379 @@ void updateTime()
 	//glfwGetTime() nr of seconds since start of game
 	//last_render_time last set time nr seconds since start of game
 	deltaTime = glfwGetTime() - last_render_time; //Time in seconds it took for the last frame.
-	fps = (1 / deltaTime);
+	fps = (float)(1.0f / deltaTime);
 
 	last_render_time = glfwGetTime();
 
 	frame++;
 }
+
+// Load and initialise all waterTiles
+void loadAndInitialiseWater()
+{
+	//Create a waterTile and set its attributes
+	water = WaterTile(glm::vec3(0, 2, -400), glm::vec3(0, 0, 0), glm::vec3(800, 500, 400));
+	water.setReflectionTexture(waterRenderer.getReflectionTexture());
+	water.setRefractionTexture(waterRenderer.getRefractionTexture());
+	water.setDuDvTexture(loader.loadTexture("res/Water/WaterDuDvMap.bmp", false));
+	water.setNormalMapTexture(loader.loadTexture("res/Water/WaterNormalMap.bmp", false));
+	water.setRefractionDepthTexture(waterRenderer.getRefractionDepthTexture());
+	water.getWaterTile()->setShineDamper(100);
+	water.getWaterTile()->setReflectivity(1);
+	water.getWaterTile()->setAmbientLight(0.5f);
+	water.getWaterTile()->setShadowMap(shadowRenderer.getShadowDepthTexture());
+}
+// Load and initialise all GUI elements
+void loadAndInitialiseGUI()
+{
+	// Load cherry tree as GUI element
+	GuiCherry.loadImage("res/Cherry/cherry.bmp", true, false);
+	GuiCherry.rotation = glm::radians(10.0f);
+	GuiCherry.scale = glm::vec2(0.5f);
+	GuiCherry.position = glm::vec2(-0.5f, 0.5f);
+}
+// Render water textures
+void renderWaterTextures()
+{
+	//Enable clipdistance 0
+	glEnable(GL_CLIP_DISTANCE0);
+
+	//Bind Reflection framebuffer
+	waterRenderer.bindReflectionFrameBuffer();
+	//Prepare rendering on the reflection framebuffer
+	MasterRenderer::prepare();
+
+	//Position the camera down to get the proper reflection
+	float distance = 2 * (camera.position.y - water.getWaterTile()->getPosition().y);
+	camera.position.y -= distance;
+	camera.rotation.x *= -1; //Invert pitch
+
+							 //Render all objects to the reflection of the water
+	skybox.render(&camera);
+	terrainRenderer.render(lights, &camera, glm::vec4(0, 1, 0, -water.getWaterTile()->getPosition().y + 1.0f));
+	//modelRenderer.render(lights, &camera, glm::vec4(0, 1, 0, -water.getWaterTile()->getPosition().y + 1.0f));
+	//normalModelRenderer.render(lights, &camera, glm::vec4(0, 1, 0, -water.getWaterTile()->getPosition().y));
+
+	camera.position.y += distance; //Position the camera back up
+	camera.rotation.x *= -1; //Invert pitch back to normal
+
+							 //Bind Refraction framebuffer
+	waterRenderer.bindRefractionFrameBuffer();
+	//Prepare rendering on the Refraction framebuffer
+	MasterRenderer::prepare();
+
+	//Render all elements to the refraction of the water
+	terrainRenderer.render(lights, &camera, glm::vec4(0, -1, 0, water.getWaterTile()->getPosition().y + 1.0f));
+	//modelRenderer.render(lights, &camera, glm::vec4(0, -1, 0, water.getWaterTile()->getPosition().y + 1.0f));
+	//normalModelRenderer.render(lights, &camera, glm::vec4(0, -1, 0, water.getWaterTile()->getPosition().y));
+
+	waterRenderer.unbindCurrentFrameBuffer();
+
+	//Disable clipdistance 0
+	glDisable(GL_CLIP_DISTANCE0);
+}
+// Render shadow textures
+void renderShadowTexture(Light *shadowLight)
+{
+	//Render all objects that have to cast a shadow to the shadowmap
+	shadowRenderer.bindShadowFrameBuffer();
+
+	//Render all objects to the shadow buffer
+	//shadowRenderer.render(shadowLight, &camera, &terrainRenderer.gameobjects);
+	shadowRenderer.render(shadowLight, &camera, &modelRenderer.gameobjects);
+	shadowRenderer.render(shadowLight, &camera, &normalModelRenderer.gameobjects);
+
+	shadowRenderer.unbindCurrentFrameBuffer();
+}
+
+// Render water cubemap : WORK IN PROGRESS :
+void renderWaterCubeMap()
+{
+	//Add normalmapped models to renderer list
+	normalModelRenderer.addToRenderList(model.getModel());
+	normalModelRenderer.addToRenderList(model2.getModel());
+	//Add terrain models to renderer list
+	terrainRenderer.addToRenderList(terrains[0].getModel());
+	terrainRenderer.addToRenderList(terrains[1].getModel());
+
+	glm::vec3 reflectionPosition = glm::vec3(0.0f, 10.0f, 0.0f); //Has to be a vec3 of the position
+	const glm::vec3 faceRotations[6] = {
+		glm::vec3(0, glm::radians(-90.0f), glm::radians(180.0f)),
+		glm::vec3(0, glm::radians(90.0f),  glm::radians(180.0f)),
+		glm::vec3(glm::radians(-90.0f), 0, 0),//
+		glm::vec3(glm::radians(90.0f),  0, 0),//
+		glm::vec3(0, glm::radians(180.0f), glm::radians(180.0f)),
+		glm::vec3(0, 0,	glm::radians(180.0f))
+	};
+
+	waterReflection.bindFrameBuffer();
+	for (unsigned int i = 0; i < 6; i++) {
+		//Bind the right side
+		waterReflection.bindFrameBufferRenderTexture(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i);
+		//Clear the buffer
+		MasterRenderer::prepare();
+		//Render
+
+		skybox.renderUpdated(&camera, 90.0f, reflectionPosition, faceRotations[i]);
+
+		//normalModelRenderer.renderUpdated(lights, &camera, glm::vec4(0, -1, 0, 100000), 90.0f, reflectionPosition, faceRotations[i]); //Normal render
+		terrainRenderer.renderUpdated(lights, &camera, glm::vec4(0, -1, 0, 100000), 90.0f, reflectionPosition, faceRotations[i]); //Normal render
+
+		//glEnable(GL_CLIP_DISTANCE0);
+		//normalModelRenderer.renderUpdated(lights, &camera, glm::vec4(0, 1, 0, -water.getWaterTile()->getPosition().y + 1.0f), 90.0f, reflectionPosition, faceRotations[i]); //Reflection render
+		//normalModelRenderer.renderUpdated(lights, &camera, glm::vec4(0, -1, 0, water.getWaterTile()->getPosition().y + 1.0f), 90.0f, reflectionPosition, faceRotations[i]); //Refraction render
+		//glDisable(GL_CLIP_DISTANCE0);
+	}
+	waterReflection.unbindFrameBuffer(SCREEN_WIDTH, SCREEN_HEIGHT);
+	//waterReflection.deleteBuffers(); //Only if we dont want to use the framebuffer ever again
+
+	normalModelRenderer.clearRenderPass();
+	terrainRenderer.clearRenderPass();
+}
+
+// Load and initialise all framebuffers
+void loadAllFrameBuffers()
+{
+	//Load and intialise all postprocessors
+	if (AAType == MSAA) {
+		sceneRenderer.load(glm::vec2(SCREEN_WIDTH, SCREEN_HEIGHT), 8);
+		antiAliasedRenderer.load(glm::vec2(SCREEN_WIDTH, SCREEN_HEIGHT));
+	}
+	else if (AAType == SSAA) {
+		sceneRenderer.load(glm::vec2(SCREEN_WIDTH * 4, SCREEN_HEIGHT * 4));
+		//TODO: create a shader that downsamples the image created!
+		antiAliasedRenderer.load(glm::vec2(SCREEN_WIDTH, SCREEN_HEIGHT));
+	}
+	else if (AAType == FXAA) {
+		sceneRenderer.load(glm::vec2(SCREEN_WIDTH, SCREEN_HEIGHT));
+		antiAliasedRenderer.load("WEngine/Shaders/AntiAliasing/AAVertex.vs", "WEngine/Shaders/AntiAliasing/FXAA.fs", glm::vec2(SCREEN_WIDTH, SCREEN_HEIGHT));
+		antiAliasedRenderer.shader.loadInverseFilterTextureSize(glm::vec3((1.0f / SCREEN_WIDTH), (1.0f / SCREEN_HEIGHT), 0.0f));
+		antiAliasedRenderer.shader.loadFXAAParameters((8.0f), (1.0f / 128.0f), (1.0f / 8.0f));
+	}
+	Contrast.load("WEngine/Shaders/PostProcessing/ContrastEffect.vs", "WEngine/Shaders/PostProcessing/ContrastEffect.fs", glm::vec2(SCREEN_WIDTH, SCREEN_HEIGHT));
+	VBlur.load("WEngine/Shaders/PostProcessing/VerticalGaussionBlur.vs", "WEngine/Shaders/PostProcessing/GaussionBlur.fs", glm::vec2(SCREEN_WIDTH / 5, SCREEN_HEIGHT / 5));
+	HBlur.load("WEngine/Shaders/PostProcessing/HorizontalGaussionBlur.vs", "WEngine/Shaders/PostProcessing/GaussionBlur.fs", glm::vec2(SCREEN_WIDTH / 5, SCREEN_HEIGHT / 5));
+	brightFilter.load("WEngine/Shaders/PostProcessing/simpleVertex.vs", "WEngine/Shaders/PostProcessing/brightFilter.fs", glm::vec2(SCREEN_WIDTH, SCREEN_HEIGHT));
+	combineFilter.load("WEngine/Shaders/PostProcessing/simpleVertex.vs", "WEngine/Shaders/PostProcessing/combineFilter.fs", glm::vec2(SCREEN_WIDTH, SCREEN_HEIGHT));
+	combineFilter.shader.start();
+	combineFilter.shader.connectTextureUnits();
+	combineFilter.shader.stop();
+
+}
+// Load and initialise all masterRenderers
+void loadAndInitialiseRenderers()
+{
+	//Load and initialise all masterRenderers
+	guiRenderer.load("WEngine/Shaders/Gui/GuiShader.vs", "WEngine/Shaders/Gui/GuiShader.fs");
+	modelRenderer.load("WEngine/Shaders/Default/Default.vs", "WEngine/Shaders/Default/Default.fs", &camera);
+	normalModelRenderer.load("WEngine/Shaders/NormalMaps/NormalMap.vs", "WEngine/Shaders/NormalMaps/NormalMap.fs", &camera);
+	terrainRenderer.load("WEngine/Shaders/Terrain/Terrain.vs", "WEngine/Shaders/Terrain/Terrain.fs", &camera);
+	waterRenderer.load("WEngine/Shaders/Water/WaterShader.vs", "WEngine/Shaders/Water/WaterShader.fs", &camera);
+	shadowRenderer.load("WEngine/Shaders/Shadows/ShadowShader.vs", "WEngine/Shaders/Shadows/ShadowShader.fs");
+}
+// Load and initialise the skybox
+void loadSkybox()
+{
+	std::string skyboxTextures[6] = {
+		"res/Skybox/hw_desertnight/desert_night_right.bmp", // RIGHT
+		"res/Skybox/hw_desertnight/desert_night_left.bmp",  // LEFT
+		"res/Skybox/hw_desertnight/desert_night_top.bmp",	// TOP
+		"res/Skybox/hw_desertnight/desert_night_bottom.bmp",// BOTTOM
+		"res/Skybox/hw_desertnight/desert_night_back.bmp",	// BACK
+		"res/Skybox/hw_desertnight/desert_night_front.bmp",	// FRONT
+	};
+	skybox.load("WEngine/Shaders/Skybox/Skybox.vs", "WEngine/Shaders/Skybox/Skybox.fs", &camera, skyboxTextures);
+}
+// Initialise Lights
+void initLights()
+{
+	//Initialise lights and add them to the light list
+	sun = Light(glm::vec3(0, 1000, -7000), glm::vec3(0.35f, 0.35f, 0.35f));
+	lights.push_back(&sun);
+
+	light0 = Light(glm::vec3(185, terrains[1].getHeight(185, -293) + 13.2f, -293), glm::vec3(2, 0, 0), glm::vec3(1, 0.01f, 0.002f)); //Red
+	lights.push_back(&light0);
+
+	light1 = Light(glm::vec3(370, terrains[1].getHeight(370, -300) + 13.2f, -300), glm::vec3(0, 2, 2), glm::vec3(1, 0.01f, 0.002f));
+	lights.push_back(&light1);
+
+	light2 = Light(glm::vec3(293, terrains[1].getHeight(293, -305) + 13.2f, -305), glm::vec3(2, 2, 0), glm::vec3(1, 0.01f, 0.002f));
+	lights.push_back(&light2);
+}
+
+// ======  SERVER HANDLE FUNCTIONS  ======
+
+// Intialise the client and connect to the server on ipAddress and port
+void initialiseClient(char ipAddress[39], char port[5])
+{
+	// Initialise the client, create a connection and try to connect to the ip and port of the server.
+	client = ClientGame(ipAddress, port);
+
+	// Check if there are any intialisation errors. 
+	// If this error is fatal, we stop creating the clientNetwork.
+	std::vector<networkingErrors> clientErrors = client.getErrors();
+	for (unsigned int i = 0; i < clientErrors.size(); i++)
+	{
+		switch (clientErrors[i]) {
+		case WSA_STARTUP_ERROR:
+			printf("ERROR -- Creating client WSAStartup\n");
+			return;
+			break;
+		case GET_ADDR_INFO_ERROR:
+			printf("ERROR -- Creating client getaddrinfo\n");
+			return;
+			break;
+		case CREATE_SOCKET_ERROR:
+			printf("ERROR -- Creating client createSocket\n");
+			return;
+			break;
+		case CONNECT_SOCKET_ERROR:
+			printf("ERROR -- Creating client connectSocket\n");
+			break;
+		case ALL_CONNECTING_SOCKETS_ERROR:
+			printf("ERROR -- Creating client connecting all sockets\n");
+			return;
+			break;
+		case SET_NONBLOCKING_ERROR:
+			printf("ERROR -- Creating client nonblocking\n");
+			return;
+			break;
+		}
+	}
+
+	networkUpdateFunction = SendInitData;
+
+	// Start a new thread and run the serverLoop function.
+	_beginthread(clientLoop, 0, NULL);
+}
+// The client loop
+void clientLoop(void *)
+{
+	clientRunning = true;
+
+	// Client networking loop
+	while (clientRunning) {
+
+		// Receive and parse data.
+		client.updateClient();
+
+		// If the function pointer is set to a function, execute this function.
+		// This function is to execute a function that sends data to the server.
+		if (networkUpdateFunction != nullptr) networkUpdateFunction();
+
+		// Limit update cycle amount to UPDATE_CYCLES_PER_SECOND
+		while (((float)(std::clock() - programStartClock) / (float)CLOCKS_PER_SEC) < (clientLoopLastRenderTime + (1.0f / (float)UPDATE_CYCLES_PER_SECOND))) {}
+
+		clientLoopDeltaTime = (((float)(std::clock() - programStartClock) / (float)CLOCKS_PER_SEC)) - clientLoopLastRenderTime; //Time in miliseconds it took for the last update cycle.
+		clientLoopLastRenderTime = (((float)(std::clock() - programStartClock) / (float)CLOCKS_PER_SEC));
+	}
+
+	// End of function, end the thread and release its memory.
+	_endthread();
+}
+
+// Send intitialisation data
+// When just connected to the server and need to send name.
+void SendInitData()
+{
+	char name[] = "Wouter140";
+
+	memcpy(&client.myPlayerData.playerName, name, strlen(name));
+	client.myPlayerData.playerNameSize = strlen(name);
+	client.addActionType(GAME_INITIALISATION);
+
+	client.sendLobbyUpdate();
+}
+// Send lobby data
+// When in lobby
+void SendLobbyData()
+{
+	if (/*want to start the game*/)
+	{
+		// Add a action Start Game
+		client.addActionType(GAME_START);
+		// Send the packet to the server
+		client.sendLobbyUpdate();
+	}
+
+	// If the lobbyTimer has started running
+	if (client.gameStarting)
+	{
+
+		client.lobbyTimer -= (float)clientLoopDeltaTime;
+		if (client.lobbyTimer <= 0.0f) client.lobbyTimer = 0.0f;
+	}
+}
+
+// Send game data
+// When in game
+void SendGameData()
+{
+	// Update key input
+	handleGameInput();
+}
+
+// Load all graphics
+void loadGraphics()
+{
+	floorTextureGrass = loader.loadTexture("res/Terrain/grassy2.bmp", true);
+	floorTextureR = loader.loadTexture("res/Terrain/mud.bmp", true);
+	floorTextureG = loader.loadTexture("res/Terrain/grassFlowers.bmp", true);
+	floorTextureB = loader.loadTexture("res/Terrain/path.bmp", true);
+	floorBlendMap = loader.loadTexture("res/Terrain/blendMap.bmp", true);
+
+	//Load the texture and normalmap for the lamp model
+	lampTexture = loader.loadTexture("res/Lantern/lantern.bmp", true);
+	lampSpecularMap = loader.loadTexture("res/Lantern/lanternS.bmp", false);
+
+	//Load the texture and normalmap for the barrel model
+	barrelTexture = loader.loadTexture("res/Barrel/barrel.bmp", true);
+	barrelNormal = loader.loadTexture("res/Barrel/barrelNormal.bmp", true);
+}
+// Load all models
+void loadModels()
+{
+	// ===  TERRAIN  ===
+	//Create terrains with a heightmap, set position and all multitexture textures
+	terrains[0].createWithHeightmap("res/heightmap.bmp", -1, -1, &loader, floorTextureGrass, floorTextureR, floorTextureG, floorTextureB, floorBlendMap);
+	terrains[0].getModel()->setAmbientLight(0.2f);
+	terrains[0].getModel()->setShadowMap(shadowRenderer.getShadowDepthTexture());
+
+	terrains[1].createWithHeightmap("res/heightmap.bmp", 0, -1, &loader, floorTextureGrass, floorTextureR, floorTextureG, floorTextureB, floorBlendMap);
+	terrains[1].getModel()->setAmbientLight(0.2f);
+	terrains[1].getModel()->setShadowMap(shadowRenderer.getShadowDepthTexture());
+
+	// ===  LAMP  ===
+	// Load the lampModel
+	gameobject lampModel = loader.loadObjFile("res/Lantern/lantern.obj", true, false);
+
+	//Set lamp model and texture for all lamps
+	for (int i = 0; i < 4; i++) {
+		lamps[i].setModel(&lampModel);
+		lamps[i].getModel()->addTexture(lampTexture);
+		lamps[i].getModel()->setSpecularMap(lampSpecularMap);
+	}
+
+	//Initialise the models position, rotation and scale.
+	lamps[0].getModel()->init(glm::vec3(20, terrains[1].getHeight(20, -30), -30), glm::vec3(0, 0, 0), glm::vec3(1.3f, 1.3f, 1.3f));
+	lamps[1].getModel()->init(glm::vec3(370, terrains[1].getHeight(370, -300), -300), glm::vec3(0, 0, 0), glm::vec3(1.3f, 1.3f, 1.3f));
+	lamps[2].getModel()->init(glm::vec3(293, terrains[1].getHeight(293, -305), -305), glm::vec3(0, 0, 0), glm::vec3(1.3f, 1.3f, 1.3f));
+	lamps[3].getModel()->init(glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1.3f, 1.3f, 1.3f));
+
+	// ===  BARRELS  ===
+	// Load barrelModel 1
+	loadModel(model, "res/Barrel/barrel.obj",
+		glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1.5f, 1.5f, 1.5f),
+		barrelTexture, barrelNormal, shadowRenderer.getShadowDepthTexture(),
+		100.0f, 1.0f, 0.1f);
+
+	// Load barrelModel 2
+	loadModel(model2, model,
+		glm::vec3(20, terrains[1].getHeight(20, -10), -300), glm::vec3(0, 0, 0), glm::vec3(1.5f, 1.5f, 1.5f),
+		barrelTexture, barrelNormal, shadowRenderer.getShadowDepthTexture(),
+		100.0f, 1.0f, 0.1f);
+}
+
 
 //  =========  Initialise a model  ===========
 
@@ -616,265 +956,4 @@ void loadModel(Model &model, Model &oriModel,// Variable to set
 
 	// Set the shadowmap
 	model.getModel()->setShadowMap(shadowMapID);
-}
-
-// Render water textures
-void renderWaterTextures()
-{
-	//Enable clipdistance 0
-	glEnable(GL_CLIP_DISTANCE0);
-
-	//Bind Reflection framebuffer
-	waterRenderer.bindReflectionFrameBuffer();
-	//Prepare rendering on the reflection framebuffer
-	MasterRenderer::prepare();
-
-	//Position the camera down to get the proper reflection
-	float distance = 2 * (camera.position.y - water.getWaterTile()->getPosition().y);
-	camera.position.y -= distance;
-	camera.rotation.x *= -1; //Invert pitch
-
-							 //Render all objects to the reflection of the water
-	skybox.render(&camera);
-	terrainRenderer.render(lights, &camera, glm::vec4(0, 1, 0, -water.getWaterTile()->getPosition().y + 1.0f));
-	//modelRenderer.render(lights, &camera, glm::vec4(0, 1, 0, -water.getWaterTile()->getPosition().y + 1.0f));
-	//normalModelRenderer.render(lights, &camera, glm::vec4(0, 1, 0, -water.getWaterTile()->getPosition().y));
-
-	camera.position.y += distance; //Position the camera back up
-	camera.rotation.x *= -1; //Invert pitch back to normal
-
-							 //Bind Refraction framebuffer
-	waterRenderer.bindRefractionFrameBuffer();
-	//Prepare rendering on the Refraction framebuffer
-	MasterRenderer::prepare();
-
-	//Render all elements to the refraction of the water
-	terrainRenderer.render(lights, &camera, glm::vec4(0, -1, 0, water.getWaterTile()->getPosition().y + 1.0f));
-	//modelRenderer.render(lights, &camera, glm::vec4(0, -1, 0, water.getWaterTile()->getPosition().y + 1.0f));
-	//normalModelRenderer.render(lights, &camera, glm::vec4(0, -1, 0, water.getWaterTile()->getPosition().y));
-
-	waterRenderer.unbindCurrentFrameBuffer();
-
-	//Disable clipdistance 0
-	glDisable(GL_CLIP_DISTANCE0);
-}
-// Render shadow textures
-void renderShadowTexture(Light *shadowLight)
-{
-	//Render all objects that have to cast a shadow to the shadowmap
-	shadowRenderer.bindShadowFrameBuffer();
-
-	//Render all objects to the shadow buffer
-	//shadowRenderer.render(shadowLight, &camera, &terrainRenderer.gameobjects);
-	shadowRenderer.render(shadowLight, &camera, &modelRenderer.gameobjects);
-	shadowRenderer.render(shadowLight, &camera, &normalModelRenderer.gameobjects);
-
-	shadowRenderer.unbindCurrentFrameBuffer();
-}
-
-// Render water cubemap : WORK IN PROGRESS :
-void renderWaterCubeMap()
-{
-	//Add normalmapped models to renderer list
-	normalModelRenderer.addToRenderList(model.getModel());
-	normalModelRenderer.addToRenderList(model2.getModel());
-	//Add terrain models to renderer list
-	terrainRenderer.addToRenderList(terrains[0].getModel());
-	terrainRenderer.addToRenderList(terrains[1].getModel());
-
-	glm::vec3 reflectionPosition = glm::vec3(0.0f, 10.0f, 0.0f); //Has to be a vec3 of the position
-	const glm::vec3 faceRotations[6] = {
-		glm::vec3(0, glm::radians(-90.0f), glm::radians(180.0f)),
-		glm::vec3(0, glm::radians(90.0f),  glm::radians(180.0f)),
-		glm::vec3(glm::radians(-90.0f), 0, 0),//
-		glm::vec3(glm::radians(90.0f),  0, 0),//
-		glm::vec3(0, glm::radians(180.0f), glm::radians(180.0f)),
-		glm::vec3(0, 0,	glm::radians(180.0f))
-	};
-
-	waterReflection.bindFrameBuffer();
-	for (unsigned int i = 0; i < 6; i++) {
-		//Bind the right side
-		waterReflection.bindFrameBufferRenderTexture(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i);
-		//Clear the buffer
-		MasterRenderer::prepare();
-		//Render
-
-		skybox.renderUpdated(&camera, 90.0f, reflectionPosition, faceRotations[i]);
-
-		//normalModelRenderer.renderUpdated(lights, &camera, glm::vec4(0, -1, 0, 100000), 90.0f, reflectionPosition, faceRotations[i]); //Normal render
-		terrainRenderer.renderUpdated(lights, &camera, glm::vec4(0, -1, 0, 100000), 90.0f, reflectionPosition, faceRotations[i]); //Normal render
-
-		//glEnable(GL_CLIP_DISTANCE0);
-		//normalModelRenderer.renderUpdated(lights, &camera, glm::vec4(0, 1, 0, -water.getWaterTile()->getPosition().y + 1.0f), 90.0f, reflectionPosition, faceRotations[i]); //Reflection render
-		//normalModelRenderer.renderUpdated(lights, &camera, glm::vec4(0, -1, 0, water.getWaterTile()->getPosition().y + 1.0f), 90.0f, reflectionPosition, faceRotations[i]); //Refraction render
-		//glDisable(GL_CLIP_DISTANCE0);
-	}
-	waterReflection.unbindFrameBuffer(SCREEN_WIDTH, SCREEN_HEIGHT);
-	//waterReflection.deleteBuffers(); //Only if we dont want to use the framebuffer ever again
-
-	normalModelRenderer.clearRenderPass();
-	terrainRenderer.clearRenderPass();
-}
-
-// Intialise the client and connect to the server on ipAddress and port
-void initialiseClient(char ipAddress[39], char port[5])
-{
-	// Initialise the client, create a connection and try to connect to the ip and port of the server.
-	client = ClientGame(ipAddress, port);
-
-	// Check if there are any intialisation errors. 
-	// If this error is fatal, we stop creating the clientNetwork.
-	std::vector<networkingErrors> clientErrors = client.getErrors();
-	for (unsigned int i = 0; i < clientErrors.size(); i++)
-	{
-		switch (clientErrors[i]) {
-		case WSA_STARTUP_ERROR:
-			printf("ERROR -- Creating client WSAStartup\n");
-			return;
-			break;
-		case GET_ADDR_INFO_ERROR:
-			printf("ERROR -- Creating client getaddrinfo\n");
-			return;
-			break;
-		case CREATE_SOCKET_ERROR:
-			printf("ERROR -- Creating client createSocket\n");
-			return;
-			break;
-		case CONNECT_SOCKET_ERROR:
-			printf("ERROR -- Creating client connectSocket\n");
-			break;
-		case ALL_CONNECTING_SOCKETS_ERROR:
-			printf("ERROR -- Creating client connecting all sockets\n");
-			return;
-			break;
-		case SET_NONBLOCKING_ERROR:
-			printf("ERROR -- Creating client nonblocking\n");
-			return;
-			break;
-		}
-	}
-	
-	networkUpdateFunction = SendInitData;
-
-	// Start a new thread and run the serverLoop function.
-	_beginthread(clientLoop, 0, NULL);
-}
-// The client loop
-void clientLoop(void *)
-{
-	double clientLoopDeltaTime = 0,
-		clientLoopLastRenderTime = 0;
-	clientRunning = true;
-
-	// Client networking loop
-	while (clientRunning) {
-
-		// Receive and parse data.
-		client.updateClient();
-
-		// If the function pointer is set to a function, execute this function.
-		// This function is to execute a function that sends data to the server.
-		if (networkUpdateFunction != nullptr) networkUpdateFunction();
-
-		// Limit update cycle amount to UPDATE_CYCLES_PER_SECOND
-		while (((float)(std::clock() - programStartClock) / (float)CLOCKS_PER_SEC) < (clientLoopLastRenderTime + (1.0f / (float)UPDATE_CYCLES_PER_SECOND))) {}
-
-		clientLoopDeltaTime = (((float)(std::clock() - programStartClock) / (float)CLOCKS_PER_SEC)) - clientLoopLastRenderTime; //Time in miliseconds it took for the last update cycle.
-		clientLoopLastRenderTime = (((float)(std::clock() - programStartClock) / (float)CLOCKS_PER_SEC));
-	}
-
-	// End of function, end the thread and release its memory.
-	_endthread();
-}
-
-
-// ======  SERVER HANDLE FUNCTIONS  ======
-
-// Send intitialisation data
-// When just connected to the server and need to send name.
-void SendInitData()
-{
-	char name[] = "Wouter140";
-
-	playerData player;
-	memcpy(&player.playerName, name, strlen(name));
-	player.playerNameSize = strlen(name);
-	client.addActionType(GAME_INITIALISATION);
-
-	client.sendPlayerData(player, LOBBY_PACKET);
-}
-// Send lobby data
-// When in lobby
-void SendLobbyData()
-{
-
-}
-
-// Send game data
-// When in game
-void SendGameData()
-{
-
-}
-
-// Load all graphics
-void loadGraphics()
-{
-	floorTextureGrass = loader.loadTexture("res/Terrain/grassy2.bmp", true);
-	floorTextureR = loader.loadTexture("res/Terrain/mud.bmp", true);
-	floorTextureG = loader.loadTexture("res/Terrain/grassFlowers.bmp", true);
-	floorTextureB = loader.loadTexture("res/Terrain/path.bmp", true);
-	floorBlendMap = loader.loadTexture("res/Terrain/blendMap.bmp", true);
-
-	//Load the texture and normalmap for the lamp model
-	lampTexture = loader.loadTexture("res/Lantern/lantern.bmp", true);
-	lampSpecularMap = loader.loadTexture("res/Lantern/lanternS.bmp", false);
-
-	//Load the texture and normalmap for the barrel model
-	barrelTexture = loader.loadTexture("res/Barrel/barrel.bmp", true);
-	barrelNormal = loader.loadTexture("res/Barrel/barrelNormal.bmp", true);
-}
-// Load all models
-void loadModels()
-{
-	// ===  TERRAIN  ===
-	//Create terrains with a heightmap, set position and all multitexture textures
-	terrains[0].createWithHeightmap("res/heightmap.bmp", -1, -1, &loader, floorTextureGrass, floorTextureR, floorTextureG, floorTextureB, floorBlendMap);
-	terrains[0].getModel()->setAmbientLight(0.2f);
-	terrains[0].getModel()->setShadowMap(shadowRenderer.getShadowDepthTexture());
-
-	terrains[1].createWithHeightmap("res/heightmap.bmp", 0, -1, &loader, floorTextureGrass, floorTextureR, floorTextureG, floorTextureB, floorBlendMap);
-	terrains[1].getModel()->setAmbientLight(0.2f);
-	terrains[1].getModel()->setShadowMap(shadowRenderer.getShadowDepthTexture());
-
-	// ===  LAMP  ===
-	// Load the lampModel
-	gameobject lampModel = loader.loadObjFile("res/Lantern/lantern.obj", true, false);
-
-	//Set lamp model and texture for all lamps
-	for (int i = 0; i < 4; i++) {
-		lamps[i].setModel(&lampModel);
-		lamps[i].getModel()->addTexture(lampTexture);
-		lamps[i].getModel()->setSpecularMap(lampSpecularMap);
-	}
-
-	//Initialise the models position, rotation and scale.
-	lamps[0].getModel()->init(glm::vec3(20, terrains[1].getHeight(20, -30), -30), glm::vec3(0, 0, 0), glm::vec3(1.3f, 1.3f, 1.3f));
-	lamps[1].getModel()->init(glm::vec3(370, terrains[1].getHeight(370, -300), -300), glm::vec3(0, 0, 0), glm::vec3(1.3f, 1.3f, 1.3f));
-	lamps[2].getModel()->init(glm::vec3(293, terrains[1].getHeight(293, -305), -305), glm::vec3(0, 0, 0), glm::vec3(1.3f, 1.3f, 1.3f));
-	lamps[3].getModel()->init(glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1.3f, 1.3f, 1.3f));
-
-	// ===  BARRELS  ===
-	// Load barrelModel 1
-	loadModel(model, "res/Barrel/barrel.obj",
-		glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1.5f, 1.5f, 1.5f),
-		barrelTexture, barrelNormal, shadowRenderer.getShadowDepthTexture(),
-		100.0f, 1.0f, 0.1f);
-
-	// Load barrelModel 2
-	loadModel(model2, model,
-		glm::vec3(20, terrains[1].getHeight(20, -10), -300), glm::vec3(0, 0, 0), glm::vec3(1.5f, 1.5f, 1.5f),
-		barrelTexture, barrelNormal, shadowRenderer.getShadowDepthTexture(),
-		100.0f, 1.0f, 0.1f);
 }

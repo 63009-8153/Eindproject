@@ -4,6 +4,7 @@
 class Light
 {
 public:
+	Light();
 	Light(glm::vec3 pos, glm::vec3 col);
 	Light(glm::vec3 pos, glm::vec3 col, glm::vec3 _attenuation);
 	~Light();

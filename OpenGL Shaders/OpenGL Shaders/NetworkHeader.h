@@ -22,4 +22,6 @@
 
 #define MAX_PACKET_SIZE 1000000
 
+#define MAX_STARTTIME 30.0f
+
 #endif

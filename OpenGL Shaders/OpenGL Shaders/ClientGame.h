@@ -10,6 +10,9 @@
 #include "Player.h"
 
 extern void(*networkUpdateFunction)(void);
+extern void SendInitData();
+extern void SendLobbyData();
+extern void SendGameData();
 
 class ClientGame
 {
@@ -33,7 +36,12 @@ public:
 	void getPlayerData(Player &player);
 
 	// Send playerData to the server.
-	void sendPlayerData(playerData &player, packetTypes type);
+	// This function is only to be send during the game
+	void sendPlayerData();
+
+	// Send a lobbyUpdate packet to the server
+	// This function is only to be send during the lobby
+	void sendLobbyUpdate();
 
 	// Send an heartbeat response packet to the server
 	void sendHeartbeatPacket();
@@ -48,6 +56,21 @@ public:
 	// ClientNetwork that controls the connection to the server.
 	ClientNetwork* network;
 
+	bool gameStarting,
+		 gameStarted;
+
+	// The startTimer
+	float lobbyTimer;
+	// My Client
+	playerData myPlayerData;
+	// All clients
+	playerData allClients[MAX_LOBBYSIZE];
+	// All enemies
+	enemyData  allEnemies[MAX_ENEMIES];
+
+	// The actual lobbysize
+	unsigned int actualLobbySize;
+
 private:
 	// Error checking
 	std::vector<networkingErrors> errors;
@@ -57,10 +80,8 @@ private:
 
 	// Action types to be send in next packet
 	std::vector<actionTypes> nextActionTypes;
-
-	// All clients
-	playerData myPlayerData;
-	playerData allClients[MAX_LOBBYSIZE];
+	
+	// My ClientID
 	unsigned int myClientID;
 };
 
