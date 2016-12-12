@@ -2,6 +2,8 @@
 
 #include "WEngine/Usage.h"
 
+#include "areaTypes.h"
+
 #include "Enemy.h"
 #include "Model.h"
 #include "Player.h"
@@ -53,7 +55,7 @@ PostProcessRenderer Contrast, VBlur, HBlur, brightFilter, combineFilter;
 
 GLuint SA_T_Building[5];
 GLuint SA_T_AmmoBoxes[2], SA_TN_AmmoBoxes[2];
-GLuint SA_T_Barrels;
+GLuint SA_T_Barrels[3];
 GLuint SA_T_Barriers, SA_TN_Barriers;
 GLuint SA_T_Crate, SA_TN_Crate;
 GLuint SA_T_Crate2;
@@ -98,6 +100,8 @@ int gameState = 0;
 
 int Max_Fps = 60;
 bool limit_fps = true;
+
+areaType currentArea = SAFE_AREA;
 
 /* The Anti-Aliasing type used in the program.
    Can be one of the following:
@@ -268,19 +272,37 @@ int main() {
 		
 		/* ========= Add models to list for rendering ============== */
 		
-		//Add terrains to renderer list.
-		terrainRenderer.addToRenderList(terrains[0].getModel());
-		terrainRenderer.addToRenderList(terrains[1].getModel());
+		switch (currentArea)
+		{
+		case FORREST_AREA:
 
-		//Add normalmapped models to renderer list
-		normalModelRenderer.addToRenderList(model.getModel());
-		normalModelRenderer.addToRenderList(model2.getModel());
+			break;
+		case SAFE_AREA:
+			unsigned int i = 0;
+			// Add Building models to renderList
+			for(i = 0; i < (1 * 5); i++) modelRenderer.addToRenderList(SA_M_Building[i].getModel());
+			// Add Barrel models to renderList
+			for (i = 0; i < 5; i++) modelRenderer.addToRenderList(SA_M_Barrels[i].getModel());
+			// Add Crate2 model to renderList
+			modelRenderer.addToRenderList(SA_M_Crate2.getModel());
+			// Add SandBag2 model to renderList.
+			modelRenderer.addToRenderList(SA_M_SandBag2.getModel());
 
-		//Add lantern models
-		for (int i = 0; i < 4; i++) modelRenderer.addToRenderList(lamps[i].getModel());
+			// Add Barrier models to renderList
+			for (i = 0; i < 4; i++) normalModelRenderer.addToRenderList(SA_M_Barriers[i].getModel());
+			// Add Crate models to renderList
+			for (i = 0; i < 6; i++) normalModelRenderer.addToRenderList(SA_M_Crate[i].getModel());
+			// Add Crate models to renderList
+			for (i = 0; i < 2; i++) normalModelRenderer.addToRenderList(SA_M_Pallets[i].getModel());
+			// Add SandBag model to renderList.
+			normalModelRenderer.addToRenderList(SA_M_SandBag.getModel());
+
+			break;
+
+		}
 
 		//Add water to the renderer list
-		waterRenderer.addToRenderList(&water);
+		//waterRenderer.addToRenderList(&water);
 		
 		/* =============== Start of rendering ===================== */
 		
@@ -577,6 +599,7 @@ void renderShadowTexture(Light *shadowLight)
 // Render water cubemap : WORK IN PROGRESS :
 void renderWaterCubeMap()
 {
+	/*
 	//Add normalmapped models to renderer list
 	normalModelRenderer.addToRenderList(model.getModel());
 	normalModelRenderer.addToRenderList(model2.getModel());
@@ -617,6 +640,7 @@ void renderWaterCubeMap()
 
 	normalModelRenderer.clearRenderPass();
 	terrainRenderer.clearRenderPass();
+	*/
 }
 
 // Load and initialise all framebuffers
@@ -804,59 +828,51 @@ void SendGameData()
 // Load all graphics
 void loadGraphics()
 {
-	floorTextureGrass = loader.loadTexture("res/Terrain/grassy2.bmp", true);
-	floorTextureR = loader.loadTexture("res/Terrain/mud.bmp", true);
-	floorTextureG = loader.loadTexture("res/Terrain/grassFlowers.bmp", true);
-	floorTextureB = loader.loadTexture("res/Terrain/path.bmp", true);
-	floorBlendMap = loader.loadTexture("res/Terrain/blendMap.bmp", true);
 
-	//Load the texture and normalmap for the lamp model
-	lampTexture = loader.loadTexture("res/Lantern/lantern.bmp", true);
-	lampSpecularMap = loader.loadTexture("res/Lantern/lanternS.bmp", false);
-
-	//Load the texture and normalmap for the barrel model
-	barrelTexture = loader.loadTexture("res/Barrel/barrel.bmp", true);
-	barrelNormal = loader.loadTexture("res/Barrel/barrelNormal.bmp", true);
+	// Load all the graphics for the safe area
+	LoadGraphics_SafeArea();
 }
 // Load Safe Area Graphics
 void LoadGraphics_SafeArea()
 {
 	// Load Building's textures.
-	SA_T_Building[0] = loader.loadTexture("res/Terrain/grassy2.bmp", true);
-	SA_T_Building[1] = loader.loadTexture("res/Terrain/grassy2.bmp", true);
-	SA_T_Building[2] = loader.loadTexture("res/Terrain/grassy2.bmp", true);
-	SA_T_Building[3] = loader.loadTexture("res/Terrain/grassy2.bmp", true);
-	SA_T_Building[4] = loader.loadTexture("res/Terrain/grassy2.bmp", true);
+	SA_T_Building[0] = loader.loadTexture("res/Safe_Area/Building/Textures/building.bmp", true); // Building
+	SA_T_Building[1] = SA_T_Building[0]; // Doors
+	SA_T_Building[2] = loader.loadTexture("res/Safe_Area/Building/Textures/wood.bmp", true); // Wood
+	SA_T_Building[3] = loader.loadTexture("res/Safe_Area/Building/Textures/stroh.bmp", true); // Roof
+	SA_T_Building[4] = SA_T_Building[2]; // Wheel
 
 	// Load AmmoBox's texture and normals.
-	SA_T_AmmoBoxes[0]  = loader.loadTexture("res/Terrain/grassy2.bmp", true);
-	SA_T_AmmoBoxes[1]  = loader.loadTexture("res/Terrain/grassy2.bmp", true);
-	SA_TN_AmmoBoxes[0] = loader.loadTexture("res/Terrain/grassy2.bmp", true);
-	SA_TN_AmmoBoxes[1] = loader.loadTexture("res/Terrain/grassy2.bmp", true);
+	SA_T_AmmoBoxes[0]  = loader.loadTexture("res/Safe_Area/Weapon_Box/Textures/box_d.bmp", true);
+	SA_T_AmmoBoxes[1]  = loader.loadTexture("res/Safe_Area/Weapon_Box/Textures/roc_d.bmp", true);
+	SA_TN_AmmoBoxes[0] = loader.loadTexture("res/Safe_Area/Weapon_Box/Textures/box_n.bmp", true);
+	SA_TN_AmmoBoxes[1] = loader.loadTexture("res/Safe_Area/Weapon_Box/Textures/roc_n.bmp", true);
 
 	// Load Barrel's texture.
-	SA_T_Barrels = loader.loadTexture("res/Terrain/grassy2.bmp", true);
+	SA_T_Barrels[0] = loader.loadTexture("res/Safe_Area/Barrel/Textures/green_barrel.bmp", true);
+	SA_T_Barrels[1] = loader.loadTexture("res/Safe_Area/Barrel/Textures/red_barrel.bmp", true);
+	SA_T_Barrels[2] = loader.loadTexture("res/Safe_Area/Barrel/Textures/regular_barrel.bmp", true);
 
 	// Load Barrier's texture and normals.
-	SA_T_Barriers  = loader.loadTexture("res/Terrain/grassy2.bmp", true);
-	SA_TN_Barriers = loader.loadTexture("res/Terrain/grassy2.bmp", true);
+	SA_T_Barriers  = loader.loadTexture("res/Safe_Area/ConcreteBarrier/Textures/Barrier", true);
+	SA_TN_Barriers = loader.loadTexture("res/Safe_Area/ConcreteBarrier/Textures/Normal.bmp", true);
 
 	// Load Crate's texture and normal.
-	SA_T_Crate  = loader.loadTexture("res/Terrain/grassy2.bmp", true);
-	SA_TN_Crate = loader.loadTexture("res/Terrain/grassy2.bmp", true);
+	SA_T_Crate  = loader.loadTexture("res/Safe_Area/WoodBox/Textures/diffuse.bmp", true);
+	SA_TN_Crate = loader.loadTexture("res/Safe_Area/WoodBox/Textures/normal.bmp", true);
 
 	// Load Crate2's texture.
-	SA_T_Crate2 = loader.loadTexture("res/Terrain/grassy2.bmp", true);
+	SA_T_Crate2 = loader.loadTexture("res/Safe_Area/WoodBox2/Textures/WoodBox2.bmp", true);
 
-	SA_T_Pallets  = loader.loadTexture("res/Terrain/grassy2.bmp", true);
-	SA_TN_Pallets = loader.loadTexture("res/Terrain/grassy2.bmp", true);
+	SA_T_Pallets  = loader.loadTexture("res/Safe_Area/Pallet/Textures/Pallet_dif.bmp", true);
+	SA_TN_Pallets = loader.loadTexture("res/Safe_Area/Pallet/Textures/Pallet_norm.bmp", true);
 
 	// Load SandBag's texture and normal.
-	SA_T_SandBag  = loader.loadTexture("res/Terrain/grassy2.bmp", true);
-	SA_TN_SandBag = loader.loadTexture("res/Terrain/grassy2.bmp", true);
+	SA_T_SandBag  = loader.loadTexture("res/.bmp", true);
+	SA_TN_SandBag = loader.loadTexture("res/.bmp", true);
 
 	// Load SandBag2's texture.
-	SA_T_SandBag2 = loader.loadTexture("res/Terrain/grassy2.bmp", true);
+	SA_T_SandBag2 = loader.loadTexture("res/Safe_Area/SandBags2/Textures/dif.bmp", true);
 }
 
 // Load all models
@@ -864,63 +880,32 @@ void loadModels()
 {
 	// ===  TERRAIN  ===
 	//Create terrains with a heightmap, set position and all multitexture textures
-	terrains[0].createWithHeightmap("res/heightmap.bmp", -1, -1, &loader, floorTextureGrass, floorTextureR, floorTextureG, floorTextureB, floorBlendMap);
-	terrains[0].getModel()->setAmbientLight(0.2f);
-	terrains[0].getModel()->setShadowMap(shadowRenderer.getShadowDepthTexture());
+	//terrains[0].createWithHeightmap("res/heightmap.bmp", -1, -1, &loader, floorTextureGrass, floorTextureR, floorTextureG, floorTextureB, floorBlendMap);
+	//terrains[0].getModel()->setAmbientLight(0.2f);
+	//terrains[0].getModel()->setShadowMap(shadowRenderer.getShadowDepthTexture());
 
-	terrains[1].createWithHeightmap("res/heightmap.bmp", 0, -1, &loader, floorTextureGrass, floorTextureR, floorTextureG, floorTextureB, floorBlendMap);
-	terrains[1].getModel()->setAmbientLight(0.2f);
-	terrains[1].getModel()->setShadowMap(shadowRenderer.getShadowDepthTexture());
-
-	// ===  LAMP  ===
-	// Load the lampModel
-	gameobject lampModel = loader.loadObjFile("res/Lantern/lantern.obj", true, false);
-
-	//Set lamp model and texture for all lamps
-	for (int i = 0; i < 4; i++) {
-		lamps[i].setModel(&lampModel);
-		lamps[i].getModel()->addTexture(lampTexture);
-		lamps[i].getModel()->setSpecularMap(lampSpecularMap);
-	}
-
-	//Initialise the models position, rotation and scale.
-	lamps[0].getModel()->init(glm::vec3(20, terrains[1].getHeight(20, -30), -30), glm::vec3(0, 0, 0), glm::vec3(1.3f, 1.3f, 1.3f));
-	lamps[1].getModel()->init(glm::vec3(370, terrains[1].getHeight(370, -300), -300), glm::vec3(0, 0, 0), glm::vec3(1.3f, 1.3f, 1.3f));
-	lamps[2].getModel()->init(glm::vec3(293, terrains[1].getHeight(293, -305), -305), glm::vec3(0, 0, 0), glm::vec3(1.3f, 1.3f, 1.3f));
-	lamps[3].getModel()->init(glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1.3f, 1.3f, 1.3f));
-
-	// ===  BARRELS  ===
-	// Load barrelModel 1
-	loadModel(model, "res/Barrel/barrel.obj",
-		glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1.5f, 1.5f, 1.5f),
-		barrelTexture, barrelNormal, shadowRenderer.getShadowDepthTexture(),
-		100.0f, 1.0f, 0.1f);
-
-	// Load barrelModel 2
-	loadModel(model2, model,
-		glm::vec3(20, terrains[1].getHeight(20, -10), -300), glm::vec3(0, 0, 0), glm::vec3(1.5f, 1.5f, 1.5f),
-		barrelTexture, barrelNormal, shadowRenderer.getShadowDepthTexture(),
-		100.0f, 1.0f, 0.1f);
+	// Load all the models for the safe area.
+	loadModels_SafeArea();
 }
 // Load Safe Area Models
 void loadModels_SafeArea()
 {
 	//TODO: Still need to change the 3DSMAX settings to OpenGL Settings
 	// Load Building models.
-	loadModel(SA_M_Building[0], "res/Barrel/barrel.obj", glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1.5f, 1.5f, 1.5f), SA_T_Building[0], 100.0f, 1.0f, 0.1f);
-	loadModel(SA_M_Building[1], "res/Barrel/barrel.obj", glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1.5f, 1.5f, 1.5f), SA_T_Building[1], 100.0f, 1.0f, 0.1f);
-	loadModel(SA_M_Building[2], "res/Barrel/barrel.obj", glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1.5f, 1.5f, 1.5f), SA_T_Building[2], 100.0f, 1.0f, 0.1f);
-	loadModel(SA_M_Building[3], "res/Barrel/barrel.obj", glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1.5f, 1.5f, 1.5f), SA_T_Building[3], 100.0f, 1.0f, 0.1f);
-	loadModel(SA_M_Building[4], "res/Barrel/barrel.obj", glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1.5f, 1.5f, 1.5f), SA_T_Building[4], 100.0f, 1.0f, 0.1f);
+	loadModel(SA_M_Building[0], "res/Safe_Area/Building/Building_Building.obj", glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1.5f, 1.5f, 1.5f), SA_T_Building[0], 100.0f, 1.0f, 0.1f);
+	loadModel(SA_M_Building[1], "res/Safe_Area/Building/Building_Doors.obj", glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1.5f, 1.5f, 1.5f), SA_T_Building[1], 100.0f, 1.0f, 0.1f);
+	loadModel(SA_M_Building[2], "res/Safe_Area/Building/Building_Wood.obj", glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1.5f, 1.5f, 1.5f), SA_T_Building[2], 100.0f, 1.0f, 0.1f);
+	loadModel(SA_M_Building[3], "res/Safe_Area/Building/Building_Roof.obj", glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1.5f, 1.5f, 1.5f), SA_T_Building[3], 100.0f, 1.0f, 0.1f);
+	loadModel(SA_M_Building[4], "res/Safe_Area/Building/Building_Wheel.obj", glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1.5f, 1.5f, 1.5f), SA_T_Building[4], 100.0f, 1.0f, 0.1f);
 
 	// Load AmmoBoxes models.
-	loadModel(SA_M_AmmoBoxes[0], "res/Barrel/barrel.obj", glm::vec3(-5.695f, -12.76f, 1.042f), glm::vec3(0, 0, glm::radians(133.379f)), glm::vec3(1.0f), SA_T_AmmoBoxes[0], SA_TN_AmmoBoxes[0], 100.0f, 1.0f, 0.1f);
-	loadModel(SA_M_AmmoBoxes[1], "res/Barrel/barrel.obj", glm::vec3(-5.695f, -12.76f, 1.042f), glm::vec3(0, 0, glm::radians(133.379f)), glm::vec3(1.0f), SA_T_AmmoBoxes[1], SA_TN_AmmoBoxes[1], 100.0f, 1.0f, 0.1f);
-	loadModel(SA_M_AmmoBoxes[2], "res/Barrel/barrel.obj", glm::vec3(-5.695f, -12.76f, 1.042f), glm::vec3(0, 0, glm::radians(133.379f)), glm::vec3(1.0f), SA_T_AmmoBoxes[1], SA_TN_AmmoBoxes[1], 100.0f, 1.0f, 0.1f);
-	loadModel(SA_M_AmmoBoxes[3], "res/Barrel/barrel.obj", glm::vec3(-5.695f, -12.76f, 1.042f), glm::vec3(0, 0, glm::radians(133.379f)), glm::vec3(1.0f), SA_T_AmmoBoxes[1], SA_TN_AmmoBoxes[1], 100.0f, 1.0f, 0.1f);
-	loadModel(SA_M_AmmoBoxes[4], "res/Barrel/barrel.obj", glm::vec3(-5.695f, -12.76f, 1.042f), glm::vec3(0, 0, glm::radians(133.379f)), glm::vec3(1.0f), SA_T_AmmoBoxes[1], SA_TN_AmmoBoxes[1], 100.0f, 1.0f, 0.1f);
-	loadModel(SA_M_AmmoBoxes[5], "res/Barrel/barrel.obj", glm::vec3(-5.695f, -12.76f, 1.042f), glm::vec3(0, 0, glm::radians(133.379f)), glm::vec3(1.0f), SA_T_AmmoBoxes[1], SA_TN_AmmoBoxes[1], 100.0f, 1.0f, 0.1f);
-	loadModel(SA_M_AmmoBoxes[6], "res/Barrel/barrel.obj", glm::vec3(-5.695f, -12.76f, 1.042f), glm::vec3(0, 0, glm::radians(133.379f)), glm::vec3(1.0f), SA_T_AmmoBoxes[1], SA_TN_AmmoBoxes[1], 100.0f, 1.0f, 0.1f);
+	loadModel(SA_M_AmmoBoxes[0], "res/Safe_Area/Weapon_Box/Weapon_Box.obj", glm::vec3(-5.695f, -12.76f, 1.042f), glm::vec3(0, 0, glm::radians(133.379f)), glm::vec3(1.0f), SA_T_AmmoBoxes[0], SA_TN_AmmoBoxes[0], 100.0f, 1.0f, 0.1f);
+	loadModel(SA_M_AmmoBoxes[1], "res/Safe_Area/Weapon_Box/Weapon_Box_Granade.obj", glm::vec3(-5.695f, -12.76f, 1.042f), glm::vec3(0, 0, glm::radians(133.379f)), glm::vec3(1.0f), SA_T_AmmoBoxes[1], SA_TN_AmmoBoxes[1], 100.0f, 1.0f, 0.1f);
+	loadModel(SA_M_AmmoBoxes[2], "res/Safe_Area/Weapon_Box/Weapon_Box_Granade2.obj", glm::vec3(-5.695f, -12.76f, 1.042f), glm::vec3(0, 0, glm::radians(133.379f)), glm::vec3(1.0f), SA_T_AmmoBoxes[1], SA_TN_AmmoBoxes[1], 100.0f, 1.0f, 0.1f);
+	loadModel(SA_M_AmmoBoxes[3], "res/Safe_Area/Weapon_Box/Weapon_Box_Granade3.obj", glm::vec3(-5.695f, -12.76f, 1.042f), glm::vec3(0, 0, glm::radians(133.379f)), glm::vec3(1.0f), SA_T_AmmoBoxes[1], SA_TN_AmmoBoxes[1], 100.0f, 1.0f, 0.1f);
+	loadModel(SA_M_AmmoBoxes[4], "res/Safe_Area/Weapon_Box/Weapon_Box_Granade4.obj", glm::vec3(-5.695f, -12.76f, 1.042f), glm::vec3(0, 0, glm::radians(133.379f)), glm::vec3(1.0f), SA_T_AmmoBoxes[1], SA_TN_AmmoBoxes[1], 100.0f, 1.0f, 0.1f);
+	loadModel(SA_M_AmmoBoxes[5], "res/Safe_Area/Weapon_Box/Weapon_Box_Granade5.obj", glm::vec3(-5.695f, -12.76f, 1.042f), glm::vec3(0, 0, glm::radians(133.379f)), glm::vec3(1.0f), SA_T_AmmoBoxes[1], SA_TN_AmmoBoxes[1], 100.0f, 1.0f, 0.1f);
+	loadModel(SA_M_AmmoBoxes[6], "res/Safe_Area/Weapon_Box/Weapon_Box_Granade6.obj", glm::vec3(-5.695f, -12.76f, 1.042f), glm::vec3(0, 0, glm::radians(133.379f)), glm::vec3(1.0f), SA_T_AmmoBoxes[1], SA_TN_AmmoBoxes[1], 100.0f, 1.0f, 0.1f);
 	
 	loadModel(SA_M_AmmoBoxes[7],  SA_M_AmmoBoxes[0], glm::vec3(3.656f, 13.91f, 1.042f), glm::vec3(0, 0, glm::radians(79.083f)), glm::vec3(1.0f), SA_T_AmmoBoxes[0], SA_TN_AmmoBoxes[0], 100.0f, 1.0f, 0.1f);
 	loadModel(SA_M_AmmoBoxes[8],  SA_M_AmmoBoxes[1], glm::vec3(3.656f, 13.91f, 1.042f), glm::vec3(0, 0, glm::radians(79.083f)), glm::vec3(1.0f), SA_T_AmmoBoxes[1], SA_TN_AmmoBoxes[1], 100.0f, 1.0f, 0.1f);
@@ -939,20 +924,20 @@ void loadModels_SafeArea()
 	loadModel(SA_M_AmmoBoxes[20], SA_M_AmmoBoxes[6], glm::vec3(-7.26f, -2.125f, 1.042f), glm::vec3(0, 0, glm::radians(-178.774f)), glm::vec3(1.0f), SA_T_AmmoBoxes[1], SA_TN_AmmoBoxes[1], 100.0f, 1.0f, 0.1f);
 
 	// Load Barrels models.
-	loadModel(SA_M_Barrels[0], "res/Barrel/barrel.obj", glm::vec3(-7.349f, 8.582f, 0.513f), glm::vec3(0, 0, glm::radians(-22.889f)), glm::vec3(1.0f), SA_T_Barrels, 100.0f, 1.0f, 0.1f);
-	loadModel(SA_M_Barrels[1], SA_M_Barrels[0], glm::vec3(-4.407f, 13.685f, 0.893f), glm::vec3(glm::radians(14.743f), glm::radians(0.389f), glm::radians(-91.479f)), glm::vec3(1.0f), SA_T_Barrels, 100.0f, 1.0f, 0.1f);
-	loadModel(SA_M_Barrels[2], SA_M_Barrels[0], glm::vec3(-7.349f, 12.441f, 3.818f), glm::vec3(glm::radians(-5.954f), 0, 0), glm::vec3(1.0f), SA_T_Barrels, 100.0f, 1.0f, 0.1f);
-	loadModel(SA_M_Barrels[3], SA_M_Barrels[0], glm::vec3(-7.349f, 13.585f, 0.513f), glm::vec3(0.0f), glm::vec3(1.0f), SA_T_Barrels, 100.0f, 1.0f, 0.1f);
-	loadModel(SA_M_Barrels[4], SA_M_Barrels[0], glm::vec3(-7.349f, 10.777f, 0.513f), glm::vec3(glm::radians(-16.803f), glm::radians(-3.727f), glm::radians(20.35f)), glm::vec3(1.0f), SA_T_Barrels, 100.0f, 1.0f, 0.1f);
+	loadModel(SA_M_Barrels[0], "res/Safe_Area/Barrel/Barrel.obj", glm::vec3(-7.349f, 8.582f, 0.513f), glm::vec3(0, 0, glm::radians(-22.889f)), glm::vec3(1.0f), SA_T_Barrels[0], 100.0f, 1.0f, 0.1f);
+	loadModel(SA_M_Barrels[1], SA_M_Barrels[0], glm::vec3(-4.407f, 13.685f, 0.893f), glm::vec3(glm::radians(14.743f), glm::radians(0.389f), glm::radians(-91.479f)), glm::vec3(1.0f), SA_T_Barrels[0], 100.0f, 1.0f, 0.1f);
+	loadModel(SA_M_Barrels[2], SA_M_Barrels[0], glm::vec3(-7.349f, 12.441f, 3.818f), glm::vec3(glm::radians(-5.954f), 0, 0), glm::vec3(1.0f), SA_T_Barrels[0], 100.0f, 1.0f, 0.1f);
+	loadModel(SA_M_Barrels[3], SA_M_Barrels[0], glm::vec3(-7.349f, 13.585f, 0.513f), glm::vec3(0.0f), glm::vec3(1.0f), SA_T_Barrels[0], 100.0f, 1.0f, 0.1f);
+	loadModel(SA_M_Barrels[4], SA_M_Barrels[0], glm::vec3(-7.349f, 10.777f, 0.513f), glm::vec3(glm::radians(-16.803f), glm::radians(-3.727f), glm::radians(20.35f)), glm::vec3(1.0f), SA_T_Barrels[0], 100.0f, 1.0f, 0.1f);
 	
 	// Load Barriers models.
-	loadModel(SA_M_Barriers[0], "res/Barrel/barrel.obj", glm::vec3(5.746f, -14.737f, 1.817f), glm::vec3(0.0f), glm::vec3(1.0f), SA_T_Barriers, SA_TN_Barriers, 100.0f, 1.0f, 0.1f);
+	loadModel(SA_M_Barriers[0], "res/Safe_Area/ConcreteBarrier/ConcreteBarrier.obj", glm::vec3(5.746f, -14.737f, 1.817f), glm::vec3(0.0f), glm::vec3(1.0f), SA_T_Barriers, SA_TN_Barriers, 100.0f, 1.0f, 0.1f);
 	loadModel(SA_M_Barriers[1], SA_M_Barriers[0], glm::vec3(2.48f, -14.737f, 1.817f), glm::vec3(0.0f), glm::vec3(1.0f), SA_T_Barriers, SA_TN_Barriers, 100.0f, 1.0f, 0.1f);
 	loadModel(SA_M_Barriers[2], SA_M_Barriers[0], glm::vec3(-0.987f, -14.737f, 1.817f), glm::vec3(0.0f), glm::vec3(1.0f), SA_T_Barriers, SA_TN_Barriers, 100.0f, 1.0f, 0.1f);
 	loadModel(SA_M_Barriers[3], SA_M_Barriers[0], glm::vec3(-4.258f, -14.737f, 1.817f), glm::vec3(0.0f), glm::vec3(1.0f), SA_T_Barriers, SA_TN_Barriers, 100.0f, 1.0f, 0.1f);
 
 	// Load Crates models.
-	loadModel(SA_M_Crate[0], "res/Barrel/barrel.obj", glm::vec3(9.514f, 8.295f, 4.408f), glm::vec3(0, 0, glm::radians(-18.961f)), glm::vec3(1.0f), SA_T_Crate, SA_TN_Crate, 100.0f, 1.0f, 0.1f);
+	loadModel(SA_M_Crate[0], "res/Safe_Area/WoodBox/WoodBox.obj", glm::vec3(9.514f, 8.295f, 4.408f), glm::vec3(0, 0, glm::radians(-18.961f)), glm::vec3(1.0f), SA_T_Crate, SA_TN_Crate, 100.0f, 1.0f, 0.1f);
 	loadModel(SA_M_Crate[1], SA_M_Crate[0], glm::vec3(8.96f, 9.678f, 1.864f), glm::vec3(0, 0, 0), glm::vec3(1.0f), SA_T_Crate, SA_TN_Crate, 100.0f, 1.0f, 0.1f);
 	loadModel(SA_M_Crate[2], SA_M_Crate[0], glm::vec3(9.385f, -4.265f, 2.049f), glm::vec3(glm::radians(-0.109f), glm::radians(-15.49f), glm::radians(0.046f)), glm::vec3(1.0f), SA_T_Crate, SA_TN_Crate, 100.0f, 1.0f, 0.1f);
 	loadModel(SA_M_Crate[3], SA_M_Crate[0], glm::vec3(9.552f, 5.291f, 4.424f), glm::vec3(0, 0, 0), glm::vec3(1.0f), SA_T_Crate, SA_TN_Crate, 100.0f, 1.0f, 0.1f);
@@ -960,17 +945,17 @@ void loadModels_SafeArea()
 	loadModel(SA_M_Crate[5], SA_M_Crate[0], glm::vec3(8.96f, 5.932f, 1.864), glm::vec3(0, 0, 0), glm::vec3(1.0f), SA_T_Crate, SA_TN_Crate, 100.0f, 1.0f, 0.1f);
 	
 	// Load Crate2 model.
-	loadModel(SA_M_Crate2, "res/Barrel/barrel.obj", glm::vec3(10.1f, 6.945f, 6.599), glm::vec3(0, 0, glm::radians(6.99f)), glm::vec3(1.0f), SA_T_Crate2, 100.0f, 1.0f, 0.1f);
+	loadModel(SA_M_Crate2, "res/Safe_Area/WoodBox2/WoodBox2.obj", glm::vec3(10.1f, 6.945f, 6.599), glm::vec3(0, 0, glm::radians(6.99f)), glm::vec3(1.0f), SA_T_Crate2, 100.0f, 1.0f, 0.1f);
 	
 	// Load Pallets models.
-	loadModel(SA_M_Pallets[0], "res/Barrel/barrel.obj", glm::vec3(9.958f, 12.077f, 2.466f), glm::vec3(glm::radians(90.0f), glm::radians(-81.467f), glm::radians(29.358)), glm::vec3(1.0f), SA_T_Pallets, SA_TN_Pallets, 100.0f, 1.0f, 0.1f);
+	loadModel(SA_M_Pallets[0], "res/Safe_Area/Pallet/Pallet.obj", glm::vec3(9.958f, 12.077f, 2.466f), glm::vec3(glm::radians(90.0f), glm::radians(-81.467f), glm::radians(29.358)), glm::vec3(1.0f), SA_T_Pallets, SA_TN_Pallets, 100.0f, 1.0f, 0.1f);
 	loadModel(SA_M_Pallets[1], SA_M_Pallets[0], glm::vec3(9.362f, 14.006f, 2.466f), glm::vec3(glm::radians(90.0f), glm::radians(-81.467f), glm::radians(52.264f)), glm::vec3(1.0f), SA_T_Pallets, SA_TN_Pallets, 100.0f, 1.0f, 0.1f);
 	
 	// Load SandBag model.
-	loadModel(SA_M_SandBag, "res/Barrel/barrel.obj", glm::vec3(8.933f, -10.087f, 0.513f), glm::vec3(0, 0, glm::radians(66.783f)), glm::vec3(1.0f), SA_T_SandBag, SA_TN_SandBag, 100.0f, 1.0f, 0.1f);
+	loadModel(SA_M_SandBag, "res/Safe_Area/SandBags/SandBags.obj", glm::vec3(8.933f, -10.087f, 0.513f), glm::vec3(0, 0, glm::radians(66.783f)), glm::vec3(1.0f), SA_T_SandBag, SA_TN_SandBag, 100.0f, 1.0f, 0.1f);
 
 	// Load SandBag2 model.
-	loadModel(SA_M_SandBag2, "res/Barrel/barrel.obj", glm::vec3(-8.35f, -6.885f, -2.656f), glm::vec3(glm::radians(-1.528f), glm::radians(-17.504f), glm::radians(-145.947f)), glm::vec3(1.0f), SA_T_SandBag2, 100.0f, 1.0f, 0.1f);
+	loadModel(SA_M_SandBag2, "res/Safe_Area/SandBags2/SandBags2.obj", glm::vec3(-8.35f, -6.885f, -2.656f), glm::vec3(glm::radians(-1.528f), glm::radians(-17.504f), glm::radians(-145.947f)), glm::vec3(1.0f), SA_T_SandBag2, 100.0f, 1.0f, 0.1f);
 
 }
 
