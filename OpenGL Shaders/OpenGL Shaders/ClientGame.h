@@ -48,6 +48,7 @@ public:
 
 	// Add an actionType to the next packet send to the server.
 	void addActionType(actionTypes type);
+	bool hasActionType();
 
 	// Get the network error.
 	// Resets to 0 after call

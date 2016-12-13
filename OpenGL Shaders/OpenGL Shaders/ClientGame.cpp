@@ -58,7 +58,7 @@ void ClientGame::updateClient()
 				{
 					// If the server has received our initialisation packet, stop sending it.
 					case GAME_RECEIVED_INIT:
-						networkUpdateFunction = nullptr;
+						networkUpdateFunction = SendLobbyData;
 						break;
 					case GAME_START:
 						gameStarting = true;
@@ -128,6 +128,7 @@ void ClientGame::updateClient()
 
 		default:
 			printf("ERROR: -- Packet received with Unknown packetType %u!!\n", packetType);
+			return;
 			break;
 		}
 	}
@@ -255,6 +256,12 @@ void ClientGame::addActionType(actionTypes type)
 	else {
 		printf("WARNING -- Already added %d actionTypes.\nThis is the maximum to be send!\nLosing last actionType!\n", MAX_ACTIONS);
 	}
+}
+
+bool ClientGame::hasActionType()
+{
+	if (nextActionTypes.size() > 0) return true;
+	return false;
 }
 
 // Get the network error.
