@@ -10,6 +10,8 @@ ClientGame::ClientGame(char ipAddress[39], char port[5])
 	//Create a new clientNetwork with IP-Address and Port
 	network = new ClientNetwork(ipAddress, port);
 	errors = network->getErrors();
+
+	lobbyTimer = MAX_STARTTIME;
 }
 // Destructor
 ClientGame::~ClientGame()
@@ -36,6 +38,7 @@ void ClientGame::updateClient()
 
 		switch (packetType) {
 
+		// LobbyPacket is received when in the lobby
 		case LOBBY_PACKET:
 		{
 			ClientReceivePacketLobby packet;
@@ -55,20 +58,51 @@ void ClientGame::updateClient()
 				{
 					// If the server has received our initialisation packet, stop sending it.
 					case GAME_RECEIVED_INIT:
-						networkUpdateFunction = nullptr;
+						networkUpdateFunction = SendLobbyData;
+						break;
+					case GAME_START:
+						gameStarting = true;
+						break;
+					case GAME_STARTED:
+						// Set the networkFunction to the game update function
+						networkUpdateFunction = SendGameData;
+						gameStarted = true;
+						gameStarting = false;
 						break;
 				}
 			}
+
+			lobbyTimer = packet.startTimer;
 		}
 			break;
+		// GamePacket is received when playing the game
 		case GAME_PACKET:
 		{
 			ClientReceivePacket packet;
 			packet.deserialize(&(network_data[i]));
 			i += sizeof(ClientReceivePacket);
 
+			// Set the lobbysize
+			actualLobbySize = std::min(packet.lobbySize, (unsigned int)MAX_LOBBYSIZE);
+			
+			// Get all playerData
+			for (unsigned int k = 0; k < actualLobbySize; k++)
+			{
+				allClients[k] = packet.players[k];
+
+				if (myClientID == packet.players[k].playerID)
+				{
+					myPlayerData = packet.players[k];
+				}
+			}
+			// Get all enemies
+			for (unsigned int l = 0; l < MAX_ENEMIES; l++) 
+			{
+				allEnemies[l] = packet.enemies[l];
+			}
 		}
 			break;
+		// InitialisationPacket is received when we first connect to the server
 		case INITALISATION_PACKET:
 		{
 			ClientReceivePacketLobby packet;
@@ -81,6 +115,7 @@ void ClientGame::updateClient()
 			printf("INFO:  -- Client accepted by server! We got clientID: %d\n", packet.players[0].playerID);
 		}
 			break;
+		// HeartbeatPacket is received when the server wants to check if we are still an active client
 		case HEARTBEAT_PACKET:
 		{
 			i += sizeof(ClientReceivePacketLobby);
@@ -90,8 +125,10 @@ void ClientGame::updateClient()
 			sendHeartbeatPacket();
 		}
 			break;
+
 		default:
 			printf("ERROR: -- Packet received with Unknown packetType %u!!\n", packetType);
+			return;
 			break;
 		}
 	}
@@ -111,19 +148,72 @@ void ClientGame::disconnect()
 	NetworkServices::sendMessage(network->getSocket(), packet_data, packet_size);
 }
 
-// Send playerData to the server.
-void ClientGame::sendPlayerData(playerData &player, packetTypes type)
+// Update the playerdata of own playerData
+void ClientGame::setPlayerData(Player & player)
+{
+	myPlayerData.rotation = player.getRotation();
+}
+
+// Update the playerdata of own playerData
+void ClientGame::getPlayerData(Player & player)
+{
+	for (unsigned int i = 0; i < MAX_LOBBYSIZE; i++)
+	{
+		if (allClients[i].playerID == myClientID)
+		{
+			// Set the position
+			player.setPosition(allClients[i].position);
+
+			// Set the health
+			player.health = allClients[i].health;
+			player.maxHealth = allClients[i].maxHealth;
+			// Set the velocity
+			player.setVelocity(allClients[i].velocity);
+
+			return;
+		}
+	}
+}
+
+// Send my playerData to the server.
+// This function is only to be send during the game
+void ClientGame::sendPlayerData()
 {
 	const unsigned int packet_size = sizeof(ClientSendPacket);
 	char packet_data[packet_size];
 
 	ClientSendPacket packet;
-	packet.packet_type = type;
-	packet.player = player;
+	packet.packet_type = GAME_PACKET;
+	packet.player = myPlayerData;
 
 	// Add all set actionTypes to the packet
 	for (int i = 0; i < MAX_ACTIONS; i++) {
 		if(i < (int)nextActionTypes.size()) packet.action_types[i] = nextActionTypes[i];
+		else packet.action_types[i] = ACTION_NONE;
+	}
+	// Clear the actions
+	nextActionTypes.clear();
+
+	packet.serialize(packet_data);
+
+	NetworkServices::sendMessage(network->getSocket(), packet_data, packet_size);
+}
+
+// Send a lobbyUpdate packet to the server
+// This function is only to be send during the lobby
+void ClientGame::sendLobbyUpdate()
+{
+	const unsigned int packet_size = sizeof(ClientSendPacketLobby);
+	char packet_data[packet_size];
+
+	ClientSendPacketLobby packet;
+	packet.packet_type = LOBBY_PACKET;
+
+	packet.player = myPlayerData;
+
+	// Add all set actionTypes to the packet
+	for (int i = 0; i < MAX_ACTIONS; i++) {
+		if (i < (int)nextActionTypes.size()) packet.action_types[i] = nextActionTypes[i];
 		else packet.action_types[i] = ACTION_NONE;
 	}
 	// Clear the actions
@@ -153,11 +243,25 @@ void ClientGame::addActionType(actionTypes type)
 {
 	// If we are not at MAX_ACTIONS add the action, else dont add it.
 	if (nextActionTypes.size() < MAX_ACTIONS) {
+		// Check if the action is not already in the action list.
+		for (unsigned int i = 0; i < nextActionTypes.size(); i++)
+		{
+			if (nextActionTypes[i] == type)
+			{
+				return;
+			}
+		}
 		nextActionTypes.push_back(type);
 	}
 	else {
 		printf("WARNING -- Already added %d actionTypes.\nThis is the maximum to be send!\nLosing last actionType!\n", MAX_ACTIONS);
 	}
+}
+
+bool ClientGame::hasActionType()
+{
+	if (nextActionTypes.size() > 0) return true;
+	return false;
 }
 
 // Get the network error.

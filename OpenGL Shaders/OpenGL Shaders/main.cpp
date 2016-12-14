@@ -1,7 +1,12 @@
 #include "ClientGame.h"
 
 #include "WEngine/Usage.h"
-#include "ReactPhysics3D/reactphysics3d.h"
+
+#include "areaTypes.h"
+
+#include "Enemy.h"
+#include "Model.h"
+#include "Player.h"
 
 #define WAVE_SPEED 0.03
 
@@ -9,7 +14,7 @@
 #define SSAA 2
 #define FXAA 3
 
-#define UPDATE_CYCLES_PER_SECOND 144
+#define UPDATE_CYCLES_PER_SECOND 60
 clock_t programStartClock = std::clock();
 
 // ============  Client Handle Variables ===========
@@ -17,11 +22,18 @@ bool clientRunning = false;
 ClientGame client;
 void clientLoop(void *);
 
+double	clientLoopDeltaTime		 = 0,
+		clientLoopLastRenderTime = 0;
 
 // ============  GAME PROGRAM VARIABLES ============
 
 GLFWwindow* window;
 void (*networkUpdateFunction)(void) = nullptr;
+
+float mouseSensitivity = 1.0f;
+
+Player player;
+Player otherPlayers[MAX_LOBBYSIZE];
 
 Loader loader;
 Camera camera;
@@ -40,24 +52,42 @@ PostProcessRenderer Contrast, VBlur, HBlur, brightFilter, combineFilter;
 
 
 // == RENDER ELEMENTS ==
+
+GLuint SA_T_Building[5];
+GLuint SA_T_AmmoBoxes[7], SA_TN_AmmoBoxes[2];
+GLuint SA_T_Barrels[3];
+GLuint SA_T_Barriers, SA_TN_Barriers;
+GLuint SA_T_Crate, SA_TN_Crate;
+GLuint SA_T_Crate2;
+GLuint SA_T_Pallets, SA_TN_Pallets;
+GLuint SA_T_SandBag, SA_TN_SandBag;
+GLuint SA_T_SandBag2;
+
+Model SA_M_Building[1 * 5];
+Model SA_M_AmmoBoxes[3 * 7];
+Model SA_M_Barrels[5];
+Model SA_M_Barriers[4];
+Model SA_M_Crate2;
+Model SA_M_Crate[6];
+Model SA_M_Pallets[2];
+Model SA_M_SandBag,
+	  SA_M_SandBag2;
+
 std::vector<texture2D> GuiElements;
+texture2D GuiCherry;
 
 Terrain terrains[2];
 
 std::vector<Light*> lights;
+Light sun, light0, light1, light2;
 
 WaterTile water;
 
-gameobject lamps[4];
-gameobject model, model2, model3;
-
-Skybox skybox, skybox2;
+Skybox skybox;
 
 textureCubemap waterReflection;
 
-texture2D GuiCherry;
-
-// == GAME INFO ==
+// ===  GAME INFO  ===
 glm::vec3 clearColor = glm::vec3(0, 0, 0);
 
 double last_render_time = 0;
@@ -71,6 +101,8 @@ int gameState = 0;
 int Max_Fps = 60;
 bool limit_fps = true;
 
+areaType currentArea = SAFE_AREA;
+
 /* The Anti-Aliasing type used in the program.
    Can be one of the following:
    * MSAA - MultiSampled Anti-Aliasing
@@ -79,13 +111,27 @@ bool limit_fps = true;
 */
 int AAType = FXAA;
 
-// ==  FUNCTIONS  ==
+// ===  FUNCTIONS  ===
+
+// Load a model with only a texture
+void loadModel(Model &model, std::string modelFilename, glm::vec3 pos, glm::vec3 rot, glm::vec3 scale, GLuint textureID, float shineDamper, float reflectivity, float ambientLight);
+// Load a model with a texture and normalMap
+void loadModel(Model &model, std::string modelFilename, glm::vec3 pos, glm::vec3 rot, glm::vec3 scale, GLuint textureID, GLuint normalTextureID, float shineDamper, float reflectivity, float ambientLight);
+// Load a model with a texture, normalMap and a shadowMap
+void loadModel(Model &model, std::string modelFilename, glm::vec3 pos, glm::vec3 rot, glm::vec3 scale, GLuint textureID, GLuint normalTextureID, GLuint shadowMapID, float shineDamper, float reflectivity, float ambientLight);
+
+// Set a model with only a texture
+void loadModel(Model &model, Model &oriModel, glm::vec3 pos, glm::vec3 rot, glm::vec3 scale, GLuint textureID, float shineDamper, float reflectivity, float ambientLight);
+// Set a model with a texture and normalMap
+void loadModel(Model &model, Model &oriModel, glm::vec3 pos, glm::vec3 rot, glm::vec3 scale, GLuint textureID, GLuint normalTextureID, float shineDamper, float reflectivity, float ambientLight);
+// Set a model with a texture, normalMap and a shadowMap
+void loadModel(Model &model, Model &oriModel, glm::vec3 pos, glm::vec3 rot, glm::vec3 scale, GLuint textureID, GLuint normalTextureID, GLuint shadowMapID, float shineDamper, float reflectivity, float ambientLight);
 
 // If trapMouseInWindow it returns the changed amount of pixels since last update
 // Else if returns the position the mouse is on
 glm::vec2 handleMouseInput(bool trapMouseInWindow);
 // Handle user input
-void handleInput();
+void handleGameInput();
 // Update time stuff
 void updateTime();
 // Render water textures
@@ -94,6 +140,19 @@ void renderWaterTextures();
 void renderShadowTexture(Light *shadowLight);
 // Render water cubemap : WORK IN PROGRESS :
 void renderWaterCubeMap();
+
+// Load and initialise all waterTiles
+void loadAndInitialiseWater();
+// Load and initialise all GUI elements
+void loadAndInitialiseGUI();
+// Load and initialise all framebuffers
+void loadAllFrameBuffers();
+// Load and initialise all renderers
+void loadAndInitialiseRenderers();
+// Load and initialise the skybox
+void loadSkybox();
+// Initialise Lights
+void initLights();
 
 // Initialise the client
 void initialiseClient(char ipAddress[39], char port[5]);
@@ -105,6 +164,15 @@ void SendInitData();
 void SendLobbyData();
 void SendGameData();
 
+// Load all graphics
+void loadGraphics();
+// Load Safe Area Graphics
+void LoadGraphics_SafeArea();
+// Load all models
+void loadModels();
+// Load Safe Area Models
+void loadModels_SafeArea();
+
 int main() {
 
 	// ============  NETWORKING LOGIC =================
@@ -112,205 +180,83 @@ int main() {
 	// Initialise, set the client and connect to the server.
 	initialiseClient("127.0.0.1", "6881");
 
+
 	// ===============  GAME LOGIC ====================
 
 	// Initialise GLFW and throw error if it failed
 	if (!glfwInit()){
 		throw std::runtime_error("Failed to initialize GLFW");
-		return -1;
+		exit(-1);
 	}
 
 	// ========  Initialise  ==========
 	last_render_time = glfwGetTime();
 
-	// ==== DISPLAY ====
 
+//TODO: StartScreen Loop here
+
+	// ===  DISPLAY  ===
 	//Create a display and initialise GLEW
 	DisplayManager::createDisplay(SCREEN_WIDTH, SCREEN_HEIGHT, PROGRAM_NAME, false);
 
-	//Just disable vsync for max fps.
+	//Just disable vsync for max fps :).
 	DisplayManager::disableVsync();
 
-	//glfwSetKeyCallback(window, keyfun);
-
-	// ==== CAMERA ====
-
-	//Intialise the camera and set its position
+	// ===  CAMERA  ===
+	//Intialise the camera and set its position and rotation
 	camera.Initalise(75.0f, SCREEN_WIDTH, SCREEN_HEIGHT, 0.01f, 1000.0f);
-	camera.Set(glm::vec3(0, 10, -50), glm::vec3(0, _PI, 0));
+	camera.Set(glm::vec3(0, 10, 0), glm::vec3(0, 0, 0));
 
-	// ==== Framebuffers ====
+	// ===  Framebuffers  ===
 
 	//Initialise framebuffer for cubemap texture waterReflection
 	waterReflection.initialseFrameBuffer(1280);
 
-	//Load and intialise all postprocessors
-	if (AAType == MSAA) {
-		sceneRenderer.load(glm::vec2(SCREEN_WIDTH, SCREEN_HEIGHT), 8);
-		antiAliasedRenderer.load(glm::vec2(SCREEN_WIDTH, SCREEN_HEIGHT));
-	}
-	else if (AAType == SSAA) {
-		sceneRenderer.load(glm::vec2(SCREEN_WIDTH * 4, SCREEN_HEIGHT * 4));
-		//TODO: create a shader that downsamples the image created!
-		antiAliasedRenderer.load(glm::vec2(SCREEN_WIDTH, SCREEN_HEIGHT));
-	}
-	else if (AAType == FXAA) {
-		sceneRenderer.load(glm::vec2(SCREEN_WIDTH, SCREEN_HEIGHT));
-		antiAliasedRenderer.load("WEngine/Shaders/AntiAliasing/AAVertex.vs", "WEngine/Shaders/AntiAliasing/FXAA.fs", glm::vec2(SCREEN_WIDTH, SCREEN_HEIGHT));
-		antiAliasedRenderer.shader.loadInverseFilterTextureSize(glm::vec3((1.0f / SCREEN_WIDTH), (1.0f / SCREEN_HEIGHT), 0.0f));
-		antiAliasedRenderer.shader.loadFXAAParameters((8.0f), (1.0f / 128.0f), (1.0f / 8.0f));
-	}
-	Contrast.load("WEngine/Shaders/PostProcessing/ContrastEffect.vs", "WEngine/Shaders/PostProcessing/ContrastEffect.fs", glm::vec2(SCREEN_WIDTH, SCREEN_HEIGHT));
-	VBlur.load("WEngine/Shaders/PostProcessing/VerticalGaussionBlur.vs", "WEngine/Shaders/PostProcessing/GaussionBlur.fs", glm::vec2(SCREEN_WIDTH / 5, SCREEN_HEIGHT / 5));
-	HBlur.load("WEngine/Shaders/PostProcessing/HorizontalGaussionBlur.vs", "WEngine/Shaders/PostProcessing/GaussionBlur.fs", glm::vec2(SCREEN_WIDTH / 5, SCREEN_HEIGHT / 5));
-	brightFilter.load("WEngine/Shaders/PostProcessing/simpleVertex.vs", "WEngine/Shaders/PostProcessing/brightFilter.fs", glm::vec2(SCREEN_WIDTH, SCREEN_HEIGHT));
-	combineFilter.load("WEngine/Shaders/PostProcessing/simpleVertex.vs", "WEngine/Shaders/PostProcessing/combineFilter.fs", glm::vec2(SCREEN_WIDTH, SCREEN_HEIGHT));
-	combineFilter.shader.start();
-	combineFilter.shader.connectTextureUnits();
-	combineFilter.shader.stop();
+	// Load and initialise all framebuffers
+	loadAllFrameBuffers();
+	// Load and initialise all renderers
+	loadAndInitialiseRenderers();
 
-	//Load and initialise all masterRenderers
-	guiRenderer.load("WEngine/Shaders/Gui/GuiShader.vs", "WEngine/Shaders/Gui/GuiShader.fs");
-	modelRenderer.load("WEngine/Shaders/Default/Default.vs", "WEngine/Shaders/Default/Default.fs", &camera);
-	normalModelRenderer.load("WEngine/Shaders/NormalMaps/NormalMap.vs", "WEngine/Shaders/NormalMaps/NormalMap.fs", &camera);
-	terrainRenderer.load("WEngine/Shaders/Terrain/Terrain.vs", "WEngine/Shaders/Terrain/Terrain.fs", &camera);
-	waterRenderer.load("WEngine/Shaders/Water/WaterShader.vs", "WEngine/Shaders/Water/WaterShader.fs", &camera);
-	shadowRenderer.load("WEngine/Shaders/Shadows/ShadowShader.vs", "WEngine/Shaders/Shadows/ShadowShader.fs");
+	// ===  SKYBOX  ===
+	loadSkybox();
 
-	// ==== SKYBOX ====
-
-	std::string skyboxTextures[6] = {
-		"res/Skybox/hw_desertnight/desert_night_right.bmp",
-		"res/Skybox/hw_desertnight/desert_night_left.bmp",
-		"res/Skybox/hw_desertnight/desert_night_top.bmp",
-		"res/Skybox/hw_desertnight/desert_night_bottom.bmp",
-		"res/Skybox/hw_desertnight/desert_night_back.bmp",
-		"res/Skybox/hw_desertnight/desert_night_front.bmp",
-	};
-	skybox.load("WEngine/Shaders/Skybox/Skybox.vs", "WEngine/Shaders/Skybox/Skybox.fs", &camera, skyboxTextures);
-	skybox2.load("WEngine/Shaders/Skybox/Skybox.vs", "WEngine/Shaders/Skybox/Skybox.fs", &camera, skyboxTextures);
-
-	// ==== GUI ====
-
-	GuiCherry.loadImage("res/Cherry/cherry.bmp", true, false);
-	GuiCherry.rotation = glm::radians(10.0f);
-	GuiCherry.scale = glm::vec2(0.5f);
-	GuiCherry.position = glm::vec2(-0.5f, 0.5f);
+	// ===  GUI  ===
+	//loadAndInitialiseGUI();
 	
-	// ==== INPUT ====
-
+	// ===  INPUT  ===
 	//Set input mode
 	glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
+
+	//Set input callback
+	//glfwSetKeyCallback(window, keyfun);
+
+	// ===  LOAD AND INITIALISE MODELS  ===
+	// Load all graphics
+	loadGraphics();
+	// Load all models and initialise
+	loadModels();
+
+	// ===  LIGHTS  ===
+	initLights();
+	
+	// ===  WATER  ===
+	loadAndInitialiseWater();
+
+	//renderWaterCubeMap();
+
+	// ===  Add GUI elements to the renderig list  ===
+	//GuiElements.push_back(GuiCherry);
 
 	//Initialise gameState
 	gameState = 1;
 
-	// ==== MODELS ====
+	// Hide the cursor
+	DisplayManager::gameCursor();
+//TODO: glfwCreateCursor can set a picture of the cursor
 
-	//Load all multitexture textures
-	GLuint	floorTextureGrass = loader.loadTexture("res/Terrain/grassy2.bmp", true),
-			floorTextureR	  = loader.loadTexture("res/Terrain/mud.bmp", true),
-			floorTextureG	  = loader.loadTexture("res/Terrain/grassFlowers.bmp", true),
-			floorTextureB	  = loader.loadTexture("res/Terrain/path.bmp", true),
-			floorBlendMap	  = loader.loadTexture("res/Terrain/blendMap.bmp", true);
-	//Create terrains with a heightmap, set position and all multitexture textures
-	terrains[0].createWithHeightmap("res/heightmap.bmp", -1, -1, &loader, floorTextureGrass, floorTextureR, floorTextureG, floorTextureB, floorBlendMap);
-	terrains[1].createWithHeightmap("res/heightmap.bmp",  0, -1, &loader, floorTextureGrass, floorTextureR, floorTextureG, floorTextureB, floorBlendMap);
-	//Set ambientLight on the terrain models
-	terrains[0].getModel()->setAmbientLight(0.2f);
-	terrains[1].getModel()->setAmbientLight(0.2f);
-	//Set shadowmap texture on the terrain
-	terrains[0].getModel()->setShadowMap(shadowRenderer.getShadowDepthTexture());
-	terrains[1].getModel()->setShadowMap(shadowRenderer.getShadowDepthTexture());
-
-	//Load lamp models and texture
-	GLuint lampTexture = loader.loadTexture("res/Lantern/lantern.bmp", true);
-	GLuint lampSpecularMap = loader.loadTexture("res/Lantern/lanternS.bmp", false);
-	gameobject lampModel = loader.loadObjFile("res/Lantern/lantern.obj", true, false);
-
-	//Set lamp model and texture
-	for (int i = 0; i < 4; i++){
-		lamps[i] = gameobject(&lampModel);
-		lamps[i].addTexture(lampTexture);
-		lamps[i].setSpecularMap(lampSpecularMap);
-	}
-
-	//Initialise the models position, rotation and scale.
-	lamps[0].init(glm::vec3(20, terrains[1].getHeight(20, -30), -30), glm::vec3(0, 0, 0), glm::vec3(1.3f, 1.3f, 1.3f));
-	lamps[1].init(glm::vec3(370, terrains[1].getHeight(370, -300), -300), glm::vec3(0, 0, 0), glm::vec3(1.3f, 1.3f, 1.3f));
-	lamps[2].init(glm::vec3(293, terrains[1].getHeight(293, -305), -305), glm::vec3(0, 0, 0), glm::vec3(1.3f, 1.3f, 1.3f));
-	lamps[3].init(glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1.3f, 1.3f, 1.3f));
-
-	//Create a model with a .obj file
-	model = gameobject(&loader.loadObjFile("res/Barrel/barrel.obj", true, false));
-	model2 = gameobject(&model);
-
-	//Load the texture and normalmap for the barrel model
-	GLuint barrelTexture = loader.loadTexture("res/Barrel/barrel.bmp", true);
-	GLuint barrelNormal = loader.loadTexture("res/Barrel/barrelNormal.bmp", true);
-
-	//Load the texture for the model and give it to the model.
-	model.addTexture(barrelTexture);
-	//Set the normal map texture to the model
-	model.setNormalMap(barrelNormal);
-	//Initialise the models position, rotation and scale.
-	model.init(glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1.5f, 1.5f, 1.5f));
-	//Set shinyness to model
-	model.setShineDamper(100);
-	model.setReflectivity(1);
-	//Set model ambient light
-	model.setAmbientLight(0.1f);
-	model.setShadowMap(shadowRenderer.getShadowDepthTexture());
-
-	/*model.setEnviromentCubeMapID(waterReflection.textureid);
-	model.hasReflectionCubeMap = true;
-	model.hasRefractionCubeMap = false;
-	model.reflectionRatio = 0.5f;
-	model.reflectionRefractionRatio = 0.5f;*/
-
-	//Load the texture for the model and give it to the model.
-	model2.addTexture(barrelTexture);
-	//Set the normal map texture to the model
-	model2.setNormalMap(barrelNormal);
-	//Initialise the models position, rotation and scale.
-	model2.init(glm::vec3(20, terrains[1].getHeight(20, -10), -300), glm::vec3(0, 0, 0), glm::vec3(1.5f, 1.5f, 1.5f));
-	//Set shinyness to model
-	model2.setShineDamper(100);
-	model2.setReflectivity(1);
-	//Set model ambient light
-	model2.setAmbientLight(0.1f);
-	model2.setShadowMap(shadowRenderer.getShadowDepthTexture());
+	// Set the mouse in the middle of the screen at start so there is no unwanted staring rotation
+	handleMouseInput(true);
 	
-	//Create lights
-	Light sun(glm::vec3(0, 1000, -7000), glm::vec3(0.35f, 0.35f, 0.35f));
-	Light light0(glm::vec3(185, terrains[1].getHeight(185, -293) + 13.2f, -293), glm::vec3(2, 0, 0), glm::vec3(1, 0.01f, 0.002f)); //Red
-	Light light1(glm::vec3(370, terrains[1].getHeight(370, -300) + 13.2f, -300), glm::vec3(0, 2, 2), glm::vec3(1, 0.01f, 0.002f));
-	Light light2(glm::vec3(293, terrains[1].getHeight(293, -305) + 13.2f, -305), glm::vec3(2, 2, 0), glm::vec3(1, 0.01f, 0.002f));
-
-	//Add lights to the list
-	lights.push_back(&sun);
-	lights.push_back(&light0);
-	lights.push_back(&light1);
-	lights.push_back(&light2);
-
-	//Create a waterTile and set its attributes
-	water = WaterTile(glm::vec3(0, 2, -400), glm::vec3(0, 0, 0), glm::vec3(800, 500, 400));
-	water.setReflectionTexture(waterRenderer.getReflectionTexture());
-	water.setRefractionTexture(waterRenderer.getRefractionTexture());
-	water.setDuDvTexture(loader.loadTexture("res/Water/WaterDuDvMap.bmp", false));
-	water.setNormalMapTexture(loader.loadTexture("res/Water/WaterNormalMap.bmp", false));
-	water.setRefractionDepthTexture(waterRenderer.getRefractionDepthTexture());
-	water.getWaterTile()->setShineDamper(100);
-	water.getWaterTile()->setReflectivity(1);
-	water.getWaterTile()->setAmbientLight(0.5f);
-	water.getWaterTile()->setShadowMap(shadowRenderer.getShadowDepthTexture());
-
-	lights[0]->setPosition(glm::vec3(sin((float)frame / 100.0f) * 100.0f, 100.0f, cos((float)frame / 100.0f) * 100.0f));
-
-	renderWaterCubeMap();
-
-	//GuiElements.push_back(GuiCherry);
-
 	do {
 		//renderWaterCubeMap();
 		//GuiElements[0].rotation = (float)frame / 100.0f;
@@ -320,25 +266,45 @@ int main() {
 
 		//Change WaterMoveFactor for random(ish) water movement
 		float currentWaterMoveFactor = waterRenderer.getMoveFactor();
-		currentWaterMoveFactor += WAVE_SPEED * deltaTime;
+		currentWaterMoveFactor += (float)(WAVE_SPEED * deltaTime);
 		if (currentWaterMoveFactor > 1) currentWaterMoveFactor -= 1;
 		waterRenderer.setMoveFactor(currentWaterMoveFactor);
 		
 		/* ========= Add models to list for rendering ============== */
 		
-		//Add terrains to renderer list.
-		terrainRenderer.addToRenderList(terrains[0].getModel());
-		terrainRenderer.addToRenderList(terrains[1].getModel());
+		switch (currentArea)
+		{
+		case FORREST_AREA:
 
-		//Add normalmapped models to renderer list
-		normalModelRenderer.addToRenderList(&model);
-		normalModelRenderer.addToRenderList(&model2);
+			break;
+		case SAFE_AREA:
+			unsigned int i = 0;
+			// Add Building models to renderList
+			for(i = 0; i < (1 * 5); i++) modelRenderer.addToRenderList(SA_M_Building[i].getModel());
+			// Add Barrel models to renderList
+			for (i = 0; i < 5; i++) modelRenderer.addToRenderList(SA_M_Barrels[i].getModel());
+			// Add Crate2 model to renderList
+			modelRenderer.addToRenderList(SA_M_Crate2.getModel());
+			// Add SandBag2 model to renderList.
+			modelRenderer.addToRenderList(SA_M_SandBag2.getModel());
 
-		//Add lantern models
-		for (int i = 0; i < 4; i++) modelRenderer.addToRenderList(&lamps[i]);
+			// Add AmmoBox models to renderList
+			for (i = 0; i < (3 * 7); i++) normalModelRenderer.addToRenderList(SA_M_AmmoBoxes[i].getModel());
+			// Add Barrier models to renderList
+			for (i = 0; i < 4; i++) normalModelRenderer.addToRenderList(SA_M_Barriers[i].getModel());
+			// Add Crate models to renderList
+			for (i = 0; i < 6; i++) normalModelRenderer.addToRenderList(SA_M_Crate[i].getModel());
+			// Add Crate models to renderList
+			for (i = 0; i < 2; i++) normalModelRenderer.addToRenderList(SA_M_Pallets[i].getModel());
+			// Add SandBag model to renderList.
+			normalModelRenderer.addToRenderList(SA_M_SandBag.getModel());
+
+			break;
+
+		}
 
 		//Add water to the renderer list
-		waterRenderer.addToRenderList(&water);
+		//waterRenderer.addToRenderList(&water);
 		
 		/* =============== Start of rendering ===================== */
 		
@@ -431,19 +397,71 @@ int main() {
 			while (glfwGetTime() < (last_render_time + (1.0f / (float)Max_Fps))) {}
 		}
 
-		//Update input
-		handleInput();
+		// Poll all events
+		glfwPollEvents();
 
-		lights[0]->setPosition(glm::vec3(sin((float)frame / 100.0f) * 100.0f, 100.0f, cos((float)frame / 100.0f) * 100.0f));
-		lamps[3].setPosition(glm::vec3(sin((float)frame / 100.0f) * 100.0f, 100.0f, cos((float)frame / 100.0f) * 100.0f));
+		// Update mouse input and lock it in the middle of the screen
+		glm::vec2 changedMousePos = handleMouseInput(true);
+		changedMousePos *= mouseSensitivity;
+
+		// Rotate the x and y axis of the player with the mouse
+		glm::vec3 rot = player.getRotation();
+		rot.y -= changedMousePos.x * 0.1f;
+		rot.x -= changedMousePos.y * 0.1f;
+
+		if (rot.x < -90.0f) rot.x = -90.0f;
+		else if (rot.x > 90.0f) rot.x = 90.0f;
+		
+		player.setRotation(rot);
+
+		// Get and update the player with its new position, it's health and the rest
+		client.getPlayerData(player);
+
+		// Set the rotation of the player for the next update
+		client.setPlayerData(player);
+		
+		// Set the camera rotation to the players rotation and convert it to radians
+		camera.rotation = glm::radians(player.getRotation());
+		// Set the camera position
+		camera.position = player.getPosition();
+		camera.position.y = 8.0f;
+
+		//if (glfwGetKey(window, GLFW_KEY_KP_8) == GLFW_PRESS) camera.position.x += 0.1f; // up
+		//else if (glfwGetKey(window, GLFW_KEY_KP_2) == GLFW_PRESS) camera.position.x -= 0.1f; //down
+
+		//if (glfwGetKey(window, GLFW_KEY_KP_4) == GLFW_PRESS) camera.position.z += 0.1f; // left
+		//else if (glfwGetKey(window, GLFW_KEY_KP_6) == GLFW_PRESS) camera.position.z -= 0.1f; //right
+
+		//glm::vec3 p = SA_M_Pallets[1].getRotation();
+
+		//if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) p.x += 0.01f;
+		//else if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS) p.x -= 0.01f;
+
+		//if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) p.y += 0.01f;
+		//else if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS) p.y -= 0.01f;
+
+		//if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) p.z += 0.01f;
+		//else if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS) p.z -= 0.01f;
+
+		//printf("Rot: %f, %f, %f\n", glm::degrees(p.x), glm::degrees(p.y), glm::degrees(p.z));
+
+		//SA_M_Pallets[1].setRotation(p);
+
+		/*glm::vec3 r = SA_M_Barrels[1].getRotation();
+		r.z += deltaTime;
+		r.x += deltaTime / 2;
+		SA_M_Barrels[1].setRotation(r);*/
 
 		//Set title to hold fps info
-		std::string fpsStr = std::string(PROGRAM_NAME) + " FPS: " + std::to_string(fps) + " deltaTime: " + std::to_string(deltaTime * 100) + " debugTime: " + std::to_string((debugTime - frameStartTime) * 100);
+		std::string fpsStr = std::string(PROGRAM_NAME) + " FPS: " + std::to_string(fps) + " deltaTime: " + std::to_string(deltaTime * 100) + " Mouse: x: " + std::to_string(rot.x) + " y: " + std::to_string(rot.y);
 		DisplayManager::setDisplayTitle(fpsStr.c_str());
 
 		if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) gameState = 0;
 		if (DisplayManager::updateDisplay() < 0) gameState = 0;
 	}while (gameState >= 1);
+
+	// Show the cursor again
+	DisplayManager::showCursor();
 
 	//Close and Cleanup the display
 	DisplayManager::closeDisplay();
@@ -464,6 +482,8 @@ int main() {
 	glfwTerminate();
 }
 
+
+
 // If trapMouseInWindow it returns the changed amount of pixels since last update
 // Else if returns the position the mouse is on
 glm::vec2 handleMouseInput(bool trapMouseInWindow) {
@@ -474,7 +494,7 @@ glm::vec2 handleMouseInput(bool trapMouseInWindow) {
 	glm::vec2 windowPos = DisplayManager::getWindowPosition();
 	glm::vec2 windowSize = DisplayManager::getWindowSize();
 
-	glm::vec2 windowCenter = glm::vec2(windowPos.x + windowSize.x / 2, windowPos.y + windowSize.y / 2);
+	glm::vec2 windowCenter = glm::vec2(windowPos.x + (windowSize.x / 2), windowPos.y + (windowSize.y / 2));
 
 	glm::vec2 difference;
 
@@ -489,32 +509,30 @@ glm::vec2 handleMouseInput(bool trapMouseInWindow) {
 
 	return difference;
 }
-// Handle user input
-void handleInput()
+// Handle user input in game
+void handleGameInput()
 {
-	//Poll all events
+	// Poll all events
 	glfwPollEvents();
 
-	//HandleInput from keys
-	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) camera.position.x -= (deltaTime * 50);
-	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) camera.position.x += (deltaTime * 50);
+	// HandleInput from keys
 
-	if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) camera.position.y -= (deltaTime * 50);
-	if (glfwGetKey(window, GLFW_KEY_LEFT_ALT) == GLFW_PRESS) camera.position.y += (deltaTime * 50);
+	if (window == nullptr) return;
 
-	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) camera.position.z -= (deltaTime * 50);
-	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) camera.position.z += (deltaTime * 50);
+	// Handle input of forward or backward
+	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) client.addActionType(MOVE_FORWARD);
+	else if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) client.addActionType(MOVE_BACKWARD);
+	// Handle input of left or right
+	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) client.addActionType(MOVE_LEFT);
+	else if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) client.addActionType(MOVE_RIGHT);
 
-	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) camera.rotation.x -= (deltaTime * 2);
-	if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) camera.rotation.x += (deltaTime * 2);
-
-	if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) camera.rotation.y -= (deltaTime * 2);
-	if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) camera.rotation.y += (deltaTime * 2);
-
-	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
-		camera.position.y = terrains[1].getHeight(camera.position.x, camera.position.z) + 7;
-		if (camera.position.y < 4.0f) camera.position.y = 4.0f;
-	}
+	// Handle input of sprinting
+	if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) client.addActionType(MOVE_RUN);
+	
+	// Handle input of shooting
+	if (glfwGetKey(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) client.addActionType(SHOOT_ONCE);
+	
+	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) client.addActionType(JUMP);
 }
 // Update time stuff
 void updateTime()
@@ -523,11 +541,36 @@ void updateTime()
 	//glfwGetTime() nr of seconds since start of game
 	//last_render_time last set time nr seconds since start of game
 	deltaTime = glfwGetTime() - last_render_time; //Time in seconds it took for the last frame.
-	fps = (1 / deltaTime);
+	fps = (float)(1.0f / deltaTime);
 
 	last_render_time = glfwGetTime();
 
 	frame++;
+}
+
+// Load and initialise all waterTiles
+void loadAndInitialiseWater()
+{
+	//Create a waterTile and set its attributes
+	water = WaterTile(glm::vec3(0, 2, -400), glm::vec3(0, 0, 0), glm::vec3(800, 500, 400));
+	water.setReflectionTexture(waterRenderer.getReflectionTexture());
+	water.setRefractionTexture(waterRenderer.getRefractionTexture());
+	water.setDuDvTexture(loader.loadTexture("res/Water/WaterDuDvMap.bmp", false));
+	water.setNormalMapTexture(loader.loadTexture("res/Water/WaterNormalMap.bmp", false));
+	water.setRefractionDepthTexture(waterRenderer.getRefractionDepthTexture());
+	water.getWaterTile()->setShineDamper(100);
+	water.getWaterTile()->setReflectivity(1);
+	water.getWaterTile()->setAmbientLight(0.5f);
+	water.getWaterTile()->setShadowMap(shadowRenderer.getShadowDepthTexture());
+}
+// Load and initialise all GUI elements
+void loadAndInitialiseGUI()
+{
+	// Load cherry tree as GUI element
+	GuiCherry.loadImage("res/Cherry/cherry.bmp", true, false);
+	GuiCherry.rotation = glm::radians(10.0f);
+	GuiCherry.scale = glm::vec2(0.5f);
+	GuiCherry.position = glm::vec2(-0.5f, 0.5f);
 }
 // Render water textures
 void renderWaterTextures()
@@ -586,9 +629,10 @@ void renderShadowTexture(Light *shadowLight)
 // Render water cubemap : WORK IN PROGRESS :
 void renderWaterCubeMap()
 {
+	/*
 	//Add normalmapped models to renderer list
-	normalModelRenderer.addToRenderList(&model);
-	normalModelRenderer.addToRenderList(&model2);
+	normalModelRenderer.addToRenderList(model.getModel());
+	normalModelRenderer.addToRenderList(model2.getModel());
 	//Add terrain models to renderer list
 	terrainRenderer.addToRenderList(terrains[0].getModel());
 	terrainRenderer.addToRenderList(terrains[1].getModel());
@@ -626,7 +670,80 @@ void renderWaterCubeMap()
 
 	normalModelRenderer.clearRenderPass();
 	terrainRenderer.clearRenderPass();
+	*/
 }
+
+// Load and initialise all framebuffers
+void loadAllFrameBuffers()
+{
+	//Load and intialise all postprocessors
+	if (AAType == MSAA) {
+		sceneRenderer.load(glm::vec2(SCREEN_WIDTH, SCREEN_HEIGHT), 8);
+		antiAliasedRenderer.load(glm::vec2(SCREEN_WIDTH, SCREEN_HEIGHT));
+	}
+	else if (AAType == SSAA) {
+		sceneRenderer.load(glm::vec2(SCREEN_WIDTH * 4, SCREEN_HEIGHT * 4));
+		//TODO: create a shader that downsamples the image created!
+		antiAliasedRenderer.load(glm::vec2(SCREEN_WIDTH, SCREEN_HEIGHT));
+	}
+	else if (AAType == FXAA) {
+		sceneRenderer.load(glm::vec2(SCREEN_WIDTH, SCREEN_HEIGHT));
+		antiAliasedRenderer.load("WEngine/Shaders/AntiAliasing/AAVertex.vs", "WEngine/Shaders/AntiAliasing/FXAA.fs", glm::vec2(SCREEN_WIDTH, SCREEN_HEIGHT));
+		antiAliasedRenderer.shader.loadInverseFilterTextureSize(glm::vec3((1.0f / SCREEN_WIDTH), (1.0f / SCREEN_HEIGHT), 0.0f));
+		antiAliasedRenderer.shader.loadFXAAParameters((8.0f), (1.0f / 128.0f), (1.0f / 8.0f));
+	}
+	Contrast.load("WEngine/Shaders/PostProcessing/ContrastEffect.vs", "WEngine/Shaders/PostProcessing/ContrastEffect.fs", glm::vec2(SCREEN_WIDTH, SCREEN_HEIGHT));
+	VBlur.load("WEngine/Shaders/PostProcessing/VerticalGaussionBlur.vs", "WEngine/Shaders/PostProcessing/GaussionBlur.fs", glm::vec2(SCREEN_WIDTH / 5, SCREEN_HEIGHT / 5));
+	HBlur.load("WEngine/Shaders/PostProcessing/HorizontalGaussionBlur.vs", "WEngine/Shaders/PostProcessing/GaussionBlur.fs", glm::vec2(SCREEN_WIDTH / 5, SCREEN_HEIGHT / 5));
+	brightFilter.load("WEngine/Shaders/PostProcessing/simpleVertex.vs", "WEngine/Shaders/PostProcessing/brightFilter.fs", glm::vec2(SCREEN_WIDTH, SCREEN_HEIGHT));
+	combineFilter.load("WEngine/Shaders/PostProcessing/simpleVertex.vs", "WEngine/Shaders/PostProcessing/combineFilter.fs", glm::vec2(SCREEN_WIDTH, SCREEN_HEIGHT));
+	combineFilter.shader.start();
+	combineFilter.shader.connectTextureUnits();
+	combineFilter.shader.stop();
+
+}
+// Load and initialise all masterRenderers
+void loadAndInitialiseRenderers()
+{
+	//Load and initialise all masterRenderers
+	guiRenderer.load("WEngine/Shaders/Gui/GuiShader.vs", "WEngine/Shaders/Gui/GuiShader.fs");
+	modelRenderer.load("WEngine/Shaders/Default/Default.vs", "WEngine/Shaders/Default/Default.fs", &camera);
+	normalModelRenderer.load("WEngine/Shaders/NormalMaps/NormalMap.vs", "WEngine/Shaders/NormalMaps/NormalMap.fs", &camera);
+	terrainRenderer.load("WEngine/Shaders/Terrain/Terrain.vs", "WEngine/Shaders/Terrain/Terrain.fs", &camera);
+	waterRenderer.load("WEngine/Shaders/Water/WaterShader.vs", "WEngine/Shaders/Water/WaterShader.fs", &camera);
+	shadowRenderer.load("WEngine/Shaders/Shadows/ShadowShader.vs", "WEngine/Shaders/Shadows/ShadowShader.fs");
+}
+// Load and initialise the skybox
+void loadSkybox()
+{
+	std::string skyboxTextures[6] = {
+		"res/Skybox/hw_desertnight/desert_night_right.bmp", // RIGHT
+		"res/Skybox/hw_desertnight/desert_night_left.bmp",  // LEFT
+		"res/Skybox/hw_desertnight/desert_night_top.bmp",	// TOP
+		"res/Skybox/hw_desertnight/desert_night_bottom.bmp",// BOTTOM
+		"res/Skybox/hw_desertnight/desert_night_back.bmp",	// BACK
+		"res/Skybox/hw_desertnight/desert_night_front.bmp",	// FRONT
+	};
+	skybox.load("WEngine/Shaders/Skybox/Skybox.vs", "WEngine/Shaders/Skybox/Skybox.fs", &camera, skyboxTextures);
+}
+// Initialise Lights
+void initLights()
+{
+	//Initialise lights and add them to the light list
+	sun = Light(glm::vec3(0, 0, 0), glm::vec3(0.35f, 0.35f, 0.35f));
+	lights.push_back(&sun);
+
+	light0 = Light(glm::vec3(185, terrains[1].getHeight(185, -293) + 13.2f, -293), glm::vec3(2, 0, 0), glm::vec3(1, 0.01f, 0.002f)); //Red
+	lights.push_back(&light0);
+
+	light1 = Light(glm::vec3(370, terrains[1].getHeight(370, -300) + 13.2f, -300), glm::vec3(0, 2, 2), glm::vec3(1, 0.01f, 0.002f));
+	lights.push_back(&light1);
+
+	light2 = Light(glm::vec3(293, terrains[1].getHeight(293, -305) + 13.2f, -305), glm::vec3(2, 2, 0), glm::vec3(1, 0.01f, 0.002f));
+	lights.push_back(&light2);
+}
+
+// ======  SERVER HANDLE FUNCTIONS  ======
 
 // Intialise the client and connect to the server on ipAddress and port
 void initialiseClient(char ipAddress[39], char port[5])
@@ -665,7 +782,7 @@ void initialiseClient(char ipAddress[39], char port[5])
 			break;
 		}
 	}
-	
+
 	networkUpdateFunction = SendInitData;
 
 	// Start a new thread and run the serverLoop function.
@@ -674,8 +791,6 @@ void initialiseClient(char ipAddress[39], char port[5])
 // The client loop
 void clientLoop(void *)
 {
-	double clientLoopDeltaTime = 0,
-		clientLoopLastRenderTime = 0;
 	clientRunning = true;
 
 	// Client networking loop
@@ -688,6 +803,8 @@ void clientLoop(void *)
 		// This function is to execute a function that sends data to the server.
 		if (networkUpdateFunction != nullptr) networkUpdateFunction();
 
+		player.setPosition(client.myPlayerData.position);
+
 		// Limit update cycle amount to UPDATE_CYCLES_PER_SECOND
 		while (((float)(std::clock() - programStartClock) / (float)CLOCKS_PER_SEC) < (clientLoopLastRenderTime + (1.0f / (float)UPDATE_CYCLES_PER_SECOND))) {}
 
@@ -699,32 +816,296 @@ void clientLoop(void *)
 	_endthread();
 }
 
-
-// ======  SERVER HANDLE FUNCTIONS  ======
-
 // Send intitialisation data
 // When just connected to the server and need to send name.
 void SendInitData()
 {
 	char name[] = "Wouter140";
 
-	playerData player;
-	memcpy(&player.playerName, name, strlen(name));
-	player.playerNameSize = strlen(name);
+	memcpy(&client.myPlayerData.playerName, name, strlen(name));
+	client.myPlayerData.playerNameSize = strlen(name);
 	client.addActionType(GAME_INITIALISATION);
 
-	client.sendPlayerData(player, LOBBY_PACKET);
+	client.sendLobbyUpdate();
 }
 // Send lobby data
 // When in lobby
 void SendLobbyData()
 {
+	//if (/*want to start the game*/)
+	//{
+		// Add a action Start Game
+		client.addActionType(GAME_START);
+		// Send the packet to the server
+		client.sendLobbyUpdate();
+	//}
 
+	// If the lobbyTimer has started running
+	if (client.gameStarting)
+	{
+
+		client.lobbyTimer -= (float)clientLoopDeltaTime;
+		if (client.lobbyTimer <= 0.0f) client.lobbyTimer = 0.0f;
+	}
 }
 
 // Send game data
 // When in game
 void SendGameData()
 {
+	// Update key input
+	handleGameInput();
 
+	if(client.hasActionType())
+		client.sendPlayerData();
+}
+
+// Load all graphics
+void loadGraphics()
+{
+
+	// Load all the graphics for the safe area
+	LoadGraphics_SafeArea();
+}
+// Load Safe Area Graphics
+void LoadGraphics_SafeArea()
+{
+
+	// Load Building's textures.
+	SA_T_Building[0] = loader.loadTexture("res/Safe_Area/Building/Textures/building.bmp", true); // Building
+	SA_T_Building[1] = loader.loadTexture("res/Safe_Area/Building/Textures/building.bmp", true); // Doors
+	SA_T_Building[2] = loader.loadTexture("res/Safe_Area/Building/Textures/wood.bmp", true); // Wood
+	SA_T_Building[3] = loader.loadTexture("res/Safe_Area/Building/Textures/stroh.bmp", true); // Roof
+	SA_T_Building[4] = loader.loadTexture("res/Safe_Area/Building/Textures/wood.bmp", true); // Wheel
+
+	// Load AmmoBox's texture and normals.
+	SA_T_AmmoBoxes[0]  = loader.loadTexture("res/Safe_Area/Weapon_Box/Textures/box_d.bmp", true);
+	SA_T_AmmoBoxes[1]  = loader.loadTexture("res/Safe_Area/Weapon_Box/Textures/roc_d.bmp", true);
+	SA_T_AmmoBoxes[2] = loader.loadTexture("res/Safe_Area/Weapon_Box/Textures/roc_d.bmp", true);
+	SA_T_AmmoBoxes[3] = loader.loadTexture("res/Safe_Area/Weapon_Box/Textures/roc_d.bmp", true);
+	SA_T_AmmoBoxes[4] = loader.loadTexture("res/Safe_Area/Weapon_Box/Textures/roc_d.bmp", true);
+	SA_T_AmmoBoxes[5] = loader.loadTexture("res/Safe_Area/Weapon_Box/Textures/roc_d.bmp", true);
+	SA_T_AmmoBoxes[6] = loader.loadTexture("res/Safe_Area/Weapon_Box/Textures/roc_d.bmp", true);
+	SA_TN_AmmoBoxes[0] = loader.loadTexture("res/Safe_Area/Weapon_Box/Textures/box_n.bmp", false);
+	SA_TN_AmmoBoxes[1] = loader.loadTexture("res/Safe_Area/Weapon_Box/Textures/roc_n.bmp", false);
+
+	// Load Barrel's texture.
+	SA_T_Barrels[0] = loader.loadTexture("res/Safe_Area/Barrel/Textures/green_barrel.bmp", true);
+	SA_T_Barrels[1] = loader.loadTexture("res/Safe_Area/Barrel/Textures/red_barrel.bmp", true);
+	SA_T_Barrels[2] = loader.loadTexture("res/Safe_Area/Barrel/Textures/regular_barrel.bmp", true);
+
+	// Load Barrier's texture and normals.
+	SA_T_Barriers  = loader.loadTexture("res/Safe_Area/ConcreteBarrier/Textures/Barrier.bmp", true);
+	SA_TN_Barriers = loader.loadTexture("res/Safe_Area/ConcreteBarrier/Textures/Normal.bmp", false);
+
+	// Load Crate's texture and normal.
+	SA_T_Crate  = loader.loadTexture("res/Safe_Area/WoodBox/Textures/diffuse.bmp", true);
+	SA_TN_Crate = loader.loadTexture("res/Safe_Area/WoodBox/Textures/normal.bmp", false);
+
+	// Load Crate2's texture.
+	SA_T_Crate2 = loader.loadTexture("res/Safe_Area/WoodBox2/Textures/WoodBox2.bmp", true);
+
+	// Load Pallet's textures
+	SA_T_Pallets  = loader.loadTexture("res/Safe_Area/Pallet/Textures/Pallet_dif.bmp", true);
+	SA_TN_Pallets = loader.loadTexture("res/Safe_Area/Pallet/Textures/Pallet_norm.bmp", false);
+
+	// Load SandBag's texture and normal.
+	SA_T_SandBag  = loader.loadTexture("res/Safe_Area/SandBags/Textures/sandbags_d.bmp", true);
+	SA_TN_SandBag = loader.loadTexture("res/Safe_Area/SandBags/Textures/sandbags_n.bmp", false);
+
+	// Load SandBag2's texture.
+	SA_T_SandBag2 = loader.loadTexture("res/Safe_Area/SandBags2/Textures/dif.bmp", true);
+}
+
+// Load all models
+void loadModels()
+{
+	// ===  TERRAIN  ===
+	//Create terrains with a heightmap, set position and all multitexture textures
+	//terrains[0].createWithHeightmap("res/heightmap.bmp", -1, -1, &loader, floorTextureGrass, floorTextureR, floorTextureG, floorTextureB, floorBlendMap);
+	//terrains[0].getModel()->setAmbientLight(0.2f);
+	//terrains[0].getModel()->setShadowMap(shadowRenderer.getShadowDepthTexture());
+
+	// Load all the models for the safe area.
+	loadModels_SafeArea();
+}
+// Load Safe Area Models
+void loadModels_SafeArea()
+{
+	// Please note:
+	// If taking the positions from 3DS MAX:
+	// Change the position Z to Y And Y to Z!
+	// Then invert the Z position!
+	// Also change the rotation Z to Y and Y to Z!
+
+	// Load Building models.
+	loadModel(SA_M_Building[0], "res/Safe_Area/Building/Building_Building.obj", glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1.0f), SA_T_Building[0], 100.0f, -1.0f, 0.4f);
+	loadModel(SA_M_Building[1], "res/Safe_Area/Building/Building_Doors.obj", glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1.0f), SA_T_Building[1], 100.0f, -1.0f, 0.4f);
+	loadModel(SA_M_Building[2], "res/Safe_Area/Building/Building_Wood.obj", glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1.0f), SA_T_Building[2], 100.0f, -1.0f, 0.4f);
+	loadModel(SA_M_Building[3], "res/Safe_Area/Building/Building_Roof.obj", glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1.0f), SA_T_Building[3], 100.0f, -1.0f, 0.4f);
+	loadModel(SA_M_Building[4], "res/Safe_Area/Building/Building_Wheel.obj", glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1.0f), SA_T_Building[4], 100.0f, -1.0f, 0.4f);
+
+	// Load AmmoBoxes models.
+	loadModel(SA_M_AmmoBoxes[0], "res/Safe_Area/Weapon_Box/Weapon_Box.obj",			 glm::vec3(-5.695f, 1.042f, 12.76f), glm::vec3(0, glm::radians(-133.379f), 0), glm::vec3(1.0f), SA_T_AmmoBoxes[0], SA_TN_AmmoBoxes[0], 100.0f, 1.0f, 0.6f);
+	loadModel(SA_M_AmmoBoxes[1], "res/Safe_Area/Weapon_Box/Weapon_Box_Granade.obj",  glm::vec3(-5.695f, 1.042f, 12.76f), glm::vec3(0, glm::radians(-133.379f), 0), glm::vec3(1.0f), SA_T_AmmoBoxes[1], SA_TN_AmmoBoxes[1], 100.0f, 1.0f, 0.6f);
+	loadModel(SA_M_AmmoBoxes[2], "res/Safe_Area/Weapon_Box/Weapon_Box_Granade2.obj", glm::vec3(-5.695f, 1.042f, 12.76f), glm::vec3(0, glm::radians(-133.379f), 0), glm::vec3(1.0f), SA_T_AmmoBoxes[2], SA_TN_AmmoBoxes[1], 100.0f, 1.0f, 0.6f);
+	loadModel(SA_M_AmmoBoxes[3], "res/Safe_Area/Weapon_Box/Weapon_Box_Granade3.obj", glm::vec3(-5.695f, 1.042f, 12.76f), glm::vec3(0, glm::radians(-133.379f), 0), glm::vec3(1.0f), SA_T_AmmoBoxes[3], SA_TN_AmmoBoxes[1], 100.0f, 1.0f, 0.6f);
+	loadModel(SA_M_AmmoBoxes[4], "res/Safe_Area/Weapon_Box/Weapon_Box_Granade4.obj", glm::vec3(-5.695f, 1.042f, 12.76f), glm::vec3(0, glm::radians(-133.379f), 0), glm::vec3(1.0f), SA_T_AmmoBoxes[4], SA_TN_AmmoBoxes[1], 100.0f, 1.0f, 0.6f);
+	loadModel(SA_M_AmmoBoxes[5], "res/Safe_Area/Weapon_Box/Weapon_Box_Granade5.obj", glm::vec3(-5.695f, 1.042f, 12.76f), glm::vec3(0, glm::radians(-133.379f), 0), glm::vec3(1.0f), SA_T_AmmoBoxes[5], SA_TN_AmmoBoxes[1], 100.0f, 1.0f, 0.6f);
+	loadModel(SA_M_AmmoBoxes[6], "res/Safe_Area/Weapon_Box/Weapon_Box_Granade6.obj", glm::vec3(-5.695f, 1.042f, 12.76f), glm::vec3(0, glm::radians(-133.379f), 0), glm::vec3(1.0f), SA_T_AmmoBoxes[6], SA_TN_AmmoBoxes[1], 100.0f, 1.0f, 0.6f);
+	
+	loadModel(SA_M_AmmoBoxes[7],  SA_M_AmmoBoxes[0], glm::vec3(3.656f, 1.042f, -13.91f), glm::vec3(0, glm::radians(79.083f), 0), glm::vec3(1.0f), SA_T_AmmoBoxes[0], SA_TN_AmmoBoxes[0], 100.0f, 1.0f, 0.6f);
+	loadModel(SA_M_AmmoBoxes[8],  SA_M_AmmoBoxes[1], glm::vec3(3.656f, 1.042f, -13.91f), glm::vec3(0, glm::radians(79.083f), 0), glm::vec3(1.0f), SA_T_AmmoBoxes[1], SA_TN_AmmoBoxes[1], 100.0f, 1.0f, 0.6f);
+	loadModel(SA_M_AmmoBoxes[9],  SA_M_AmmoBoxes[2], glm::vec3(3.656f, 1.042f, -13.91f), glm::vec3(0, glm::radians(79.083f), 0), glm::vec3(1.0f), SA_T_AmmoBoxes[2], SA_TN_AmmoBoxes[1], 100.0f, 1.0f, 0.6f);
+	loadModel(SA_M_AmmoBoxes[10], SA_M_AmmoBoxes[3], glm::vec3(3.656f, 1.042f, -13.91f), glm::vec3(0, glm::radians(79.083f), 0), glm::vec3(1.0f), SA_T_AmmoBoxes[3], SA_TN_AmmoBoxes[1], 100.0f, 1.0f, 0.6f);
+	loadModel(SA_M_AmmoBoxes[11], SA_M_AmmoBoxes[4], glm::vec3(3.656f, 1.042f, -13.91f), glm::vec3(0, glm::radians(79.083f), 0), glm::vec3(1.0f), SA_T_AmmoBoxes[4], SA_TN_AmmoBoxes[1], 100.0f, 1.0f, 0.6f);
+	loadModel(SA_M_AmmoBoxes[12], SA_M_AmmoBoxes[5], glm::vec3(3.656f, 1.042f, -13.91f), glm::vec3(0, glm::radians(79.083f), 0), glm::vec3(1.0f), SA_T_AmmoBoxes[5], SA_TN_AmmoBoxes[1], 100.0f, 1.0f, 0.6f);
+	loadModel(SA_M_AmmoBoxes[13], SA_M_AmmoBoxes[6], glm::vec3(3.656f, 1.042f, -13.91f), glm::vec3(0, glm::radians(79.083f), 0), glm::vec3(1.0f), SA_T_AmmoBoxes[6], SA_TN_AmmoBoxes[1], 100.0f, 1.0f, 0.6f);
+	
+	loadModel(SA_M_AmmoBoxes[14], SA_M_AmmoBoxes[0], glm::vec3(-7.26f, 1.042f, 2.125f), glm::vec3(0, glm::radians(-178.774f), 0), glm::vec3(1.0f), SA_T_AmmoBoxes[0], SA_TN_AmmoBoxes[0], 100.0f, 1.0f, 0.6f);
+	loadModel(SA_M_AmmoBoxes[15], SA_M_AmmoBoxes[1], glm::vec3(-7.26f, 1.042f, 2.125f), glm::vec3(0, glm::radians(-178.774f), 0), glm::vec3(1.0f), SA_T_AmmoBoxes[1], SA_TN_AmmoBoxes[1], 100.0f, 1.0f, 0.6f);
+	loadModel(SA_M_AmmoBoxes[16], SA_M_AmmoBoxes[2], glm::vec3(-7.26f, 1.042f, 2.125f), glm::vec3(0, glm::radians(-178.774f), 0), glm::vec3(1.0f), SA_T_AmmoBoxes[2], SA_TN_AmmoBoxes[1], 100.0f, 1.0f, 0.6f);
+	loadModel(SA_M_AmmoBoxes[17], SA_M_AmmoBoxes[3], glm::vec3(-7.26f, 1.042f, 2.125f), glm::vec3(0, glm::radians(-178.774f), 0), glm::vec3(1.0f), SA_T_AmmoBoxes[3], SA_TN_AmmoBoxes[1], 100.0f, 1.0f, 0.6f);
+	loadModel(SA_M_AmmoBoxes[18], SA_M_AmmoBoxes[4], glm::vec3(-7.26f, 1.042f, 2.125f), glm::vec3(0, glm::radians(-178.774f), 0), glm::vec3(1.0f), SA_T_AmmoBoxes[4], SA_TN_AmmoBoxes[1], 100.0f, 1.0f, 0.6f);
+	loadModel(SA_M_AmmoBoxes[19], SA_M_AmmoBoxes[5], glm::vec3(-7.26f, 1.042f, 2.125f), glm::vec3(0, glm::radians(-178.774f), 0), glm::vec3(1.0f), SA_T_AmmoBoxes[5], SA_TN_AmmoBoxes[1], 100.0f, 1.0f, 0.6f);
+	loadModel(SA_M_AmmoBoxes[20], SA_M_AmmoBoxes[6], glm::vec3(-7.26f, 1.042f, 2.125f), glm::vec3(0, glm::radians(-178.774f), 0), glm::vec3(1.0f), SA_T_AmmoBoxes[6], SA_TN_AmmoBoxes[1], 100.0f, 1.0f, 0.6f);
+
+	// Load Barrels models.
+	loadModel(SA_M_Barrels[0], "res/Safe_Area/Barrel/Barrel.obj", glm::vec3(-7.849f, -0.623f, -8.431f), glm::vec3(0, glm::radians(-22.889f), 0), glm::vec3(1.0f), SA_T_Barrels[1], 100.0f, 1.0f, 0.1f); // Red
+	loadModel(SA_M_Barrels[1], SA_M_Barrels[0], glm::vec3(-5.165f, 0.227f, -14.639f), glm::vec3(glm::radians(30.785f), glm::radians(114.220f), glm::radians(-36.758f)), glm::vec3(1.0f), SA_T_Barrels[0], 100.0f, 1.0f, 0.1f); // Green
+	loadModel(SA_M_Barrels[2], SA_M_Barrels[0], glm::vec3(-7.849f, 3.818f, -12.441f), glm::vec3(glm::radians(-5.954f), 0, 0), glm::vec3(1.0f), SA_T_Barrels[2], 100.0f, 1.0f, 0.1f);
+	loadModel(SA_M_Barrels[3], SA_M_Barrels[0], glm::vec3(-7.849f, 0.513f, -13.585f), glm::vec3(0.0f), glm::vec3(1.0f), SA_T_Barrels[2], 100.0f, 1.0f, 0.1f);
+	loadModel(SA_M_Barrels[4], SA_M_Barrels[0], glm::vec3(-7.849f, 0.513f, -10.777f), glm::vec3(glm::radians(-16.803f), glm::radians(20.35f), glm::radians(3.727f)), glm::vec3(1.0f), SA_T_Barrels[2], 100.0f, 1.0f, 0.1f);
+	
+	// Load Barriers models.
+	loadModel(SA_M_Barriers[0], "res/Safe_Area/ConcreteBarrier/ConcreteBarrier.obj", glm::vec3(5.746f, 1.817f, 14.737f), glm::vec3(0.0f), glm::vec3(1.0f), SA_T_Barriers, SA_TN_Barriers, 100.0f, 1.0f, 0.1f);
+	loadModel(SA_M_Barriers[1], SA_M_Barriers[0], glm::vec3(2.4800f, 1.817f, 14.737f), glm::vec3(0.0f), glm::vec3(1.0f), SA_T_Barriers, SA_TN_Barriers, 100.0f, 1.0f, 0.1f);
+	loadModel(SA_M_Barriers[2], SA_M_Barriers[0], glm::vec3(-0.987f, 1.817f, 14.737f), glm::vec3(0.0f), glm::vec3(1.0f), SA_T_Barriers, SA_TN_Barriers, 100.0f, 1.0f, 0.1f);
+	loadModel(SA_M_Barriers[3], SA_M_Barriers[0], glm::vec3(-4.258f, 1.817f, 14.737f), glm::vec3(0.0f), glm::vec3(1.0f), SA_T_Barriers, SA_TN_Barriers, 100.0f, 1.0f, 0.1f);
+
+	// Load Crates models.
+	loadModel(SA_M_Crate[0], "res/Safe_Area/WoodBox/WoodBox.obj", glm::vec3(9.514f, 4.408f, -8.295f), glm::vec3(0, glm::radians(-18.961f), 0), glm::vec3(1.0f), SA_T_Crate, SA_TN_Crate, 100.0f, 1.0f, 0.1f);
+	loadModel(SA_M_Crate[1], SA_M_Crate[0], glm::vec3(8.960f, 1.864f, -9.678f), glm::vec3(0), glm::vec3(1.0f), SA_T_Crate, SA_TN_Crate, 100.0f, 1.0f, 0.1f);
+	loadModel(SA_M_Crate[2], SA_M_Crate[0], glm::vec3(9.385f, 2.049f, 4.265f), glm::vec3(glm::radians(-0.109f), glm::radians(0.046f), glm::radians(15.49f)), glm::vec3(1.0f), SA_T_Crate, SA_TN_Crate, 100.0f, 1.0f, 0.1f);
+	loadModel(SA_M_Crate[3], SA_M_Crate[0], glm::vec3(9.552f, 4.424f, -5.291f), glm::vec3(0), glm::vec3(1.0f), SA_T_Crate, SA_TN_Crate, 100.0f, 1.0f, 0.1f);
+	loadModel(SA_M_Crate[4], SA_M_Crate[0], glm::vec3(9.552f, 4.725f, 4.021f), glm::vec3(0, 0, glm::radians(5.235f)), glm::vec3(1.0f), SA_T_Crate, SA_TN_Crate, 100.0f, 1.0f, 0.1f);
+	loadModel(SA_M_Crate[5], SA_M_Crate[0], glm::vec3(8.960f, 1.864f, -5.932f), glm::vec3(0), glm::vec3(1.0f), SA_T_Crate, SA_TN_Crate, 100.0f, 1.0f, 0.1f);
+	
+	// Load Crate2 model.
+	loadModel(SA_M_Crate2, "res/Safe_Area/WoodBox2/WoodBox2.obj", glm::vec3(10.1f, 6.599f, -6.945f), glm::vec3(0, glm::radians(6.99f), 0), glm::vec3(1.0f), SA_T_Crate2, 100.0f, 1.0f, 0.1f);
+	
+	// Load Pallets models.
+	loadModel(SA_M_Pallets[0], "res/Safe_Area/Pallet/Pallet.obj", glm::vec3(9.958f, 2.466f, -12.077f), glm::vec3(glm::radians(146.722f), glm::radians(67.173f), glm::radians(-59.121f)), glm::vec3(1.0f), SA_T_Pallets, SA_TN_Pallets, 100.0f, 1.0f, 0.1f);
+	loadModel(SA_M_Pallets[1], SA_M_Pallets[0], glm::vec3(9.362f, 2.466f, -14.006f), glm::vec3(glm::radians(166.203f), glm::radians(-141.395f), glm::radians(81.467f)), glm::vec3(1.0f), SA_T_Pallets, SA_TN_Pallets, 100.0f, 1.0f, 0.1f);
+	
+	// Load SandBag model.
+	loadModel(SA_M_SandBag, "res/Safe_Area/SandBags/SandBags.obj", glm::vec3(8.933f, 0.513f, 10.087f), glm::vec3(0, glm::radians(66.783f), 0), glm::vec3(1.0f), SA_T_SandBag, SA_TN_SandBag, 100.0f, 1.0f, 0.1f);
+
+	// Load SandBag2 model.
+	loadModel(SA_M_SandBag2, "res/Safe_Area/SandBags2/SandBags2.obj", glm::vec3(-8.35f, 1.815f, 6.885f), glm::vec3(glm::radians(-1.528f), glm::radians(-145.947f), glm::radians(17.504f)), glm::vec3(1.0f), SA_T_SandBag2, 100.0f, 1.0f, 0.1f);
+
+}
+
+
+//  =========  Initialise a model  ===========
+
+// Load a model with only a texture
+void loadModel(Model &model, // Variable to set
+	std::string modelFilename, // Model filename
+	glm::vec3 pos, glm::vec3 rot, glm::vec3 scale, // Initial Position, rotation and scale
+	GLuint textureID,  // Textures
+	float shineDamper, float reflectivity,
+	float ambientLight) // Reflectivity
+{
+	// Load modeldata and set the variable.
+	model.setModel(&gameobject(loader.loadObjFile(modelFilename.c_str(), false, false)));
+	// Initialise model
+	model.Initialise(pos, rot, scale);
+
+	// Add a texture
+	model.getModel()->addTexture(textureID);
+
+	// Set the shineDamper
+	model.getModel()->setShineDamper(shineDamper);
+	// Set the reflectivity
+	model.getModel()->setReflectivity(reflectivity);
+
+	// Set the ambientLight
+	model.getModel()->setAmbientLight(ambientLight);
+}
+// Load a model with a texture and normalMap
+void loadModel(Model &model, // Variable to set
+	std::string modelFilename, // Model filename
+	glm::vec3 pos, glm::vec3 rot, glm::vec3 scale, // Initial Position, rotation and scale
+	GLuint textureID, GLuint normalTextureID, // Textures
+	float shineDamper, float reflectivity,
+	float ambientLight) // Reflectivity
+{
+	loadModel(model, modelFilename, pos, rot, scale, textureID, shineDamper, reflectivity, ambientLight);
+
+	// Set the normalmap
+	model.getModel()->setNormalMap(normalTextureID);
+}
+// Load a model with a texture, normalMap and a shadowMap
+void loadModel(Model &model, // Variable to set
+	std::string modelFilename, // Model filename
+	glm::vec3 pos, glm::vec3 rot, glm::vec3 scale, // Initial Position, rotation and scale
+	GLuint textureID, GLuint normalTextureID, GLuint shadowMapID, // Textures
+	float shineDamper, float reflectivity,
+	float ambientLight)
+{
+	// Load the model
+	loadModel(model, modelFilename, pos, rot, scale, textureID, normalTextureID, shineDamper, reflectivity, ambientLight);
+
+	// Set the shadowmap
+	model.getModel()->setShadowMap(shadowMapID);
+}
+
+// Set a model with only a texture
+void loadModel(Model &model, Model &oriModel, // Variable to set
+	glm::vec3 pos, glm::vec3 rot, glm::vec3 scale, // Initial Position, rotation and scale
+	GLuint textureID,  // Textures
+	float shineDamper, float reflectivity,
+	float ambientLight) // Reflectivity
+{
+	model.setModel(oriModel.getModel());
+
+	// Initialise model
+	model.Initialise(pos, rot, scale);
+
+	// Add a texture
+	model.getModel()->addTexture(textureID);
+
+	// Set the shineDamper
+	model.getModel()->setShineDamper(shineDamper);
+	// Set the reflectivity
+	model.getModel()->setReflectivity(reflectivity);
+
+	// Set the ambientLight
+	model.getModel()->setAmbientLight(ambientLight);
+}
+// Set a model with a texture and normalMap
+void loadModel(Model &model, Model &oriModel,// Variable to set
+	glm::vec3 pos, glm::vec3 rot, glm::vec3 scale, // Initial Position, rotation and scale
+	GLuint textureID, GLuint normalTextureID, // Textures
+	float shineDamper, float reflectivity,
+	float ambientLight) // Reflectivity
+{
+	loadModel(model, oriModel, pos, rot, scale, textureID, shineDamper, reflectivity, ambientLight);
+
+	// Set the normalmap
+	model.getModel()->setNormalMap(normalTextureID);
+}
+// Set a model with a texture, normalMap and a shadowMap
+void loadModel(Model &model, Model &oriModel,// Variable to set
+	glm::vec3 pos, glm::vec3 rot, glm::vec3 scale, // Initial Position, rotation and scale
+	GLuint textureID, GLuint normalTextureID, GLuint shadowMapID, // Textures
+	float shineDamper, float reflectivity,
+	float ambientLight)
+{
+	// Load the model
+	loadModel(model, oriModel, pos, rot, scale, textureID, normalTextureID, shineDamper, reflectivity, ambientLight);
+
+	// Set the shadowmap
+	model.getModel()->setShadowMap(shadowMapID);
 }

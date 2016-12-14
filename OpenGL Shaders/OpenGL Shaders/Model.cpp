@@ -14,31 +14,31 @@ Model::~Model()
 // Get the models position
 glm::vec3 Model::getPosition()
 {
-	return position;
+	return model.getPosition();
 }
 
 // Set the models position
 void Model::setPosition(glm::vec3 pos)
 {
-	position = pos;
+	model.setPosition(pos);
 }
 
 // Get the models rotation
 glm::vec3 Model::getRotation()
 {
-	return rotation;
+	return model.getRotation();
 }
 
 // Set the models rotation
 void Model::setRotation(glm::vec3 rot)
 {
-	rotation = rot;
+	model.setRotation(rot);
 }
 
 // Get the models scale
 glm::vec3 Model::getScale()
 {
-	return scale;
+	return model.getScale();
 }
 
 // Get the models velocity
@@ -56,9 +56,10 @@ void Model::setVelocity(glm::vec3 vel)
 // Initialise the model
 void Model::Initialise(glm::vec3 pos, glm::vec3 rot, glm::vec3 scal)
 {
-	position = pos;
-	rotation = rot;
-	scale = scal;
+	model.setPosition(pos);
+	model.setRotation(rot);
+	model.setScale(scal);
+
 	velocity = glm::vec3(0.0f);
 }
 
@@ -66,6 +67,7 @@ void Model::Initialise(glm::vec3 pos, glm::vec3 rot, glm::vec3 scal)
 void Model::setModel(gameobject * object)
 {
 	model = gameobject(object);
+	model.init();
 }
 // Get the pointer to the models gameobject
 gameobject* Model::getModel()

@@ -8,7 +8,7 @@
 
 #define VERTEX_COUNT 126
 
-#define SIZE 800
+#define TERRAINSIZE 800
 #define MAX_HEIGHT 80
 #define MAX_PIXEL_COLOUR 256*256*256
 
