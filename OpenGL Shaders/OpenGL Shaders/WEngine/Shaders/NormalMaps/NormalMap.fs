@@ -30,6 +30,8 @@ uniform vec3 skyColour;
 
 uniform float ambientLight;
 
+uniform float tileAmount;
+
 const float levels = 3.0;
 const float useCelShading = 0;
 
@@ -68,11 +70,16 @@ void main(void){
 
 	float level;
 
+	vec2 textureCoords = pass_textureCoords;
+	float tiledAmount = tileAmount;
+	if(tiledAmount < 1.0) tiledAmount = 1.0;
+	textureCoords *= tiledAmount;
+
 	// Model normal
 	vec3 unitNormal = normalize(surfaceNormal);
 	
     // Get tangent space normal
-    vec3 tangent_normal = normalize(texture(normalMap, pass_textureCoords).xyz * 2.0 - 1.0);
+    vec3 tangent_normal = normalize(texture(normalMap, textureCoords).xyz * 2.0 - 1.0);
 		
 	// Calculate tangent
 	vec3 tangent = normalize( max( cross(unitNormal, vec3(0.0, 0.0, 1.0)) , cross(unitNormal, vec3(0.0, 1.0, 0.0)) ) );
@@ -122,13 +129,13 @@ void main(void){
 	float shadow = ShadowCalculation(FragPosLightSpace, unitNormal, normalize(toLightVector[0]));
 	totalDiffuse = max(totalDiffuse, ambientLight) * shadow;
 
-	vec4 textureColour = texture(textureSampler0, pass_textureCoords);
+	vec4 textureColour = texture(textureSampler0, textureCoords);
 	if(textureColour.a < 0.7){
 		discard;
 	}
 
 	if(usesSpecularMap > 0.5){
-		vec4 mapInfo = texture(specularMap, pass_textureCoords);
+		vec4 mapInfo = texture(specularMap, textureCoords);
 		totalSpecular *= mapInfo.r;
 		if(mapInfo.g > 0.5){
 			totalDiffuse = vec3(1.0);

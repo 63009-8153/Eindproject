@@ -83,6 +83,8 @@ void ShaderProgram::load(char vertexFile[], char fragmentFile[])
 	location_lightSpaceMatrix = getUniformLocation("lightSpaceMatrix");
 	location_cameraPosition = getUniformLocation("cameraPosition");
 
+	location_tileAmount = getUniformLocation("tileAmount");
+
 	for (int i = 0; i < MAX_LIGHTS; i++) {
 		location_lightPosition[i] = getUniformLocation("lightPosition[" + std::to_string(i) + "]");
 		location_lightColour[i] = getUniformLocation("lightColour[" + std::to_string(i) + "]");
@@ -95,6 +97,10 @@ void ShaderProgram::load(char vertexFile[], char fragmentFile[])
 
 	glDeleteShader(vertexShaderID);
 	glDeleteShader(fragmentShaderID);
+
+	start();
+	loadTileAmount(1.0f);
+	stop();
 
 	printf("Shader Loaded\n");
 }
@@ -236,6 +242,11 @@ void ShaderProgram::loadLights(std::vector<Light*> lights) {
 			loadVector(location_attenuation[i], glm::vec3(1, 0, 0));
 		}
 	}
+}
+
+void ShaderProgram::loadTileAmount(float tiles)
+{
+	loadFloat(location_tileAmount, tiles);
 }
 
 //Get the source of a file and create a shader id
