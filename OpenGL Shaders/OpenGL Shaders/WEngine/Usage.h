@@ -1,9 +1,11 @@
 #include "header.h"
 
 #include "Utils/loader.h"
+#include "Texture/texture2D.h"
 #include "Display/DisplayManager.h"
 
 #include "Renderer/MasterRenderer.h"
+#include "Renderer/GuiRenderer.h"
 #include "Water/WaterMasterRenderer.h"
 #include "Shadows/ShadowMasterRenderer.h"
 

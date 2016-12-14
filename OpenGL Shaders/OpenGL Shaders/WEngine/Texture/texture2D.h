@@ -3,14 +3,18 @@
 
 #include "../Utils/loader.h"
 
+extern Loader loader;
+
 class texture2D
 {
 	public:
 		texture2D();
 		~texture2D();
 
-		void loadImage(const char * filename, bool generateMipmaps);
-		void loadImage(const char * filename);
+		//Load texture data and create texture
+		void loadImage(const char * filename, bool bmpAlign, bool generateMipmaps);
+		//Only load texture data
+		void loadImage(const char * filename, bool bmpAlign);
 
 		glm::vec4 getPixelValue(int x, int y);
 
@@ -19,13 +23,16 @@ class texture2D
 			height,
 			filesize;
 
+		glm::vec2 position, scale;
+		float rotation;
+
 		GLenum imageType;
 
 		unsigned char * data; // Actual RGBA data buffer
 		unsigned int dataSize;
 
 	private:
-		Loader loader;
+		
 };
 
 #endif

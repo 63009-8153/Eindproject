@@ -155,6 +155,16 @@ void gameobject::init(glm::vec3 pos, glm::vec3 rot, glm::vec3 scal)
 
 	ambientLight = 0.1f;
 }
+void gameobject::init()
+{
+	shineDamper = -1;
+	reflectivity = -1;
+
+	useFakeLighting = false;
+	cullFaces = true;
+
+	ambientLight = 0.1f;
+}
 
 //Move the object
 void gameobject::Move(glm::vec3 _movement)

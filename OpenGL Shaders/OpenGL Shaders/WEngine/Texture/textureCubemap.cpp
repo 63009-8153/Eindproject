@@ -53,7 +53,7 @@ void textureCubemap::loadCubeMap(std::string filename[6])
 	for (unsigned int i = 0; i < 6; i++)
 	{
 		//Load image in texture2D by filename
-		textures[i].loadImage(filename[i].c_str());
+		textures[i].loadImage(filename[i].c_str(), true);
 
 		//Save datapointer of each texture2D's image data
 		data[i] = textures[i].data;

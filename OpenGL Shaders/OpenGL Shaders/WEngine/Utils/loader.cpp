@@ -334,7 +334,7 @@ GLuint Loader::loadTexture(const char * imagepath, bool createMipmap)
 
 	return textureID;
 }
-GLuint Loader::loadTextureInVector(const char * imagepath, bool createMipmap, unsigned char *&_data, int & width, int & height, int & size, GLenum & type)
+GLuint Loader::loadTextureInData(const char * imagepath, bool bmpAlign, bool createMipmap, unsigned char *&_data, int & width, int & height, int & size, GLenum & type)
 {
 	// Data read from the header of the BMP file
 	unsigned char header[54]; // Each BMP file begins by a 54-bytes header
@@ -395,6 +395,17 @@ GLuint Loader::loadTextureInVector(const char * imagepath, bool createMipmap, un
 
 	_data = data;
 
+	if (bmpAlign) {
+		unsigned char * formattedData = new unsigned char[imageSize];
+		unsigned int formattedDataPosition = 0;
+		for (int row = (height - 1); row >= 0; row--) {
+			for (unsigned int colum = 0; colum < (width * 4); colum++) {
+				formattedData[formattedDataPosition++] = _data[(row * (width * 4)) + colum];
+			}
+		}
+		_data = formattedData;
+	}
+
 	// Create one OpenGL texture
 	GLuint textureID;
 	glGenTextures(1, &textureID);
@@ -403,7 +414,7 @@ GLuint Loader::loadTextureInVector(const char * imagepath, bool createMipmap, un
 	glBindTexture(GL_TEXTURE_2D, textureID);
 
 	// Give the image to OpenGL
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, imagewidth, imageheight, 0, GL_BGRA, GL_UNSIGNED_BYTE, data);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, imagewidth, imageheight, 0, GL_BGRA, GL_UNSIGNED_BYTE, _data);
 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -431,7 +442,7 @@ GLuint Loader::loadTextureInVector(const char * imagepath, bool createMipmap, un
 
 	return textureID;
 }
-void Loader::loadTextureInVector(const char * imagepath, unsigned char *&_data, int & width, int & height, int & size, GLenum & type)
+void Loader::loadTextureInData(const char * imagepath, bool bmpAlign, unsigned char *&_data, int & width, int & height, int & size, GLenum & type)
 {
 	// Data read from the header of the BMP file
 	unsigned char header[54]; // Each BMP file begins by a 54-bytes header
@@ -439,7 +450,6 @@ void Loader::loadTextureInVector(const char * imagepath, unsigned char *&_data, 
 	unsigned int imageSize;   // = width * height * 4
 	unsigned int imagewidth, imageheight;
 
-	unsigned char * data; // Actual RGBA data buffer
 
 	// Open the image file
 	FILE * file;
@@ -474,11 +484,10 @@ void Loader::loadTextureInVector(const char * imagepath, unsigned char *&_data, 
 	if (imageSize == 0) imageSize = imagewidth * imageheight * 4; // 4 : one byte for each Red, Green, Blue and Alpha component
 	if (dataPos == 0) dataPos = 54; // The BMP header is done that way
 
-	data = new unsigned char[imageSize]; // Create a buffer with correct size
 	_data = new unsigned char[imageSize]; // Create a buffer with correct size
 
 	//Read the actual data from the file into the buffer
-	fread(data, 1, imageSize, file);
+	fread(_data, 1, imageSize, file);
 
 	//Everything is in memory now, the file can be closed
 	fclose(file);
@@ -488,16 +497,16 @@ void Loader::loadTextureInVector(const char * imagepath, unsigned char *&_data, 
 	height = imageheight;
 	type = GL_BGRA;
 
-	//Still starts at the bottom left!!
-	unsigned char * formattedData = new unsigned char[imageSize];
-	unsigned int formattedDataPosition = 0;
-	for (int row = (imageheight - 1); row >= 0; row--) {
-		for (unsigned int colum = 0; colum < (imagewidth * 4); colum++) {
-			formattedData[formattedDataPosition++] = data[(row * (imagewidth * 4)) + colum];
+	if (bmpAlign) {
+		unsigned char * formattedData = new unsigned char[imageSize];
+		unsigned int formattedDataPosition = 0;
+		for (int row = (height - 1); row >= 0; row--) {
+			for (unsigned int colum = 0; colum < (width * 4); colum++) {
+				formattedData[formattedDataPosition++] = _data[(row * (width * 4)) + colum];
+			}
 		}
+		_data = formattedData;
 	}
-
-	_data = formattedData;
 }
 
 GLuint Loader::loadCubeMap(unsigned char * data[], glm::vec2 size[], GLenum type)

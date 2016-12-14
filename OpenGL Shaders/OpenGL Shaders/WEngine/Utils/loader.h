@@ -17,8 +17,8 @@ public:
 
 	GLuint loadTexture(const char * imagepath, bool createMipmap);
 
-	GLuint loadTextureInVector(const char * imagepath, bool createMipmap, unsigned char *&data, int & width, int & height, int & size, GLenum & type);
-	void loadTextureInVector(const char * imagepath, unsigned char *&data, int & width, int & height, int & size, GLenum & type);
+	GLuint loadTextureInData(const char * imagepath, bool bmpAlign, bool createMipmap, unsigned char *&data, int & width, int & height, int & size, GLenum & type);
+	void loadTextureInData(const char * imagepath, bool bmpAlign, unsigned char *&data, int & width, int & height, int & size, GLenum & type);
 
 	GLuint loadCubeMap(unsigned char * data[], glm::vec2 size[], GLenum type);
 
