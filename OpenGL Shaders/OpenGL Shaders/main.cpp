@@ -925,9 +925,8 @@ void loadModels_SafeArea()
 {
 	// Please note:
 	// If taking the positions from 3DS MAX:
-	// Change the position Z to Y And Y to Z!
-	// Then invert the Z position!
-	// Also change the rotation Z to Y and Y to Z!
+	// The position and Rotation Y and Z need to be swapped.
+	// Then the Z needs to be inverted on both the position and rotation
 
 	// Load Floor's moodels.
 	loadModel(SA_M_Floor, "res/Safe_Area/Floor/Floor.obj", glm::vec3(0, -0.652, 0), glm::vec3(0, 0, 0), glm::vec3(1.0f), SA_T_Floor, 100.0f, -1.0f, 0.4f);
@@ -970,11 +969,11 @@ void loadModels_SafeArea()
 
 	// Load Barrels models.
 	loadModel(SA_M_Barrels[0], "res/Safe_Area/Barrel/Barrel.obj", glm::vec3(-7.725f, -0.623f, -9.331f), glm::vec3(0, glm::radians(-22.889f), 0), glm::vec3(1.0f), SA_T_Barrels[1], 35.0f, 0.5f, 0.1f); // Red
-	loadModel(SA_M_Barrels[1], SA_M_Barrels[0], glm::vec3(-4.665f, -0.227f, -14.639f), glm::vec3(glm::radians(30.785f), glm::radians(114.220f), glm::radians(-36.758f)), glm::vec3(1.0f), SA_T_Barrels[0], 35.0f, 0.5f, 0.1f); // Green
-	loadModel(SA_M_Barrels[2], SA_M_Barrels[0], glm::vec3(-7.725f, 2.815f, -13.345f), glm::vec3(glm::radians(-5.954f), 0, 0), glm::vec3(1.0f), SA_T_Barrels[2], 30.0f, 0.5f, 0.1f);
+	loadModel(SA_M_Barrels[1], SA_M_Barrels[0], glm::vec3(-4.665f, -0.227f, -14.639f), glm::vec3(glm::radians(14.743f), glm::radians(-91.479f), glm::radians(-0.389f)), glm::vec3(1.0f), SA_T_Barrels[0], 35.0f, 0.5f, 0.1f); // Green
+	loadModel(SA_M_Barrels[2], SA_M_Barrels[0], glm::vec3(-7.725f, 2.815f, -13.345f), glm::vec3(glm::radians(1.203f), 0, 0), glm::vec3(1.0f), SA_T_Barrels[2], 30.0f, 0.5f, 0.1f);
 	loadModel(SA_M_Barrels[3], SA_M_Barrels[0], glm::vec3(-7.725f, -0.623f, -14.639f), glm::vec3(0.0f), glm::vec3(1.0f), SA_T_Barrels[2], 30.0f, 0.5f, 0.1f);
-	loadModel(SA_M_Barrels[4], SA_M_Barrels[0], glm::vec3(-7.725f, -0.623f, -11.614f), glm::vec3(glm::radians(-16.803f), glm::radians(20.35f), glm::radians(3.727f)), glm::vec3(1.0f), SA_T_Barrels[2], 30.0f, 0.5f, 0.1f);
-	loadModel(SA_M_Barrels[5], SA_M_Barrels[0], glm::vec3(-7.725f, 0.204f, 14.789f), glm::vec3(glm::radians(-66.793f), glm::radians(-19.981f), glm::radians(0.618f)), glm::vec3(1.0f), SA_T_Barrels[1], 35.0f, 0.5f, 0.1f);
+	loadModel(SA_M_Barrels[4], SA_M_Barrels[0], glm::vec3(-7.725f, -0.623f, -11.614f), glm::vec3(glm::radians(-12.803f), glm::radians(18.968f), 0), glm::vec3(1.0f), SA_T_Barrels[2], 30.0f, 0.5f, 0.1f);
+	loadModel(SA_M_Barrels[5], SA_M_Barrels[0], glm::vec3(-7.725f, 0.204f, 14.789f), glm::vec3(glm::radians(-66.793f), glm::radians(0.618f), glm::radians(19.981f)), glm::vec3(1.0f), SA_T_Barrels[1], 35.0f, 0.5f, 0.1f);
 	
 	// Load Barriers models.
 	loadModel(SA_M_Barriers[0], "res/Safe_Area/ConcreteBarrier/ConcreteBarrier.obj", glm::vec3(5.746f, 0.734f, 14.737f), glm::vec3(0.0f), glm::vec3(1.0f), SA_T_Barriers, SA_TN_Barriers, 100.0f, 0.0f, 0.1f);
@@ -994,9 +993,9 @@ void loadModels_SafeArea()
 	loadModel(SA_M_Crate2, "res/Safe_Area/WoodBox2/WoodBox2.obj", glm::vec3(10.217f, 5.708f, -7.628f), glm::vec3(0, glm::radians(6.99f), 0), glm::vec3(1.0f), SA_T_Crate2, 100.0f, 1.0f, 0.1f);
 	
 	// Load Pallets models.
-	loadModel(SA_M_Pallets[0], "res/Safe_Area/Pallet/Pallet.obj", glm::vec3(9.958f, 1.409f, -12.077f), glm::vec3(glm::radians(146.722f), glm::radians(67.173f), glm::radians(-59.121f)), glm::vec3(1.0f), SA_T_Pallets, SA_TN_Pallets, 100.0f, 0.1f, 0.1f);
-	loadModel(SA_M_Pallets[1], SA_M_Pallets[0], glm::vec3(9.362f, 1.409f, -14.006f), glm::vec3(glm::radians(166.203f), glm::radians(-141.395f), glm::radians(81.467f)), glm::vec3(1.0f), SA_T_Pallets, SA_TN_Pallets, 100.0f, 0.1f, 0.1f);
-	
+	loadModel(SA_M_Pallets[0], "res/Safe_Area/Pallet/Pallet.obj", glm::vec3(9.958f, 1.409f, -12.077f), glm::vec3(glm::radians(90.0f), glm::radians(29.358f), glm::radians(81.467f)), glm::vec3(1.0f), SA_T_Pallets, SA_TN_Pallets, 100.0f, 0.1f, 0.1f);
+	loadModel(SA_M_Pallets[1], SA_M_Pallets[0], glm::vec3(9.362f, 1.409f, -14.006f), glm::vec3(glm::radians(90.0f), glm::radians(52.264f), glm::radians(81.467f)), glm::vec3(1.0f), SA_T_Pallets, SA_TN_Pallets, 100.0f, 0.1f, 0.1f);
+
 	// Load SandBag model.
 	loadModel(SA_M_SandBag[0], "res/Safe_Area/SandBags/SandBags.obj", glm::vec3(8.933f, -0.623, 10.087f), glm::vec3(0, glm::radians(66.783f), 0), glm::vec3(1.0f), SA_T_SandBag, SA_TN_SandBag, 100.0f, 0.1f, 0.1f);
 	loadModel(SA_M_SandBag[1], SA_M_SandBag[0], glm::vec3(-8.436f, -0.623, 4.834f), glm::vec3(0, glm::radians(89.368f), 0), glm::vec3(1.0f), SA_T_SandBag, SA_TN_SandBag, 100.0f, 0.1f, 0.1f);
