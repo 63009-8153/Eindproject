@@ -20,6 +20,8 @@ gameobject::gameobject(gameobject *object){
 	hasShadowMap = false;
 	hasReflectionCubeMap = false;
 	hasRefractionCubeMap = false;
+
+	tiledAmount = 1.0f;
 }
 gameobject::gameobject(int _vaoID, int _vertexCount)
 {
@@ -38,6 +40,8 @@ gameobject::gameobject(int _vaoID, int _vertexCount)
 	hasShadowMap = false;
 	hasReflectionCubeMap = false;
 	hasRefractionCubeMap = false;
+
+	tiledAmount = 1.0f;
 }
 
 //Gameobject destructor
@@ -235,4 +239,14 @@ float gameobject::getShineDamper()
 float gameobject::getReflectivity()
 {
 	return reflectivity;
+}
+
+void gameobject::setTiledAmount(float amount)
+{
+	tiledAmount = amount;
+}
+
+float gameobject::getTiledAmount()
+{
+	return tiledAmount;
 }

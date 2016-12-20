@@ -26,7 +26,7 @@ public:
 	//Create a transformation matrix
 	static glm::mat4 createTransformationMatrix(glm::vec2 translation, float rotation, glm::vec2 scale) {
 		//Identity matrix
-		glm::mat4 matrix = glm::mat4();
+		glm::mat4 matrix = glm::mat4(1.0f);
 
 		//Translate matrix
 		matrix = glm::translate(matrix, glm::vec3(translation, 0.0f));
@@ -43,15 +43,15 @@ public:
 	}
 	static glm::mat4 createTransformationMatrix(glm::vec3 translation, glm::vec3 rotation, glm::vec3 scale) {
 		//Identity matrix
-		glm::mat4 matrix = glm::mat4();
+		glm::mat4 matrix = glm::mat4(1.0f);
 
 		//Translate matrix
 		matrix = glm::translate(matrix, translation);
 
 		//Rotate matrix
-		matrix = glm::rotate(matrix, rotation.x, glm::vec3(1, 0, 0));
 		matrix = glm::rotate(matrix, rotation.y, glm::vec3(0, 1, 0));
 		matrix = glm::rotate(matrix, rotation.z, glm::vec3(0, 0, 1));
+		matrix = glm::rotate(matrix, rotation.x, glm::vec3(1, 0, 0));
 
 		//Scale matrix
 		matrix = glm::scale(matrix, scale);
@@ -64,12 +64,12 @@ public:
 	//Create a view matrix
 	static glm::mat4 createViewMatrix(glm::vec3 translation, glm::vec3 rotation) {
 		//Identity matrix
-		glm::mat4 matrix = glm::mat4();
+		glm::mat4 matrix = glm::mat4(1.0f);
 
 		//Rotate matrix
-		matrix = glm::rotate(matrix, rotation.x, glm::vec3(1, 0, 0));
 		matrix = glm::rotate(matrix, rotation.y, glm::vec3(0, 1, 0));
 		matrix = glm::rotate(matrix, rotation.z, glm::vec3(0, 0, 1));
+		matrix = glm::rotate(matrix, rotation.x, glm::vec3(1, 0, 0));
 
 		//Translate matrix
 		matrix = glm::translate(matrix, -translation);
