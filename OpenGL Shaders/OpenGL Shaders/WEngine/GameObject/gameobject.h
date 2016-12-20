@@ -71,6 +71,9 @@ public:
 	float getShineDamper();
 	float getReflectivity();
 
+	void setTiledAmount(float amount);
+	float getTiledAmount();
+
 private:
 	int vaoID;
 	int vertexCount;
@@ -78,6 +81,8 @@ private:
 	glm::vec3 position, 
 			  rotation,
 			  scale;
+
+	float tiledAmount;
 
 	std::vector<GLuint> textureID;
 	GLuint normalMapID,

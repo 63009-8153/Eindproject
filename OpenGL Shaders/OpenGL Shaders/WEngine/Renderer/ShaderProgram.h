@@ -41,6 +41,8 @@ public:
 
 	void loadLights(std::vector<Light*> lights);
 
+	void loadTileAmount(float tiles);
+
 private:
 	int programID;
 	int vertexShaderID;
@@ -86,6 +88,8 @@ private:
 
 	GLuint	location_lightSpaceMatrix,
 		location_cameraPosition;
+
+	GLuint  location_tileAmount;
 
 	static int loadShader(char file[], GLenum type);
 

@@ -23,6 +23,9 @@ void Renderer::render(std::map<GLuint, std::vector<gameobject>> *gameobjects)
 			//Prepare each models own variables
 			prepareModelInstance(&it->second[i]);
 
+			// Set the tile amount in the shader
+			shader->loadTileAmount(it->second[i].getTiledAmount());
+
 			//If the model is supposed to be using both sides, disable culling
 			if (!it->second[i].cullFaces) MasterRenderer::DisableCulling();
 
