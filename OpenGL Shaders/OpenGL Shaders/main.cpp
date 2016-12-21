@@ -25,6 +25,13 @@ void clientLoop(void *);
 double	clientLoopDeltaTime		 = 0,
 		clientLoopLastRenderTime = 0;
 
+// My Client
+volatile playerData myPlayerData;
+// All clients
+volatile playerData allClients[MAX_LOBBYSIZE];
+// All enemies
+volatile enemyData  allEnemies[MAX_ENEMIES];
+
 // ============  GAME PROGRAM VARIABLES ============
 
 GLFWwindow* window;
@@ -424,7 +431,7 @@ int main() {
 		camera.rotation = glm::radians(player.getRotation());
 		// Set the camera position
 		camera.position = player.getPosition();
-		camera.position.y = 4.0f;
+		camera.position.y += 4.0f;
 
 		//if (glfwGetKey(window, GLFW_KEY_KP_8) == GLFW_PRESS) camera.position.x += 0.1f; // up
 		//else if (glfwGetKey(window, GLFW_KEY_KP_2) == GLFW_PRESS) camera.position.x -= 0.1f; //down
@@ -795,7 +802,7 @@ void clientLoop(void *)
 		// This function is to execute a function that sends data to the server.
 		if (networkUpdateFunction != nullptr) networkUpdateFunction();
 
-		player.setPosition(client.myPlayerData.position);
+		player.setPosition(myPlayerData.position);
 
 		// Limit update cycle amount to UPDATE_CYCLES_PER_SECOND
 		while (((float)(std::clock() - programStartClock) / (float)CLOCKS_PER_SEC) < (clientLoopLastRenderTime + (1.0f / (float)UPDATE_CYCLES_PER_SECOND))) {}
@@ -848,7 +855,7 @@ void SendGameData()
 	// Update key input
 	handleGameInput();
 
-	if(client.hasActionType())
+	//if(client.hasActionType())
 		client.sendPlayerData();
 }
 
