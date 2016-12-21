@@ -20,7 +20,6 @@ clock_t programStartClock = std::clock();
 // ============  Client Handle Variables ===========
 bool clientRunning = false;
 ClientGame client;
-void clientLoop(void *);
 
 double	clientLoopDeltaTime		 = 0,
 		clientLoopLastRenderTime = 0;
@@ -157,7 +156,7 @@ void initLights();
 // Initialise the client
 void initialiseClient(char ipAddress[39], char port[5]);
 // Client loop
-void clientLoop(void *);
+void clientLoop();
 
 // Network functions
 void SendInitData();
@@ -258,6 +257,8 @@ int main() {
 	handleMouseInput(true);
 	
 	do {
+		clientLoop();
+
 		//renderWaterCubeMap();
 		//GuiElements[0].rotation = (float)frame / 100.0f;
 
@@ -777,17 +778,14 @@ void initialiseClient(char ipAddress[39], char port[5])
 
 	networkUpdateFunction = SendInitData;
 
-	// Start a new thread and run the serverLoop function.
-	_beginthread(clientLoop, 0, NULL);
+	clientRunning = true;
 }
 // The client loop
-void clientLoop(void *)
+void clientLoop()
 {
-	clientRunning = true;
 
 	// Client networking loop
-	while (clientRunning) {
-
+	if (clientRunning) {
 		// Receive and parse data.
 		client.updateClient();
 
@@ -803,9 +801,6 @@ void clientLoop(void *)
 		clientLoopDeltaTime = (((float)(std::clock() - programStartClock) / (float)CLOCKS_PER_SEC)) - clientLoopLastRenderTime; //Time in miliseconds it took for the last update cycle.
 		clientLoopLastRenderTime = (((float)(std::clock() - programStartClock) / (float)CLOCKS_PER_SEC));
 	}
-
-	// End of function, end the thread and release its memory.
-	_endthread();
 }
 
 // Send intitialisation data
