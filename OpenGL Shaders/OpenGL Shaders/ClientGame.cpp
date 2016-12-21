@@ -92,7 +92,7 @@ void ClientGame::updateClient()
 
 				if (myClientID == packet.players[k].playerID)
 				{
-					myPlayerData = packet.players[k];
+					myPlayerData == packet.players[k];
 				}
 			}
 			// Get all enemies
@@ -159,6 +159,7 @@ void ClientGame::getPlayerData(Player & player)
 {
 	for (unsigned int i = 0; i < MAX_LOBBYSIZE; i++)
 	{
+		// If the current client is myplayer client
 		if (allClients[i].playerID == myClientID)
 		{
 			// Set the position
@@ -167,6 +168,7 @@ void ClientGame::getPlayerData(Player & player)
 			// Set the health
 			player.health = allClients[i].health;
 			player.maxHealth = allClients[i].maxHealth;
+
 			// Set the velocity
 			player.setVelocity(allClients[i].velocity);
 
