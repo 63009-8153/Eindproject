@@ -10,7 +10,7 @@ public:
 	// Get the models position
 	glm::vec3 getPosition();
 	// Set the models position
-	void setPosition(glm::vec3 &pos);
+	void setPosition(glm::vec3 pos);
 
 	// Get the models rotation
 	glm::vec3 getRotation();

@@ -70,6 +70,13 @@ public:
 	// The startTimer
 	float lobbyTimer;
 
+	// My Client
+	playerData myPlayerData;
+	// All clients
+	playerData allClients[MAX_LOBBYSIZE];
+	// All enemies
+	enemyData  allEnemies[MAX_ENEMIES];
+
 	// The actual lobbysize
 	unsigned int actualLobbySize;
 

@@ -24,13 +24,6 @@ ClientGame client;
 double	clientLoopDeltaTime		 = 0,
 		clientLoopLastRenderTime = 0;
 
-// My Client
-volatile playerData myPlayerData;
-// All clients
-volatile playerData allClients[MAX_LOBBYSIZE];
-// All enemies
-volatile enemyData  allEnemies[MAX_ENEMIES];
-
 // ============  GAME PROGRAM VARIABLES ============
 
 GLFWwindow* window;
@@ -800,7 +793,7 @@ void clientLoop()
 		// This function is to execute a function that sends data to the server.
 		if (networkUpdateFunction != nullptr) networkUpdateFunction();
 
-		player.setPosition(myPlayerData.position);
+		player.setPosition(client.myPlayerData.position);
 
 		// Limit update cycle amount to UPDATE_CYCLES_PER_SECOND
 		while (((float)(std::clock() - programStartClock) / (float)CLOCKS_PER_SEC) < (clientLoopLastRenderTime + (1.0f / (float)UPDATE_CYCLES_PER_SECOND))) {}

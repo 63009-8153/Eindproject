@@ -152,7 +152,7 @@ void ClientGame::disconnect()
 void ClientGame::setPlayerData(Player & player)
 {
 	myPlayerData.rotation = player.getRotation();
-	printf("%f | %f | %f\n", myPlayerData.rotation.x, myPlayerData.rotation.y, myPlayerData.rotation.z);
+	printf("Set: %f | %f | %f\n", myPlayerData.rotation.x, myPlayerData.rotation.y, myPlayerData.rotation.z);
 }
 
 // Update the playerdata of own playerData
@@ -187,7 +187,7 @@ void ClientGame::sendPlayerData()
 	packet.packet_type = GAME_PACKET;
 
 	packet.player = myPlayerData;
-	printf("%f | %f | %f\n", myPlayerData.rotation.x, myPlayerData.rotation.y, myPlayerData.rotation.z);
+	printf("Get: %f | %f | %f\n", myPlayerData.rotation.x, myPlayerData.rotation.y, myPlayerData.rotation.z);
 
 	// Add all set actionTypes to the packet
 	for (int i = 0; i < MAX_ACTIONS; i++) {
