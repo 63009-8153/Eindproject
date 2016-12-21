@@ -410,12 +410,15 @@ int main() {
 		rot.y -= changedMousePos.x * 0.1f;
 		rot.x -= changedMousePos.y * 0.1f;
 
+		// Clamp x to -90 and 90 deg
 		if (rot.x < -90.0f) rot.x = -90.0f;
 		else if (rot.x > 90.0f) rot.x = 90.0f;
 		
+		// Set the player rotation from mouse input
 		player.setRotation(rot);
 
-		// Get and update the player with its new position, it's health and the rest
+
+		// Get and update the player with its new position, it's health and the rest But not the rotation!!!
 		client.getPlayerData(player);
 
 		// Set the rotation of the player for the next update
