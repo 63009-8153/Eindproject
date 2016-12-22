@@ -92,7 +92,7 @@ void ClientGame::updateClient()
 
 				if (myClientID == packet.players[k].playerID)
 				{
-					myPlayerData = packet.players[k];
+					myPlayerData == packet.players[k];
 				}
 			}
 			// Get all enemies
@@ -152,6 +152,7 @@ void ClientGame::disconnect()
 void ClientGame::setPlayerData(Player & player)
 {
 	myPlayerData.rotation = player.getRotation();
+	printf("Set: %f | %f | %f\n", myPlayerData.rotation.x, myPlayerData.rotation.y, myPlayerData.rotation.z);
 }
 
 // Update the playerdata of own playerData
@@ -159,6 +160,7 @@ void ClientGame::getPlayerData(Player & player)
 {
 	for (unsigned int i = 0; i < MAX_LOBBYSIZE; i++)
 	{
+		// If the current client is myplayer client
 		if (allClients[i].playerID == myClientID)
 		{
 			// Set the position
@@ -167,6 +169,7 @@ void ClientGame::getPlayerData(Player & player)
 			// Set the health
 			player.health = allClients[i].health;
 			player.maxHealth = allClients[i].maxHealth;
+
 			// Set the velocity
 			player.setVelocity(allClients[i].velocity);
 
@@ -184,7 +187,9 @@ void ClientGame::sendPlayerData()
 
 	ClientSendPacket packet;
 	packet.packet_type = GAME_PACKET;
+
 	packet.player = myPlayerData;
+	printf("Get: %f | %f | %f\n", myPlayerData.rotation.x, myPlayerData.rotation.y, myPlayerData.rotation.z);
 
 	// Add all set actionTypes to the packet
 	for (int i = 0; i < MAX_ACTIONS; i++) {

@@ -30,4 +30,23 @@ struct playerData {
 
 		return *this;
 	}
+
+	playerData& operator ==(const playerData& p)
+	{
+		position = p.position;
+		scale = p.scale;
+		playerID = p.playerID;
+		health = p.health;
+		maxHealth = p.maxHealth;
+		shooting = p.shooting;
+
+		memcpy(playerName, p.playerName, MAX_NAMESIZE);
+		playerNameSize = p.playerNameSize;
+
+		activePlayer = p.activePlayer;
+
+		return *this;
+	}
+
+
 };
