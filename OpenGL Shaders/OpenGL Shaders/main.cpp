@@ -8,6 +8,8 @@
 #include "Model.h"
 #include "Player.h"
 
+#include "Tree.h"
+
 #define WAVE_SPEED 0.03
 
 #define MSAA 1
@@ -72,6 +74,9 @@ Model SA_M_Crate[6];
 Model SA_M_Pallets[2];
 Model SA_M_SandBag[2];
 
+GLuint	FM_T_FLATTERRAIN[5];
+GLuint	FM_T_TERRAIN,
+		FM_TN_TERRAIN;
 GLuint  FM_T_AMBULANCE[5],
 		FM_TN_AMBULANCE[5];
 GLuint  FM_T_COMMAND_TENT,
@@ -90,7 +95,18 @@ GLuint	FM_T_BROKENFENCE1[3], FM_T_BROKENFENCE2[3],
 GLuint	FM_T_ROADLIGHT[3];
 GLuint	FM_T_MILITARY_BUNKER[3];
 GLuint  FM_T_TRAFFICCONE;
+GLuint	FM_T_ROAD,
+		FM_TN_ROAD;
+GLuint	FM_T_STATUE,
+		FM_TN_STATUE;
+GLuint	FM_T_RAIL[2];
+GLuint	FM_T_TOWNHOUSE;
+GLuint	FM_T_WELL,
+		FM_TN_WELL;
 
+Tree  trees;
+Terrain FM_M_FLATTERRAIN;
+Model FM_M_TERRAIN;
 Model FM_M_AMBULANCE[5 * 2];
 Model FM_M_COMMAND_TENT[2];
 Model FM_M_ARMY_TENT[3 * 6];
@@ -99,15 +115,18 @@ Model FM_M_BARRIER[25];
 Model FM_M_CONTAINER[12];
 Model FM_M_BROKEN_FENCE1[3];
 Model FM_M_BROKEN_FENCE2[3];
-Model FM_M_FENCE[3 * 163];
+Model FM_M_FENCE[3 * 164];
 Model FM_M_ROADLIGHT[3 * 24];
 Model FM_M_MILITARY_BUNKER[3 * 3];
 Model FM_M_TRAFFICCONE[14];
+Model FM_M_ROAD[3];
+Model FM_M_STATUE;
+Model FM_M_RAIL[2];
+Model FM_M_TOWNHOUSE[2];
+Model FM_M_WELL;
 
 std::vector<texture2D> GuiElements;
 texture2D GuiCherry;
-
-Terrain terrains[2];
 
 std::vector<Light*> lights;
 Light sun, light0, light1, light2;
@@ -207,6 +226,19 @@ void loadModels();
 void loadModels_SafeArea();
 // Load Forrest Map Models
 void LoadModels_ForrestMap();
+
+// Load the Fence model
+void loadFence(int iteration, glm::vec3 pos, glm::vec3 rot);
+// Load the RoadLight model
+void loadRoadLight(int iteration, glm::vec3 pos, glm::vec3 rot);
+// Load the TrafficCone model
+void loadTrafficCone(int iteration, glm::vec3 pos, glm::vec3 rot);
+// Load the ArmyTent model
+void loadArmyTent(int iteration, glm::vec3 pos, glm::vec3 rot);
+// Load the ArmyTruck model
+void loadArmyTruck(int iteration, glm::vec3 pos, glm::vec3 rot);
+// Load the tree models
+void loadTreeModels();
 
 
 int main() {
@@ -936,6 +968,90 @@ void LoadGraphics_SafeArea()
 void LoadGraphics_ForrestMap()
 {
 	//SA_TN_Pallets = loader.loadTexture("res/Safe_Area/Pallet/Textures/Pallet_norm.bmp", false);
+	//TODO: Set tree texture
+
+	FM_T_FLATTERRAIN[0] = loader.loadTexture("res/Forrest_Area/Terrain/Ground/Textures/TerrainBlendMap.bmp", false);
+	/*FM_T_FLATTERRAIN[1] = loader.loadTexture("res/Forrest_Area/Terrain/Ground/Textures/black.bmp", true);
+	FM_T_FLATTERRAIN[2] = loader.loadTexture("res/Forrest_Area/Terrain/Ground/Textures/red.bmp", true);
+	FM_T_FLATTERRAIN[3] = loader.loadTexture("res/Forrest_Area/Terrain/Ground/Textures/green.bmp", true);
+	FM_T_FLATTERRAIN[4] = loader.loadTexture("res/Forrest_Area/Terrain/Ground/Textures/blue.bmp", true);
+*/
+	FM_T_TERRAIN = loader.loadTexture("res/Forrest_Area/Terrain/Mountains/Textures/Ring_Of_Doom_Texture.bmp", true);
+	FM_TN_TERRAIN = loader.loadTexture("res/Forrest_Area/Terrain/Mountains/Textures/Ring_Of_Doom_Normal.bmp", true);
+
+	FM_T_AMBULANCE[0] = loader.loadTexture("res/Forrest_Area/Ambulance/Textures/veh_ambulance_dam_02_d.bmp", true);
+	FM_T_AMBULANCE[1] = loader.loadTexture("res/Forrest_Area/Ambulance/Textures/veh_ambulance_dam_02_1_d.bmp", true);
+	FM_T_AMBULANCE[2] = loader.loadTexture("res/Forrest_Area/Ambulance/Textures/veh_ambulance_logo_dam_d.bmp", true);
+	FM_T_AMBULANCE[3] = loader.loadTexture("res/Forrest_Area/Ambulance/Textures/veh_ambulance_wheels_d.bmp", true);
+	FM_T_AMBULANCE[4] = loader.loadTexture("res/Forrest_Area/Ambulance/Textures/veh_ambulance_windows_dam_d.bmp", true);
+
+	FM_TN_AMBULANCE[0] = loader.loadTexture("res/Forrest_Area/Ambulance/Textures/veh_ambulance_dam_02_n.bmp", true);
+	FM_TN_AMBULANCE[1] = loader.loadTexture("res/Forrest_Area/Ambulance/Textures/veh_ambulance_dam_02_1_n.bmp", true);
+	FM_TN_AMBULANCE[2] = loader.loadTexture("res/Forrest_Area/Ambulance/Textures/veh_ambulance_logo_dam_n.bmp", true);
+	FM_TN_AMBULANCE[3] = loader.loadTexture("res/Forrest_Area/Ambulance/Textures/veh_ambulance_wheels_n.bmp", true);
+	FM_TN_AMBULANCE[4] = loader.loadTexture("res/Forrest_Area/Ambulance/Textures/veh_ambulance_windows_dam_n.bmp", true);
+
+	FM_T_COMMAND_TENT = loader.loadTexture("res/Forrest_Area/Army_Command_Tent/Textures/Tent_Defuse.bmp", true);
+	FM_TN_COMMAND_TENT = loader.loadTexture("res/Forrest_Area/Army_Command_Tent/Textures/Tent_Normal.bmp", true);
+
+	FM_T_ARMY_TENT[0] = loader.loadTexture("res/Forrest_Area/Army_Tent/Textures/inter.bmp", true);
+	FM_T_ARMY_TENT[1] = loader.loadTexture("res/Forrest_Area/Army_Tent/Textures/outer.bmp", true);
+	FM_T_ARMY_TENT[2] = loader.loadTexture("res/Forrest_Area/Army_Tent/Textures/Window.bmp", true);
+
+	FM_TN_ARMY_TENT[0] = loader.loadTexture("res/Forrest_Area/Army_Tent/Textures/inter_bump.bmp", true);
+	FM_TN_ARMY_TENT[1] = loader.loadTexture("res/Forrest_Area/Army_Tent/Textures/outer_bump.bmp", true);
+
+	FM_T_ARMY_TRUCK[0] = loader.loadTexture("res/Forrest_Area/Army_Truck/Textures/box-furgon.bmp", true);
+	FM_T_ARMY_TRUCK[1] = loader.loadTexture("res/Forrest_Area/Army_Truck/Textures/cabin.bmp", true);
+	FM_T_ARMY_TRUCK[2] = loader.loadTexture("res/Forrest_Area/Army_Truck/Textures/basic.bmp", true);
+	FM_T_ARMY_TRUCK[3] = loader.loadTexture("res/Forrest_Area/Army_Truck/Textures/detail_console.bmp", true);
+	FM_T_ARMY_TRUCK[4] = loader.loadTexture("res/Forrest_Area/Army_Truck/Textures/U3_wheel.bmp", true);
+
+	FM_T_BARRIER = loader.loadTexture("res/Forrest_Area/Barrier/Textures/Barrier.bmp", true);
+	FM_TN_BARRIER = loader.loadTexture("res/Forrest_Area/Barrier/Textures/Normal.bmp", true);
+
+	FM_T_CONTAINER = loader.loadTexture("res/Forrest_Area/Container/Textures/Cargo01_D.bmp", true);
+	FM_TN_CONTAINER = loader.loadTexture("res/Forrest_Area/Container/Textures/Cargo01_N.bmp", true);
+
+	FM_T_FENCE[0] = loader.loadTexture("res/Forrest_Area/Fences/Textures/logends.bmp", true);
+	FM_TN_FENCE[0] = loader.loadTexture("res/Forrest_Area/Fences/Textures/logends_NRM.bmp", true);
+	FM_T_FENCE[1] = loader.loadTexture("res/Forrest_Area/Fences/Textures/logs.bmp", true);
+	FM_TN_FENCE[1] = loader.loadTexture("res/Forrest_Area/Fences/Textures/logs_NRM.bmp", true);
+	FM_T_FENCE[2] = loader.loadTexture("res/Forrest_Area/Fences/Textures/planks.bmp", true);
+	FM_TN_FENCE[2] = loader.loadTexture("res/Forrest_Area/Fences/Textures/planks_NRM.bmp", true);
+
+	FM_T_BROKENFENCE1[0] = loader.loadTexture("res/Forrest_Area/Fences/Textures/logends.bmp", true);
+	FM_T_BROKENFENCE1[1] = loader.loadTexture("res/Forrest_Area/Fences/Textures/logs.bmp", true);
+	FM_T_BROKENFENCE1[2] = loader.loadTexture("res/Forrest_Area/Fences/Textures/planks.bmp", true);
+
+	FM_T_BROKENFENCE2[0] = loader.loadTexture("res/Forrest_Area/Fences/Textures/logends.bmp", true);
+	FM_T_BROKENFENCE2[1] = loader.loadTexture("res/Forrest_Area/Fences/Textures/logs.bmp", true);
+	FM_T_BROKENFENCE2[2] = loader.loadTexture("res/Forrest_Area/Fences/Textures/planks.bmp", true);
+
+	FM_T_ROADLIGHT[0] = loader.loadTexture("res/Forrest_Area/RoadLight/Textures/Fiberglass0014_S.bmp", true);
+	FM_T_ROADLIGHT[1] = loader.loadTexture("res/Forrest_Area/RoadLight/Textures/MetalBase0121_9_S.bmp", true);
+	FM_T_ROADLIGHT[2] = loader.loadTexture("res/Forrest_Area/RoadLight/Textures/MetalBase0123_S.bmp", true);
+
+	FM_T_MILITARY_BUNKER[0] = loader.loadTexture("res/Forrest_Area/Military_Bunker/Textures/corrugated-551291_1920.bmp", true);
+	FM_T_MILITARY_BUNKER[1] = loader.loadTexture("res/Forrest_Area/Military_Bunker/Textures/mural.bmp", true);
+	FM_T_MILITARY_BUNKER[2] = loader.loadTexture("res/Forrest_Area/Military_Bunker/Textures/_original.bmp", true);
+
+	FM_T_TRAFFICCONE = loader.loadTexture("res/Forrest_Area/Traffic_Cone/Textures/cone2.bmp", true);
+
+	FM_T_ROAD = loader.loadTexture("res/Forrest_Area/Roads/Textures/Roadstraight.bmp", true);
+	FM_TN_ROAD = loader.loadTexture("res/Forrest_Area/Roads/Textures/Roadstraight_NORMAL.bmp", true);
+
+	FM_T_STATUE = loader.loadTexture("res/Forrest_Area/Statue/Textures/statue_d.bmp", true);
+	FM_TN_STATUE = loader.loadTexture("res/Forrest_Area/Statue/Textures/statue_n.bmp", true);
+
+	FM_T_RAIL[0] = loader.loadTexture("res/Forrest_Area/Rails/Textures/Truck_1524_reils.bmp", true);
+	FM_T_RAIL[1] = loader.loadTexture("res/Forrest_Area/Rails/Textures/Truck_1524_sleppers.bmp", true);
+
+	FM_T_TOWNHOUSE = loader.loadTexture("res/Forrest_Area/Town_House/Textures/BuildingsTallHouse0065_2_M.bmp", true);
+
+	FM_T_WELL = loader.loadTexture("res/Forrest_Area/Well/Textures/well_01_Diff.bmp", true);
+	FM_TN_WELL = loader.loadTexture("res/Forrest_Area/Well/Textures/well_01_Norm.bmp", true);
+
 }
 
 // Load all models
@@ -963,7 +1079,7 @@ void loadModels_SafeArea()
 
 	// Load Floor's moodels.
 	loadModel(SA_M_Floor, "res/Safe_Area/Floor/Floor.obj", glm::vec3(0, -0.652, 0), glm::vec3(0, 0, 0), glm::vec3(1.0f), SA_T_Floor, 100.0f, -1.0f, 0.4f);
-	SA_M_Floor.getModel()->setTiledAmount(6.0f);
+	SA_M_Floor.getModel()->setTiledAmount(glm::vec2(6.0f));
 
 	// Load Building models.
 	loadModel(SA_M_Building[0], "res/Safe_Area/Building/Building_Building.obj", glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1.0f), SA_T_Building[0], 100.0f, 0.1f, 0.4f);
@@ -1043,11 +1159,11 @@ void LoadModels_ForrestMap()
 	{
 		multiPos = glm::vec3(-4.67f, 0.0f, 199.825f);
 		multiRot = glm::vec3(0.0f, glm::radians(32.168f), 0.0f);
-		loadModel(FM_M_AMBULANCE[0], "res/.obj", multiPos, multiRot, glm::vec3(1.0f), FM_T_AMBULANCE[0], FM_TN_AMBULANCE[0], 100.0f, 1.0f, 0.1f);
-		loadModel(FM_M_AMBULANCE[1], "res/.obj", multiPos, multiRot, glm::vec3(1.0f), FM_T_AMBULANCE[1], FM_TN_AMBULANCE[1], 100.0f, 1.0f, 0.1f);
-		loadModel(FM_M_AMBULANCE[2], "res/.obj", multiPos, multiRot, glm::vec3(1.0f), FM_T_AMBULANCE[2], FM_TN_AMBULANCE[2], 100.0f, 1.0f, 0.1f);
-		loadModel(FM_M_AMBULANCE[3], "res/.obj", multiPos, multiRot, glm::vec3(1.0f), FM_T_AMBULANCE[3], FM_TN_AMBULANCE[3], 100.0f, 1.0f, 0.1f);
-		loadModel(FM_M_AMBULANCE[4], "res/.obj", multiPos, multiRot, glm::vec3(1.0f), FM_T_AMBULANCE[4], FM_TN_AMBULANCE[4], 100.0f, 1.0f, 0.1f);
+		loadModel(FM_M_AMBULANCE[0], "res/Forrest_Area/Ambulance/Frame.obj", multiPos, multiRot, glm::vec3(1.0f), FM_T_AMBULANCE[0], FM_TN_AMBULANCE[0], 100.0f, 1.0f, 0.1f);
+		loadModel(FM_M_AMBULANCE[1], "res/Forrest_Area/Ambulance/Frame2.obj", multiPos, multiRot, glm::vec3(1.0f), FM_T_AMBULANCE[1], FM_TN_AMBULANCE[1], 100.0f, 1.0f, 0.1f);
+		loadModel(FM_M_AMBULANCE[2], "res/Forrest_Area/Ambulance/Logo's.obj", multiPos, multiRot, glm::vec3(1.0f), FM_T_AMBULANCE[2], FM_TN_AMBULANCE[2], 100.0f, 1.0f, 0.1f);
+		loadModel(FM_M_AMBULANCE[3], "res/Forrest_Area/Ambulance/Wheels.obj", multiPos, multiRot, glm::vec3(1.0f), FM_T_AMBULANCE[3], FM_TN_AMBULANCE[3], 100.0f, 1.0f, 0.1f);
+		loadModel(FM_M_AMBULANCE[4], "res/Forrest_Area/Ambulance/Windows.obj", multiPos, multiRot, glm::vec3(1.0f), FM_T_AMBULANCE[4], FM_TN_AMBULANCE[4], 100.0f, 1.0f, 0.1f);
 
 		multiPos = glm::vec3(-128.454f, 0.0f, -299.611f);
 		multiRot = glm::vec3(0.0f, glm::radians(35.111f), 0.0f);
@@ -1062,126 +1178,81 @@ void LoadModels_ForrestMap()
 	{
 		multiPos = glm::vec3(-244.072f, -0.061f, -447.298f);
 		multiRot = glm::vec3(0.0f);
-		loadModel(FM_M_COMMAND_TENT[0], "res/.obj", multiPos, multiRot, glm::vec3(1.0f), FM_T_COMMAND_TENT, FM_TN_COMMAND_TENT, 100.0f, 1.0f, 0.1f);
+		loadModel(FM_M_COMMAND_TENT[0], "res/Forrest_Area/Army_Command_Tent/CommandTents.obj", multiPos, multiRot, glm::vec3(1.0f), FM_T_COMMAND_TENT, FM_TN_COMMAND_TENT, 100.0f, 1.0f, 0.1f);
 	}
 
 	// == ARMY_TENT ==
 	{
 		multiPos = glm::vec3(-323.534f, 20.376f, -75.994f);
 		multiRot = glm::vec3(0.0f, glm::radians(90.0f), 0.0f);
-		loadModel(FM_M_ARMY_TENT[0], "res/.obj", multiPos, multiRot, glm::vec3(1.0f), FM_T_ARMY_TENT[0], FM_TN_ARMY_TENT[0], 100.0f, 1.0f, 0.1f);
-		loadModel(FM_M_ARMY_TENT[1], "res/.obj", multiPos, multiRot, glm::vec3(1.0f), FM_T_ARMY_TENT[1], FM_TN_ARMY_TENT[1], 100.0f, 1.0f, 0.1f);
-		loadModel(FM_M_ARMY_TENT[2], "res/.obj", multiPos, multiRot, glm::vec3(1.0f), FM_T_ARMY_TENT[2], FM_TN_ARMY_TENT[2], 100.0f, 1.0f, 0.1f);
+		loadModel(FM_M_ARMY_TENT[0], "res/Forrest_Area/Army_Tent/Inside.obj", multiPos, multiRot, glm::vec3(1.0f), FM_T_ARMY_TENT[0], FM_TN_ARMY_TENT[0], 100.0f, 1.0f, 0.1f);
+		loadModel(FM_M_ARMY_TENT[1], "res/Forrest_Area/Army_Tent/Outside.obj", multiPos, multiRot, glm::vec3(1.0f), FM_T_ARMY_TENT[1], FM_TN_ARMY_TENT[1], 100.0f, 1.0f, 0.1f);
+		loadModel(FM_M_ARMY_TENT[2], "res/Forrest_Area/Army_Tent/Windows.obj", multiPos, multiRot, glm::vec3(1.0f), FM_T_ARMY_TENT[2], 100.0f, 1.0f, 0.1f);
 
-		multiPos = glm::vec3(-323.534f, 20.376f, -0.8f);
-		loadModel(FM_M_ARMY_TENT[2], FM_M_ARMY_TENT[1], multiPos, multiRot, glm::vec3(1.0f), FM_T_ARMY_TENT[0], FM_TN_ARMY_TENT[0], 100.0f, 1.0f, 0.1f);
-		loadModel(FM_M_ARMY_TENT[3], FM_M_ARMY_TENT[2], multiPos, multiRot, glm::vec3(1.0f), FM_T_ARMY_TENT[1], FM_TN_ARMY_TENT[1], 100.0f, 1.0f, 0.1f);
-		loadModel(FM_M_ARMY_TENT[4], FM_M_ARMY_TENT[3], multiPos, multiRot, glm::vec3(1.0f), FM_T_ARMY_TENT[2], FM_TN_ARMY_TENT[2], 100.0f, 1.0f, 0.1f);
-
-		multiPos = glm::vec3(-310.218f, 20.376f, 77.699f);
-		loadModel(FM_M_ARMY_TENT[5], FM_M_ARMY_TENT[1], multiPos, multiRot, glm::vec3(1.0f), FM_T_ARMY_TENT[0], FM_TN_ARMY_TENT[0], 100.0f, 1.0f, 0.1f);
-		loadModel(FM_M_ARMY_TENT[6], FM_M_ARMY_TENT[2], multiPos, multiRot, glm::vec3(1.0f), FM_T_ARMY_TENT[1], FM_TN_ARMY_TENT[1], 100.0f, 1.0f, 0.1f);
-		loadModel(FM_M_ARMY_TENT[7], FM_M_ARMY_TENT[3], multiPos, multiRot, glm::vec3(1.0f), FM_T_ARMY_TENT[2], FM_TN_ARMY_TENT[2], 100.0f, 1.0f, 0.1f);
-
-		multiPos = glm::vec3(-262.446f, 20.376f, -51.462f);
-		multiRot = glm::vec3(0.0f, glm::radians(-90.0f), 0.0f);
-		loadModel(FM_M_ARMY_TENT[8], FM_M_ARMY_TENT[1], multiPos, multiRot, glm::vec3(1.0f), FM_T_ARMY_TENT[0], FM_TN_ARMY_TENT[0], 100.0f, 1.0f, 0.1f);
-		loadModel(FM_M_ARMY_TENT[9], FM_M_ARMY_TENT[2], multiPos, multiRot, glm::vec3(1.0f), FM_T_ARMY_TENT[1], FM_TN_ARMY_TENT[1], 100.0f, 1.0f, 0.1f);
-		loadModel(FM_M_ARMY_TENT[10], FM_M_ARMY_TENT[3], multiPos, multiRot, glm::vec3(1.0f), FM_T_ARMY_TENT[2], FM_TN_ARMY_TENT[2], 100.0f, 1.0f, 0.1f);
-
-		multiPos = glm::vec3(-273.387f, 20.376f, 18.574f);
-		loadModel(FM_M_ARMY_TENT[11], FM_M_ARMY_TENT[1], multiPos, multiRot, glm::vec3(1.0f), FM_T_ARMY_TENT[0], FM_TN_ARMY_TENT[0], 100.0f, 1.0f, 0.1f);
-		loadModel(FM_M_ARMY_TENT[12], FM_M_ARMY_TENT[2], multiPos, multiRot, glm::vec3(1.0f), FM_T_ARMY_TENT[1], FM_TN_ARMY_TENT[1], 100.0f, 1.0f, 0.1f);
-		loadModel(FM_M_ARMY_TENT[13], FM_M_ARMY_TENT[3], multiPos, multiRot, glm::vec3(1.0f), FM_T_ARMY_TENT[2], FM_TN_ARMY_TENT[2], 100.0f, 1.0f, 0.1f);
-
-		multiPos = glm::vec3(-262.446f, 20.376f, 88.61f);
-		loadModel(FM_M_ARMY_TENT[14], FM_M_ARMY_TENT[1], multiPos, multiRot, glm::vec3(1.0f), FM_T_ARMY_TENT[0], FM_TN_ARMY_TENT[0], 100.0f, 1.0f, 0.1f);
-		loadModel(FM_M_ARMY_TENT[15], FM_M_ARMY_TENT[2], multiPos, multiRot, glm::vec3(1.0f), FM_T_ARMY_TENT[1], FM_TN_ARMY_TENT[1], 100.0f, 1.0f, 0.1f);
-		loadModel(FM_M_ARMY_TENT[16], FM_M_ARMY_TENT[3], multiPos, multiRot, glm::vec3(1.0f), FM_T_ARMY_TENT[2], FM_TN_ARMY_TENT[2], 100.0f, 1.0f, 0.1f);
+		//loadArmyTent(0, glm::vec3(-323.534f, 20.376f, -75.994f), glm::vec3(0.0f, glm::radians(90.0f), 0.0f));
+		loadArmyTent(1, glm::vec3(-323.534f, 20.376f, -0.8f), glm::vec3(0.0f, glm::radians(90.0f), 0.0f));
+		loadArmyTent(2, glm::vec3(-310.218f, 20.376f, 77.699f), glm::vec3(0.0f, glm::radians(90.0f), 0.0f));
+		loadArmyTent(3, glm::vec3(-262.446f, 20.376f, -51.462f), glm::vec3(0.0f, glm::radians(-90.0f), 0.0f));
+		loadArmyTent(4, glm::vec3(-273.387f, 20.376f, 18.574f), glm::vec3(0.0f, glm::radians(-90.0f), 0.0f));
+		loadArmyTent(5, glm::vec3(-262.446f, 20.376f, 88.61f), glm::vec3(0.0f, glm::radians(-90.0f), 0.0f));
 	}
 
 	// == ARMY_TRUCK ==
 	{
+		float shine = 35.0f,
+			reflect = 0.5f,
+			ambient = 0.1f;
+
 		multiPos = glm::vec3(-221.392f, 0.0f, -158.281f);
 		multiRot = glm::vec3(0.0f, glm::radians(-46.325f), 0.0f);
-		loadModel(FM_M_ARMY_TRUCK[0], "res/.obj", multiPos, multiRot, glm::vec3(1.0f), FM_T_ARMY_TRUCK[0], 100.0f, 1.0f, 0.1f);
-		loadModel(FM_M_ARMY_TRUCK[1], "res/.obj", multiPos, multiRot, glm::vec3(1.0f), FM_T_ARMY_TRUCK[1], 100.0f, 1.0f, 0.1f);
-		loadModel(FM_M_ARMY_TRUCK[2], "res/.obj", multiPos, multiRot, glm::vec3(1.0f), FM_T_ARMY_TRUCK[2], 100.0f, 1.0f, 0.1f);
-		loadModel(FM_M_ARMY_TRUCK[3], "res/.obj", multiPos, multiRot, glm::vec3(1.0f), FM_T_ARMY_TRUCK[1], 100.0f, 1.0f, 0.1f);
-		loadModel(FM_M_ARMY_TRUCK[4], "res/.obj", multiPos, multiRot, glm::vec3(1.0f), FM_T_ARMY_TRUCK[2], 100.0f, 1.0f, 0.1f);
+		loadModel(FM_M_ARMY_TRUCK[0], "res/Forrest_Area/Army_Truck/Box.obj", multiPos, multiRot, glm::vec3(1.0f), FM_T_ARMY_TRUCK[0], shine, reflect, ambient);
+		loadModel(FM_M_ARMY_TRUCK[1], "res/Forrest_Area/Army_Truck/Cabin.obj", multiPos, multiRot, glm::vec3(1.0f), FM_T_ARMY_TRUCK[1], shine, reflect, ambient);
+		loadModel(FM_M_ARMY_TRUCK[2], "res/Forrest_Area/Army_Truck/Frame.obj", multiPos, multiRot, glm::vec3(1.0f), FM_T_ARMY_TRUCK[2], shine, reflect, ambient);
+		loadModel(FM_M_ARMY_TRUCK[3], "res/Forrest_Area/Army_Truck/Lights.obj", multiPos, multiRot, glm::vec3(1.0f), FM_T_ARMY_TRUCK[1], shine, reflect, ambient);
+		loadModel(FM_M_ARMY_TRUCK[4], "res/Forrest_Area/Army_Truck/Wheels.obj", multiPos, multiRot, glm::vec3(1.0f), FM_T_ARMY_TRUCK[2], shine, reflect, ambient);
 
-		multiPos = glm::vec3(-221.392f, 0.0f, -190.219f);
-		multiRot = glm::vec3(0.0f, glm::radians(-74.909f), 0.0f);
-		loadModel(FM_M_ARMY_TRUCK[5], FM_M_ARMY_TRUCK[0], multiPos, multiRot, glm::vec3(1.0f), FM_T_ARMY_TRUCK[0], 100.0f, 1.0f, 0.1f);
-		loadModel(FM_M_ARMY_TRUCK[6], FM_M_ARMY_TRUCK[1], multiPos, multiRot, glm::vec3(1.0f), FM_T_ARMY_TRUCK[1], 100.0f, 1.0f, 0.1f);
-		loadModel(FM_M_ARMY_TRUCK[7], FM_M_ARMY_TRUCK[2], multiPos, multiRot, glm::vec3(1.0f), FM_T_ARMY_TRUCK[2], 100.0f, 1.0f, 0.1f);
-		loadModel(FM_M_ARMY_TRUCK[8], FM_M_ARMY_TRUCK[3], multiPos, multiRot, glm::vec3(1.0f), FM_T_ARMY_TRUCK[1], 100.0f, 1.0f, 0.1f);
-		loadModel(FM_M_ARMY_TRUCK[9], FM_M_ARMY_TRUCK[4], multiPos, multiRot, glm::vec3(1.0f), FM_T_ARMY_TRUCK[2], 100.0f, 1.0f, 0.1f);
-
-		multiPos = glm::vec3(-221.392f, 0.0f, -218.456f);
-		multiRot = glm::vec3(0.0f, glm::radians(-74.909f), 0.0f);
-		loadModel(FM_M_ARMY_TRUCK[10], FM_M_ARMY_TRUCK[0], multiPos, multiRot, glm::vec3(1.0f), FM_T_ARMY_TRUCK[0], 100.0f, 1.0f, 0.1f);
-		loadModel(FM_M_ARMY_TRUCK[11], FM_M_ARMY_TRUCK[1], multiPos, multiRot, glm::vec3(1.0f), FM_T_ARMY_TRUCK[1], 100.0f, 1.0f, 0.1f);
-		loadModel(FM_M_ARMY_TRUCK[12], FM_M_ARMY_TRUCK[2], multiPos, multiRot, glm::vec3(1.0f), FM_T_ARMY_TRUCK[2], 100.0f, 1.0f, 0.1f);
-		loadModel(FM_M_ARMY_TRUCK[13], FM_M_ARMY_TRUCK[3], multiPos, multiRot, glm::vec3(1.0f), FM_T_ARMY_TRUCK[1], 100.0f, 1.0f, 0.1f);
-		loadModel(FM_M_ARMY_TRUCK[14], FM_M_ARMY_TRUCK[4], multiPos, multiRot, glm::vec3(1.0f), FM_T_ARMY_TRUCK[2], 100.0f, 1.0f, 0.1f);
-
-		multiPos = glm::vec3(-221.392f, 0.0f, -244.777f);
-		multiRot = glm::vec3(0.0f, glm::radians(106.488f), 0.0f);
-		loadModel(FM_M_ARMY_TRUCK[15], FM_M_ARMY_TRUCK[0], multiPos, multiRot, glm::vec3(1.0f), FM_T_ARMY_TRUCK[0], 100.0f, 1.0f, 0.1f);
-		loadModel(FM_M_ARMY_TRUCK[16], FM_M_ARMY_TRUCK[1], multiPos, multiRot, glm::vec3(1.0f), FM_T_ARMY_TRUCK[1], 100.0f, 1.0f, 0.1f);
-		loadModel(FM_M_ARMY_TRUCK[17], FM_M_ARMY_TRUCK[2], multiPos, multiRot, glm::vec3(1.0f), FM_T_ARMY_TRUCK[2], 100.0f, 1.0f, 0.1f);
-		loadModel(FM_M_ARMY_TRUCK[18], FM_M_ARMY_TRUCK[3], multiPos, multiRot, glm::vec3(1.0f), FM_T_ARMY_TRUCK[1], 100.0f, 1.0f, 0.1f);
-		loadModel(FM_M_ARMY_TRUCK[19], FM_M_ARMY_TRUCK[4], multiPos, multiRot, glm::vec3(1.0f), FM_T_ARMY_TRUCK[2], 100.0f, 1.0f, 0.1f);
-
-		multiPos = glm::vec3(-280.253f, 0.0f, -303.281f);
-		multiRot = glm::vec3(0.0f, glm::radians(-81.785f), 0.0f);
-		loadModel(FM_M_ARMY_TRUCK[20], FM_M_ARMY_TRUCK[0], multiPos, multiRot, glm::vec3(1.0f), FM_T_ARMY_TRUCK[0], 100.0f, 1.0f, 0.1f);
-		loadModel(FM_M_ARMY_TRUCK[21], FM_M_ARMY_TRUCK[1], multiPos, multiRot, glm::vec3(1.0f), FM_T_ARMY_TRUCK[1], 100.0f, 1.0f, 0.1f);
-		loadModel(FM_M_ARMY_TRUCK[22], FM_M_ARMY_TRUCK[2], multiPos, multiRot, glm::vec3(1.0f), FM_T_ARMY_TRUCK[2], 100.0f, 1.0f, 0.1f);
-		loadModel(FM_M_ARMY_TRUCK[23], FM_M_ARMY_TRUCK[3], multiPos, multiRot, glm::vec3(1.0f), FM_T_ARMY_TRUCK[1], 100.0f, 1.0f, 0.1f);
-		loadModel(FM_M_ARMY_TRUCK[24], FM_M_ARMY_TRUCK[4], multiPos, multiRot, glm::vec3(1.0f), FM_T_ARMY_TRUCK[2], 100.0f, 1.0f, 0.1f);
-
-
-		multiPos = glm::vec3(-429.82f, 0.0f, 163.502f);
-		multiRot = glm::vec3(0.0f, glm::radians(18.667f), 0.0f);
-		loadModel(FM_M_ARMY_TRUCK[25], FM_M_ARMY_TRUCK[0], multiPos, multiRot, glm::vec3(1.0f), FM_T_ARMY_TRUCK[0], 100.0f, 1.0f, 0.1f);
-		loadModel(FM_M_ARMY_TRUCK[26], FM_M_ARMY_TRUCK[1], multiPos, multiRot, glm::vec3(1.0f), FM_T_ARMY_TRUCK[1], 100.0f, 1.0f, 0.1f);
-		loadModel(FM_M_ARMY_TRUCK[27], FM_M_ARMY_TRUCK[2], multiPos, multiRot, glm::vec3(1.0f), FM_T_ARMY_TRUCK[2], 100.0f, 1.0f, 0.1f);
-		loadModel(FM_M_ARMY_TRUCK[28], FM_M_ARMY_TRUCK[3], multiPos, multiRot, glm::vec3(1.0f), FM_T_ARMY_TRUCK[1], 100.0f, 1.0f, 0.1f);
-		loadModel(FM_M_ARMY_TRUCK[29], FM_M_ARMY_TRUCK[4], multiPos, multiRot, glm::vec3(1.0f), FM_T_ARMY_TRUCK[2], 100.0f, 1.0f, 0.1f);
+		//loadArmyTruck(0, glm::vec3(-221.392f, 0.0f, -158.281f), glm::vec3(0.0f, glm::radians(-46.325f), 0.0f));
+		loadArmyTruck(1, glm::vec3(-221.392f, 0.0f, -190.219f), glm::vec3(0.0f, glm::radians(-74.909f), 0.0f));
+		loadArmyTruck(2, glm::vec3(-221.392f, 0.0f, -218.456f), glm::vec3(0.0f, glm::radians(-74.909f), 0.0f));
+		loadArmyTruck(3, glm::vec3(-221.392f, 0.0f, -244.777f), glm::vec3(0.0f, glm::radians(106.488f), 0.0f));
+		loadArmyTruck(4, glm::vec3(-280.253f, 0.0f, -303.281f), glm::vec3(0.0f, glm::radians(-81.785f), 0.0f));
+		loadArmyTruck(5, glm::vec3(-429.82f, 0.0f, 163.502f), glm::vec3(0.0f, glm::radians(18.667f), 0.0f));
 	}
 
 	// == BARRIER ==
 	{
-		loadModel(FM_M_BARRIER[0], "res/.obj", glm::vec3(-143.101f, 1.833f, -496.647f), glm::vec3(0.0f, glm::radians(-171.108f), 0.0f), glm::vec3(1.0f), FM_T_BARRIER, FM_TN_BARRIER, 100.0f, 0.1f, 0.1f);
-		loadModel(FM_M_BARRIER[1],  FM_M_BARRIER[0], glm::vec3(-138.153f, 1.833f, -497.33f), glm::vec3(0.0f, glm::radians(-2.893f), 0.0f), glm::vec3(1.0f), FM_T_BARRIER, FM_TN_BARRIER, 100.0f, 0.1f, 0.1f);
-		loadModel(FM_M_BARRIER[2],  FM_M_BARRIER[0], glm::vec3(-133.234f, 1.833f, -497.587f), glm::vec3(0.0f, glm::radians(-171.369f), 0.0f), glm::vec3(1.0f), FM_T_BARRIER, FM_TN_BARRIER, 100.0f, 0.1f, 0.1f);
-		loadModel(FM_M_BARRIER[3],  FM_M_BARRIER[0], glm::vec3(-128.054f, 1.833f, -497.537f), glm::vec3(0.0f, glm::radians(169.062f), 0.0f), glm::vec3(1.0f), FM_T_BARRIER, FM_TN_BARRIER, 100.0f, 0.1f, 0.1f);
-		loadModel(FM_M_BARRIER[4],  FM_M_BARRIER[0], glm::vec3(-123.147f, 1.833f, -496.198f), glm::vec3(0.0f, glm::radians(-20.006f), 0.0f), glm::vec3(1.0f), FM_T_BARRIER, FM_TN_BARRIER, 100.0f, 0.1f, 0.1f);
-		loadModel(FM_M_BARRIER[5],  FM_M_BARRIER[0], glm::vec3(-117.907f, 1.833f, -495.336f), glm::vec3(0.0f), glm::vec3(1.0f), FM_T_BARRIER, FM_TN_BARRIER, 100.0f, 0.1f, 0.1f);
-		loadModel(FM_M_BARRIER[6],  FM_M_BARRIER[0], glm::vec3(-112.459f, 1.833f, -495.602f), glm::vec3(0.0f, glm::radians(-172.327f), 0.0f), glm::vec3(1.0f), FM_T_BARRIER, FM_TN_BARRIER, 100.0f, 0.1f, 0.1f);
+		float shine = 35.0f,
+			reflect = 0.5f,
+			ambient = 0.1f;
+
+		loadModel(FM_M_BARRIER[0], "res/Forrest_Area/Barrier/barrier.obj", glm::vec3(-143.101f, 1.833f, -496.647f), glm::vec3(0.0f, glm::radians(-171.108f), 0.0f), glm::vec3(1.0f), FM_T_BARRIER, FM_TN_BARRIER, shine, reflect, ambient);
+		loadModel(FM_M_BARRIER[1],  FM_M_BARRIER[0], glm::vec3(-138.153f, 1.833f, -497.33f), glm::vec3(0.0f, glm::radians(-2.893f), 0.0f), glm::vec3(1.0f), FM_T_BARRIER, FM_TN_BARRIER, shine, reflect, ambient);
+		loadModel(FM_M_BARRIER[2],  FM_M_BARRIER[0], glm::vec3(-133.234f, 1.833f, -497.587f), glm::vec3(0.0f, glm::radians(-171.369f), 0.0f), glm::vec3(1.0f), FM_T_BARRIER, FM_TN_BARRIER, shine, reflect, ambient);
+		loadModel(FM_M_BARRIER[3],  FM_M_BARRIER[0], glm::vec3(-128.054f, 1.833f, -497.537f), glm::vec3(0.0f, glm::radians(169.062f), 0.0f), glm::vec3(1.0f), FM_T_BARRIER, FM_TN_BARRIER, shine, reflect, ambient);
+		loadModel(FM_M_BARRIER[4],  FM_M_BARRIER[0], glm::vec3(-123.147f, 1.833f, -496.198f), glm::vec3(0.0f, glm::radians(-20.006f), 0.0f), glm::vec3(1.0f), FM_T_BARRIER, FM_TN_BARRIER, shine, reflect, ambient);
+		loadModel(FM_M_BARRIER[5],  FM_M_BARRIER[0], glm::vec3(-117.907f, 1.833f, -495.336f), glm::vec3(0.0f), glm::vec3(1.0f), FM_T_BARRIER, FM_TN_BARRIER, shine, reflect, ambient);
+		loadModel(FM_M_BARRIER[6],  FM_M_BARRIER[0], glm::vec3(-112.459f, 1.833f, -495.602f), glm::vec3(0.0f, glm::radians(-172.327f), 0.0f), glm::vec3(1.0f), FM_T_BARRIER, FM_TN_BARRIER, shine, reflect, ambient);
 		
-		loadModel(FM_M_BARRIER[7],  FM_M_BARRIER[0], glm::vec3(-141.758f, 1.833f, 153.703f), glm::vec3(0.0f, glm::radians(112.686f), 0.0f), glm::vec3(1.0f), FM_T_BARRIER, FM_TN_BARRIER, 100.0f, 0.1f, 0.1f);
-		loadModel(FM_M_BARRIER[8],  FM_M_BARRIER[0], glm::vec3(-138.351f, 1.833f, 159.479f), glm::vec3(0.0f, glm::radians(-56.24f), 0.0f), glm::vec3(1.0f), FM_T_BARRIER, FM_TN_BARRIER, 100.0f, 0.1f, 0.1f);
-		loadModel(FM_M_BARRIER[9],  FM_M_BARRIER[0], glm::vec3(-135.995f, 1.833f, 165.182f), glm::vec3(0.0f, glm::radians(-62.378f), 0.0f), glm::vec3(1.0f), FM_T_BARRIER, FM_TN_BARRIER, 100.0f, 0.1f, 0.1f);
-		loadModel(FM_M_BARRIER[10], FM_M_BARRIER[0], glm::vec3(-132.799f, 1.833f, 169.891f), glm::vec3(0.0f, glm::radians(135.924f), 0.0f), glm::vec3(1.0f), FM_T_BARRIER, FM_TN_BARRIER, 100.0f, 0.1f, 0.1f);
-		loadModel(FM_M_BARRIER[11], FM_M_BARRIER[0], glm::vec3(-127.808f, 1.833f, 173.611f), glm::vec3(0.0f, glm::radians(-30.061f), 0.0f), glm::vec3(1.0f), FM_T_BARRIER, FM_TN_BARRIER, 100.0f, 0.1f, 0.1f);
-		loadModel(FM_M_BARRIER[12], FM_M_BARRIER[0], glm::vec3(-122.116f, 1.833f, 176.671f), glm::vec3(0.0f, glm::radians(-21.642f), 0.0f), glm::vec3(1.0f), FM_T_BARRIER, FM_TN_BARRIER, 100.0f, 0.1f, 0.1f);
+		loadModel(FM_M_BARRIER[7],  FM_M_BARRIER[0], glm::vec3(-141.758f, 1.833f, 153.703f), glm::vec3(0.0f, glm::radians(112.686f), 0.0f), glm::vec3(1.0f), FM_T_BARRIER, FM_TN_BARRIER, shine, reflect, ambient);
+		loadModel(FM_M_BARRIER[8],  FM_M_BARRIER[0], glm::vec3(-138.351f, 1.833f, 159.479f), glm::vec3(0.0f, glm::radians(-56.24f), 0.0f), glm::vec3(1.0f), FM_T_BARRIER, FM_TN_BARRIER, shine, reflect, ambient);
+		loadModel(FM_M_BARRIER[9],  FM_M_BARRIER[0], glm::vec3(-135.995f, 1.833f, 165.182f), glm::vec3(0.0f, glm::radians(-62.378f), 0.0f), glm::vec3(1.0f), FM_T_BARRIER, FM_TN_BARRIER, shine, reflect, ambient);
+		loadModel(FM_M_BARRIER[10], FM_M_BARRIER[0], glm::vec3(-132.799f, 1.833f, 169.891f), glm::vec3(0.0f, glm::radians(135.924f), 0.0f), glm::vec3(1.0f), FM_T_BARRIER, FM_TN_BARRIER, shine, reflect, ambient);
+		loadModel(FM_M_BARRIER[11], FM_M_BARRIER[0], glm::vec3(-127.808f, 1.833f, 173.611f), glm::vec3(0.0f, glm::radians(-30.061f), 0.0f), glm::vec3(1.0f), FM_T_BARRIER, FM_TN_BARRIER, shine, reflect, ambient);
+		loadModel(FM_M_BARRIER[12], FM_M_BARRIER[0], glm::vec3(-122.116f, 1.833f, 176.671f), glm::vec3(0.0f, glm::radians(-21.642f), 0.0f), glm::vec3(1.0f), FM_T_BARRIER, FM_TN_BARRIER, shine, reflect, ambient);
 		
-		loadModel(FM_M_BARRIER[13], FM_M_BARRIER[0], glm::vec3(370.609f, 1.833f, -278.094f), glm::vec3(0.0f, glm::radians(-81.108f), 0.0f), glm::vec3(1.0f), FM_T_BARRIER, FM_TN_BARRIER, 100.0f, 0.1f, 0.1f);
-		loadModel(FM_M_BARRIER[14], FM_M_BARRIER[0], glm::vec3(369.925f, 1.833f, -283.042f), glm::vec3(0.0f, glm::radians(87.107f), 0.0f), glm::vec3(1.0f), FM_T_BARRIER, FM_TN_BARRIER, 100.0f, 0.1f, 0.1f);
-		loadModel(FM_M_BARRIER[15], FM_M_BARRIER[0], glm::vec3(369.668f, 1.833f, -287.961f), glm::vec3(0.0f, glm::radians(-81.369f), 0.0f), glm::vec3(1.0f), FM_T_BARRIER, FM_TN_BARRIER, 100.0f, 0.1f, 0.1f);
-		loadModel(FM_M_BARRIER[16], FM_M_BARRIER[0], glm::vec3(369.718f, 1.833f, -293.141f), glm::vec3(0.0f, glm::radians(-100.938f), 0.0f), glm::vec3(1.0f), FM_T_BARRIER, FM_TN_BARRIER, 100.0f, 0.1f, 0.1f);
-		loadModel(FM_M_BARRIER[17], FM_M_BARRIER[0], glm::vec3(371.057f, 1.833f, -298.048f), glm::vec3(0.0f, glm::radians(69.994f), 0.0f), glm::vec3(1.0f), FM_T_BARRIER, FM_TN_BARRIER, 100.0f, 0.1f, 0.1f);
-		loadModel(FM_M_BARRIER[18], FM_M_BARRIER[0], glm::vec3(371.919f, 1.833f, -303.288f), glm::vec3(0.0f, glm::radians(90.0f), 0.0f), glm::vec3(1.0f), FM_T_BARRIER, FM_TN_BARRIER, 100.0f, 0.1f, 0.1f);
-		loadModel(FM_M_BARRIER[19], FM_M_BARRIER[0], glm::vec3(371.653f, 1.833f, -308.736f), glm::vec3(0.0f, glm::radians(-82.327f), 0.0f), glm::vec3(1.0f), FM_T_BARRIER, FM_TN_BARRIER, 100.0f, 0.1f, 0.1f);
+		loadModel(FM_M_BARRIER[13], FM_M_BARRIER[0], glm::vec3(370.609f, 1.833f, -278.094f), glm::vec3(0.0f, glm::radians(-81.108f), 0.0f), glm::vec3(1.0f), FM_T_BARRIER, FM_TN_BARRIER, shine, reflect, ambient);
+		loadModel(FM_M_BARRIER[14], FM_M_BARRIER[0], glm::vec3(369.925f, 1.833f, -283.042f), glm::vec3(0.0f, glm::radians(87.107f), 0.0f), glm::vec3(1.0f), FM_T_BARRIER, FM_TN_BARRIER, shine, reflect, ambient);
+		loadModel(FM_M_BARRIER[15], FM_M_BARRIER[0], glm::vec3(369.668f, 1.833f, -287.961f), glm::vec3(0.0f, glm::radians(-81.369f), 0.0f), glm::vec3(1.0f), FM_T_BARRIER, FM_TN_BARRIER, shine, reflect, ambient);
+		loadModel(FM_M_BARRIER[16], FM_M_BARRIER[0], glm::vec3(369.718f, 1.833f, -293.141f), glm::vec3(0.0f, glm::radians(-100.938f), 0.0f), glm::vec3(1.0f), FM_T_BARRIER, FM_TN_BARRIER, shine, reflect, ambient);
+		loadModel(FM_M_BARRIER[17], FM_M_BARRIER[0], glm::vec3(371.057f, 1.833f, -298.048f), glm::vec3(0.0f, glm::radians(69.994f), 0.0f), glm::vec3(1.0f), FM_T_BARRIER, FM_TN_BARRIER, shine, reflect, ambient);
+		loadModel(FM_M_BARRIER[18], FM_M_BARRIER[0], glm::vec3(371.919f, 1.833f, -303.288f), glm::vec3(0.0f, glm::radians(90.0f), 0.0f), glm::vec3(1.0f), FM_T_BARRIER, FM_TN_BARRIER, shine, reflect, ambient);
+		loadModel(FM_M_BARRIER[19], FM_M_BARRIER[0], glm::vec3(371.653f, 1.833f, -308.736f), glm::vec3(0.0f, glm::radians(-82.327f), 0.0f), glm::vec3(1.0f), FM_T_BARRIER, FM_TN_BARRIER, shine, reflect, ambient);
 		
-		loadModel(FM_M_BARRIER[20], FM_M_BARRIER[0], glm::vec3(369.925f, 1.833f, 176.461f), glm::vec3(0.0f, glm::radians(87.107f), 0.0f), glm::vec3(1.0f), FM_T_BARRIER, FM_TN_BARRIER, 100.0f, 0.1f, 0.1f);
-		loadModel(FM_M_BARRIER[21], FM_M_BARRIER[0], glm::vec3(369.668f, 1.833f, 171.542f), glm::vec3(0.0f, glm::radians(-81.369f), 0.0f), glm::vec3(1.0f), FM_T_BARRIER, FM_TN_BARRIER, 100.0f, 0.1f, 0.1f);
-		loadModel(FM_M_BARRIER[22], FM_M_BARRIER[0], glm::vec3(369.718f, 1.833f, 166.362f), glm::vec3(0.0f, glm::radians(-100.938f), 0.0f), glm::vec3(1.0f), FM_T_BARRIER, FM_TN_BARRIER, 100.0f, 0.1f, 0.1f);
-		loadModel(FM_M_BARRIER[23], FM_M_BARRIER[0], glm::vec3(371.057f, 1.833f, 161.456f), glm::vec3(0.0f, glm::radians(69.994f), 0.0f), glm::vec3(1.0f), FM_T_BARRIER, FM_TN_BARRIER, 100.0f, 0.1f, 0.1f);
-		loadModel(FM_M_BARRIER[24], FM_M_BARRIER[0], glm::vec3(371.919f, 1.833f, 156.215f), glm::vec3(0.0f, glm::radians(90.0f), 0.0f), glm::vec3(1.0f), FM_T_BARRIER, FM_TN_BARRIER, 100.0f, 0.1f, 0.1f);
+		loadModel(FM_M_BARRIER[20], FM_M_BARRIER[0], glm::vec3(369.925f, 1.833f, 176.461f), glm::vec3(0.0f, glm::radians(87.107f), 0.0f), glm::vec3(1.0f), FM_T_BARRIER, FM_TN_BARRIER, shine, reflect, ambient);
+		loadModel(FM_M_BARRIER[21], FM_M_BARRIER[0], glm::vec3(369.668f, 1.833f, 171.542f), glm::vec3(0.0f, glm::radians(-81.369f), 0.0f), glm::vec3(1.0f), FM_T_BARRIER, FM_TN_BARRIER, shine, reflect, ambient);
+		loadModel(FM_M_BARRIER[22], FM_M_BARRIER[0], glm::vec3(369.718f, 1.833f, 166.362f), glm::vec3(0.0f, glm::radians(-100.938f), 0.0f), glm::vec3(1.0f), FM_T_BARRIER, FM_TN_BARRIER, shine, reflect, ambient);
+		loadModel(FM_M_BARRIER[23], FM_M_BARRIER[0], glm::vec3(371.057f, 1.833f, 161.456f), glm::vec3(0.0f, glm::radians(69.994f), 0.0f), glm::vec3(1.0f), FM_T_BARRIER, FM_TN_BARRIER, shine, reflect, ambient);
+		loadModel(FM_M_BARRIER[24], FM_M_BARRIER[0], glm::vec3(371.919f, 1.833f, 156.215f), glm::vec3(0.0f, glm::radians(90.0f), 0.0f), glm::vec3(1.0f), FM_T_BARRIER, FM_TN_BARRIER, shine, reflect, ambient);
 
 	}
 
@@ -1191,7 +1262,7 @@ void LoadModels_ForrestMap()
 			reflect = 0.5f,
 			ambient = 0.1f;
 
-		loadModel(FM_M_CONTAINER[0], "res/.obj",		 glm::vec3(-31.262f, 0.0f, -161.87f), glm::vec3(0.0f, glm::radians(-56.409f), 0.0f), glm::vec3(1.0f), FM_T_CONTAINER, FM_TN_CONTAINER, shine, reflect, ambient);
+		loadModel(FM_M_CONTAINER[0], "res/Forrest_Area/Container/Container.obj", glm::vec3(-31.262f, 0.0f, -161.87f), glm::vec3(0.0f, glm::radians(-56.409f), 0.0f), glm::vec3(1.0f), FM_T_CONTAINER, FM_TN_CONTAINER, shine, reflect, ambient);
 		loadModel(FM_M_CONTAINER[1],  FM_M_CONTAINER[0], glm::vec3(-31.262f, 10.397f, -161.87f), glm::vec3(0.0f, glm::radians(109.951f), 0.0f), glm::vec3(1.0f), FM_T_CONTAINER, FM_TN_CONTAINER, shine, reflect, ambient);
 		loadModel(FM_M_CONTAINER[2],  FM_M_CONTAINER[0], glm::vec3(-50.499f, 0.0f, -150.363f), glm::vec3(0.0f, glm::radians(-146.494f), 0.0f), glm::vec3(1.0f), FM_T_CONTAINER, FM_TN_CONTAINER, shine, reflect, ambient);
 		loadModel(FM_M_CONTAINER[3],  FM_M_CONTAINER[0], glm::vec3(-50.499f, 10.397f, -150.363f), glm::vec3(0.0f, glm::radians(67.108f), 0.0f), glm::vec3(1.0f), FM_T_CONTAINER, FM_TN_CONTAINER, shine, reflect, ambient);
@@ -1217,9 +1288,9 @@ void LoadModels_ForrestMap()
 		multiPos = glm::vec3(-403.134f, 0.0f, -448.357f);
 		multiRot = glm::vec3(0.0f, glm::radians(32.405f), 0.0f);
 
-		loadModel(FM_M_FENCE[0], "res/.obj", multiPos, multiRot, glm::vec3(1.0f), FM_T_FENCE[0], FM_TN_FENCE[0], shine, reflect, ambient);
-		loadModel(FM_M_FENCE[1], "res/.obj", multiPos, multiRot, glm::vec3(1.0f), FM_T_FENCE[1], FM_TN_FENCE[1], shine, reflect, ambient);
-		loadModel(FM_M_FENCE[2], "res/.obj", multiPos, multiRot, glm::vec3(1.0f), FM_T_FENCE[2], FM_TN_FENCE[2], shine, reflect, ambient);
+		loadModel(FM_M_FENCE[0], "res/Forrest_Area/Fences/Normal_Fence/Fence_Logends.obj", multiPos, multiRot, glm::vec3(1.0f), FM_T_FENCE[0], FM_TN_FENCE[0], shine, reflect, ambient);
+		loadModel(FM_M_FENCE[1], "res/Forrest_Area/Fences/Normal_Fence/Fence_Logs.obj", multiPos, multiRot, glm::vec3(1.0f), FM_T_FENCE[1], FM_TN_FENCE[1], shine, reflect, ambient);
+		loadModel(FM_M_FENCE[2], "res/Forrest_Area/Fences/Normal_Fence/Fence_Planks.obj", multiPos, multiRot, glm::vec3(1.0f), FM_T_FENCE[2], FM_TN_FENCE[2], shine, reflect, ambient);
 
 		//loadFence(0, glm::vec3(-403.134f, 0.0f, -448.357f), glm::vec3(0.0f, glm::radians(32.405f), 0.0f));
 		loadFence(1, glm::vec3(-385.056f, 0.0f, -452.927f), glm::vec3(0.0f, glm::radians(0.000f), 0.0f));
@@ -1385,10 +1456,9 @@ void LoadModels_ForrestMap()
 		loadFence(161, glm::vec3(-63.4227f, 0.0f, -495.461f), glm::vec3(0.0f, glm::radians(0.000f), 0.0f));
 		loadFence(162, glm::vec3(-81.7826f, 0.0f, -495.461f), glm::vec3(0.0f, glm::radians(0.000f), 0.0f));
 		loadFence(163, glm::vec3(-100.16f, 0.0f, -495.461f), glm::vec3(0.0f, glm::radians(0.000f), 0.0f));
-
 	}
 
-	// == BROKENFENCE1 ==
+	// == BROKENFENCE1 == 
 	{
 		float shine = 35.0f,
 			reflect = 0.5f,
@@ -1397,9 +1467,9 @@ void LoadModels_ForrestMap()
 		multiPos = glm::vec3(-63.358f, 0.0f, -493.495f);
 		multiRot = glm::vec3(0.0f);
 
-		loadModel(FM_M_BROKEN_FENCE1[0], "res/.obj", multiPos, multiRot, glm::vec3(1.0f), FM_T_BROKENFENCE1[0], FM_TN_BROKENFENCE[0], shine, reflect, ambient);
-		loadModel(FM_M_BROKEN_FENCE1[1], "res/.obj", multiPos, multiRot, glm::vec3(1.0f), FM_T_BROKENFENCE1[1], FM_TN_BROKENFENCE[1], shine, reflect, ambient);
-		loadModel(FM_M_BROKEN_FENCE1[2], "res/.obj", multiPos, multiRot, glm::vec3(1.0f), FM_T_BROKENFENCE1[2], FM_TN_BROKENFENCE[2], shine, reflect, ambient);
+		loadModel(FM_M_BROKEN_FENCE1[0], "res/Forrest_Area/Fences/Broken_Fence/Broken1/Broken1_Logends.obj", multiPos, multiRot, glm::vec3(1.0f), FM_T_BROKENFENCE1[0], FM_TN_FENCE[0], shine, reflect, ambient);
+		loadModel(FM_M_BROKEN_FENCE1[1], "res/Forrest_Area/Fences/Broken_Fence/Broken1/Broken1_Logs.obj", multiPos, multiRot, glm::vec3(1.0f), FM_T_BROKENFENCE1[1], FM_TN_FENCE[1], shine, reflect, ambient);
+		loadModel(FM_M_BROKEN_FENCE1[2], "res/Forrest_Area/Fences/Broken_Fence/Broken1/Broken1_Planks.obj", multiPos, multiRot, glm::vec3(1.0f), FM_T_BROKENFENCE1[2], FM_TN_FENCE[2], shine, reflect, ambient);
 	}
 
 	// == BROKENFENCE2 ==
@@ -1411,9 +1481,9 @@ void LoadModels_ForrestMap()
 		multiPos = glm::vec3(-43.384f, 0.0f, -500.421f);
 		multiRot = glm::vec3(0.0f);
 
-		loadModel(FM_M_BROKEN_FENCE2[0], "res/.obj", multiPos, multiRot, glm::vec3(1.0f), FM_T_BROKENFENCE2[0], FM_TN_BROKENFENCE[0], shine, reflect, ambient);
-		loadModel(FM_M_BROKEN_FENCE2[1], "res/.obj", multiPos, multiRot, glm::vec3(1.0f), FM_T_BROKENFENCE2[1], FM_TN_BROKENFENCE[1], shine, reflect, ambient);
-		loadModel(FM_M_BROKEN_FENCE2[2], "res/.obj", multiPos, multiRot, glm::vec3(1.0f), FM_T_BROKENFENCE2[2], FM_TN_BROKENFENCE[2], shine, reflect, ambient);
+		loadModel(FM_M_BROKEN_FENCE2[0], "res/Forrest_Area/Fences/Broken_Fence/Broken2/Broken2_Logends.obj", multiPos, multiRot, glm::vec3(1.0f), FM_T_BROKENFENCE2[0], FM_TN_FENCE[0], shine, reflect, ambient);
+		loadModel(FM_M_BROKEN_FENCE2[1], "res/Forrest_Area/Fences/Broken_Fence/Broken2/Broken2_Logs.obj", multiPos, multiRot, glm::vec3(1.0f), FM_T_BROKENFENCE2[1], FM_TN_FENCE[1], shine, reflect, ambient);
+		loadModel(FM_M_BROKEN_FENCE2[2], "res/Forrest_Area/Fences/Broken_Fence/Broken2/Broken2_Planks.obj", multiPos, multiRot, glm::vec3(1.0f), FM_T_BROKENFENCE2[2], FM_TN_FENCE[2], shine, reflect, ambient);
 	}
 
 	// == MILITARY_BUNKER ==
@@ -1424,9 +1494,9 @@ void LoadModels_ForrestMap()
 
 		multiPos = glm::vec3(-313.2f, 12.943f, -341.934f);
 		multiRot = glm::vec3(0.0f, glm::radians(-90.0f), 0.0f);
-		loadModel(FM_M_MILITARY_BUNKER[0], "res/.obj", multiPos, multiRot, glm::vec3(1.0f), FM_T_MILITARY_BUNKER[0], shine, reflect, ambient);
-		loadModel(FM_M_MILITARY_BUNKER[1], "res/.obj", multiPos, multiRot, glm::vec3(1.0f), FM_T_MILITARY_BUNKER[1], shine, reflect, ambient);
-		loadModel(FM_M_MILITARY_BUNKER[2], "res/.obj", multiPos, multiRot, glm::vec3(1.0f), FM_T_MILITARY_BUNKER[2], shine, reflect, ambient);
+		loadModel(FM_M_MILITARY_BUNKER[0], "res/Forrest_Area/Military_Bunker/Bunker_roof.obj", multiPos, multiRot, glm::vec3(1.0f), FM_T_MILITARY_BUNKER[0], shine, reflect, ambient);
+		loadModel(FM_M_MILITARY_BUNKER[1], "res/Forrest_Area/Military_Bunker/Bunker_Side1.obj", multiPos, multiRot, glm::vec3(1.0f), FM_T_MILITARY_BUNKER[1], shine, reflect, ambient);
+		loadModel(FM_M_MILITARY_BUNKER[2], "res/Forrest_Area/Military_Bunker/Bunker_Side2.obj", multiPos, multiRot, glm::vec3(1.0f), FM_T_MILITARY_BUNKER[2], shine, reflect, ambient);
 
 		multiPos = glm::vec3(-274.797f, 12.943f, -199.188f);
 		multiRot = glm::vec3(0.0f);
@@ -1443,7 +1513,10 @@ void LoadModels_ForrestMap()
 
 	// == RAILS ==
 	{
-
+		//Sleppers
+		loadModel(FM_M_RAIL[0], "res/Forrest_Area/Rails/IronRail.obj", glm::vec3(0.0f, 0.243f, -446.873f), glm::vec3(0.0f), glm::vec3(1.0f), FM_T_RAIL[0], 35.0f, 0.5f, 0.1f);
+		//Steel Rail
+		loadModel(FM_M_RAIL[1], "res/Forrest_Area/Rails/Sleppers.obj", glm::vec3(0.0f, 0.0f, -423.623f), glm::vec3(0.0f), glm::vec3(1.0f), FM_T_RAIL[1], 35.0f, 0.5f, 0.1f);
 	}
 
 	// == ROADLIGHT ==
@@ -1455,9 +1528,9 @@ void LoadModels_ForrestMap()
 		multiPos = glm::vec3(-101.98f, -0.036581f, 146.328f);
 		multiRot = glm::radians(glm::vec3(0.0f, 0.000f, 0.0f));
 
-		loadModel(FM_M_ROADLIGHT[0], "res/.obj", multiPos, multiRot, glm::vec3(1.0f), FM_T_ROADLIGHT[0], shine, reflect, ambient);
-		loadModel(FM_M_ROADLIGHT[1], "res/.obj", multiPos, multiRot, glm::vec3(1.0f), FM_T_ROADLIGHT[1], shine, reflect, ambient);
-		loadModel(FM_M_ROADLIGHT[2], "res/.obj", multiPos, multiRot, glm::vec3(1.0f), FM_T_ROADLIGHT[2], shine, reflect, ambient);
+		loadModel(FM_M_ROADLIGHT[0], "res/Forrest_Area/RoadLight/Lamp.obj", multiPos, multiRot, glm::vec3(1.0f), FM_T_ROADLIGHT[0], shine, reflect, ambient);
+		loadModel(FM_M_ROADLIGHT[1], "res/Forrest_Area/RoadLight/LampPole.obj", multiPos, multiRot, glm::vec3(1.0f), FM_T_ROADLIGHT[1], shine, reflect, ambient);
+		loadModel(FM_M_ROADLIGHT[2], "res/Forrest_Area/RoadLight/Lamp-Pole_Connector.obj", multiPos, multiRot, glm::vec3(1.0f), FM_T_ROADLIGHT[2], shine, reflect, ambient);
 
 		//loadRoadLight(0, glm::vec3(-101.98f, -0.036581f, 146.328f), glm::radians(glm::vec3(0.0f, 0.000f, 0.0f)));
 		loadRoadLight(1, glm::vec3(-101.98f, -0.036581f, 76.2742f), glm::radians(glm::vec3(0.0f, 0.000f, 0.0f)));
@@ -1487,22 +1560,43 @@ void LoadModels_ForrestMap()
 
 	// == ROAD ==
 	{
+		float shine = 35.0f,
+			reflect = 0.5f,
+			ambient = 0.1f;
 
+		loadModel(FM_M_ROAD[0], "res/Forrest_Area/Roads/ArmyRoad.obj", glm::vec3(-127.853f, 0.125f, -253.214f), glm::vec3(0.0f), glm::vec3(1.0f), FM_T_ROAD, FM_TN_ROAD, shine, reflect, ambient);
+		loadModel(FM_M_ROAD[1], "res/Forrest_Area/Roads/BuildingRoad.obj", glm::vec3(194.291f, 0.15f, -293.219f), glm::radians(glm::vec3(0.000f, 90.000f, 0.000f)), glm::vec3(1.0f), FM_T_ROAD, FM_TN_ROAD, shine, reflect, ambient);
+		loadModel(FM_M_ROAD[2], "res/Forrest_Area/Roads/TRoad.obj", glm::vec3(-10.057f, 0.05f, 166.458f), glm::radians(glm::vec3(0.000f, 90.000f, 0.000f)), glm::vec3(1.0f), FM_T_ROAD, FM_TN_ROAD, shine, reflect, ambient);
 	}
 
 	// == STATUE ==
 	{
+		float shine = 35.0f,
+			reflect = 0.5f,
+			ambient = 0.1f;
 
+		loadModel(FM_M_STATUE, "res/Forrest_Area/Statue/Statue.obj", glm::vec3(232.965f, 0.0f, -10.63f), glm::vec3(0.0f), glm::vec3(1.0f), FM_T_STATUE, FM_TN_STATUE, shine, reflect, ambient);
 	}
 
 	// == TERRAIN ==
 	{
+		float shine = 35.0f,
+			reflect = 0.5f,
+			ambient = 0.1f;
 
+		loadModel(FM_M_TERRAIN, "res/Forrest_Area/Terrain/Mountains/Mountains.obj", glm::vec3(0.0f, -32.0f, 0.0f), glm::vec3(0.0f), glm::vec3(1.0f), FM_T_TERRAIN, FM_TN_TERRAIN, shine, reflect, ambient);
+
+		FM_M_FLATTERRAIN.create(&loader.loadObjFile("res/Forrest_Area/Terrain/Ground/GroundPlane.obj", false, false), glm::vec3(-4.85f, 0.0f, 1.009f), glm::vec3(0.0f), FM_T_FLATTERRAIN[0], FM_T_FLATTERRAIN[1], FM_T_FLATTERRAIN[2], FM_T_FLATTERRAIN[3], FM_T_FLATTERRAIN[4]);
 	}
 
 	// == TOWN_HOUSE ==
 	{
+		float shine = 35.0f,
+			reflect = 0.5f,
+			ambient = 0.1f;
 
+		loadModel(FM_M_TOWNHOUSE[0], "res/Forrest_Area/Town_House/TownHouse.obj", glm::vec3(285.639f, 22.299f, -350.449f), glm::vec3(0.0f), glm::vec3(1.0f), FM_T_TOWNHOUSE, shine, reflect, ambient);
+		loadModel(FM_M_TOWNHOUSE[1], FM_M_TOWNHOUSE[0], glm::vec3(285.639f, 22.299f, -285.639), glm::vec3(0.0f, glm::radians(-90.0f), 0.0f), glm::vec3(1.0f), FM_T_TOWNHOUSE, shine, reflect, ambient);
 	}
 
 	// == TRAFFIC_CONE ==
@@ -1511,7 +1605,7 @@ void LoadModels_ForrestMap()
 			reflect = 0.5f,
 			ambient = 0.1f;
 
-		loadModel(FM_M_TRAFFICCONE[0], FM_M_TRAFFICCONE[0], glm::vec3(-99.7265f, 1.14487f, -283.624f), glm::radians(glm::vec3(0.000f, -115.923f, 0.000f)), glm::vec3(1.0f), FM_T_TRAFFICCONE, shine, reflect, ambient);
+		loadModel(FM_M_TRAFFICCONE[0], "res/Forrest_Area/Traffic_Cone/TrafficCone.obj", glm::vec3(-99.7265f, 1.14487f, -283.624f), glm::radians(glm::vec3(0.000f, -115.923f, 0.000f)), glm::vec3(1.0f), FM_T_TRAFFICCONE, shine, reflect, ambient);
 
 		//loadTrafficCone(0, glm::vec3(-99.7265f, 1.14487f, -283.624f), glm::radians(glm::vec3(0.000f, -115.923f, 0.000f)));
 		loadTrafficCone(1, glm::vec3(-99.1198f, 1.14487f, -288.298f), glm::radians(glm::vec3(0.000f, 60.946f, 0.000f)));
@@ -1527,21 +1621,21 @@ void LoadModels_ForrestMap()
 		loadTrafficCone(11, glm::vec3(-5.74136f, 1.14487f, 176.016f), glm::radians(glm::vec3(0.000f, 99.130f, 0.000f)));
 		loadTrafficCone(12, glm::vec3(0.588318f, 1.14487f, 176.853f), glm::radians(glm::vec3(0.000f, -41.157f, 0.000f)));
 		loadTrafficCone(13, glm::vec3(6.25226f, 1.14487f, 178.912f), glm::radians(glm::vec3(0.000f, -0.902f, 0.000f)));
-
 	}
 
 	// == TREE ==
+	trees.setTreeModel(&loader.loadObjFile("res/Forrest_Area/Trees/Simple_Tree/SimpleTree.obj", false, false));
 	loadTreeModels();
 
 	// == WELL ==
 	{
+		float shine = 35.0f,
+			reflect = 0.5f,
+			ambient = 0.1f;
 
+		loadModel(FM_M_WELL, "res/Forrest_Area/Well/Well.obj", glm::vec3(43.876f, 0.0f, -305.417f), glm::vec3(0.0f, glm::radians(-141.404f), 0.0f), glm::vec3(1.0f), FM_T_WELL, FM_TN_WELL, shine, reflect, ambient);
 	}
-
-
-
 }
-
 // Load the Fence model
 void loadFence(int iteration, glm::vec3 pos, glm::vec3 rot)
 {
@@ -1572,6 +1666,30 @@ void loadTrafficCone(int iteration, glm::vec3 pos, glm::vec3 rot)
 		ambient = 0.1f;
 
 	loadModel(FM_M_TRAFFICCONE[iteration], FM_M_TRAFFICCONE[0], pos, rot, glm::vec3(1.0f), FM_T_TRAFFICCONE, shine, reflect, ambient);
+}
+// Load the ArmyTent model
+void loadArmyTent(int iteration, glm::vec3 pos, glm::vec3 rot)
+{
+	float shine = 35.0f,
+		reflect = 0.5f,
+		ambient = 0.1f;
+
+	loadModel(FM_M_ARMY_TENT[(iteration * 3)],	   FM_M_ARMY_TENT[0], pos, rot, glm::vec3(1.0f), FM_T_ARMY_TENT[0], FM_TN_ARMY_TENT[0], shine, reflect, ambient);
+	loadModel(FM_M_ARMY_TENT[(iteration * 3) + 1], FM_M_ARMY_TENT[1], pos, rot, glm::vec3(1.0f), FM_T_ARMY_TENT[1], FM_TN_ARMY_TENT[1], shine, reflect, ambient);
+	loadModel(FM_M_ARMY_TENT[(iteration * 3) + 2], FM_M_ARMY_TENT[2], pos, rot, glm::vec3(1.0f), FM_T_ARMY_TENT[2], shine, reflect, ambient);
+}
+// Load the ArmyTruck model
+void loadArmyTruck(int iteration, glm::vec3 pos, glm::vec3 rot)
+{
+	float shine = 35.0f,
+		reflect = 0.5f,
+		ambient = 0.1f;
+
+	loadModel(FM_M_ARMY_TRUCK[(iteration * 5)],		FM_M_ARMY_TRUCK[0], pos, rot, glm::vec3(1.0f), FM_T_ARMY_TRUCK[0], shine, reflect, ambient);
+	loadModel(FM_M_ARMY_TRUCK[(iteration * 5) + 1], FM_M_ARMY_TRUCK[1], pos, rot, glm::vec3(1.0f), FM_T_ARMY_TRUCK[1], shine, reflect, ambient);
+	loadModel(FM_M_ARMY_TRUCK[(iteration * 5) + 2], FM_M_ARMY_TRUCK[2], pos, rot, glm::vec3(1.0f), FM_T_ARMY_TRUCK[2], shine, reflect, ambient);
+	loadModel(FM_M_ARMY_TRUCK[(iteration * 5) + 3], FM_M_ARMY_TRUCK[3], pos, rot, glm::vec3(1.0f), FM_T_ARMY_TRUCK[1], shine, reflect, ambient);
+	loadModel(FM_M_ARMY_TRUCK[(iteration * 5) + 4], FM_M_ARMY_TRUCK[4], pos, rot, glm::vec3(1.0f), FM_T_ARMY_TRUCK[2], shine, reflect, ambient);
 }
 
 // Load the tree models
@@ -1986,6 +2104,9 @@ void loadTreeModels()
 	trees.addTreePos(27.6027f, -1.3942f, -604.067f);
 	trees.addTreePos(-25.3409f, -1.3942f, -594.198f);
 	trees.addTreePos(-77.4866f, -1.3942f, -593.83f);
+
+	// Finally initialse the trees to get a random rotation
+	trees.initialseNewTrees();
 }
 
 
@@ -2000,7 +2121,7 @@ void loadModel(Model &model, // Variable to set
 	float ambientLight) // Reflectivity
 {
 	// Load modeldata and set the variable.
-	model.setModel(&gameobject(loader.loadObjFile(modelFilename.c_str(), false, false)));
+	model.setModel(&loader.loadObjFile(modelFilename.c_str(), false, false));
 	// Initialise model
 	model.Initialise(pos, rot, scale);
 

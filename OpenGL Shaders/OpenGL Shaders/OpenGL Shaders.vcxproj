@@ -172,6 +172,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Model.cpp" />
     <ClCompile Include="Player.cpp" />
+    <ClCompile Include="Tree.cpp" />
     <ClCompile Include="WEngine\Camera\camera.cpp" />
     <ClCompile Include="WEngine\Display\DisplayManager.cpp" />
     <ClCompile Include="WEngine\FrameBuffers\framebuffer.cpp" />
@@ -216,6 +217,7 @@
     <ClInclude Include="packetTypes.h" />
     <ClInclude Include="Player.h" />
     <ClInclude Include="playerData.h" />
+    <ClInclude Include="Tree.h" />
     <ClInclude Include="WEngine\Camera\camera.h" />
     <ClInclude Include="WEngine\Display\DisplayManager.h" />
     <ClInclude Include="WEngine\FrameBuffers\framebuffer.h" />

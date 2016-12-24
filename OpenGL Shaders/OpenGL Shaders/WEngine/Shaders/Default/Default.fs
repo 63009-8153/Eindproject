@@ -31,7 +31,7 @@ uniform vec3 skyColour;
 
 uniform float ambientLight;
 
-uniform float tileAmount;
+uniform vec2 tileAmount;
 
 const float levels = 3.0;
 const float useCelShading = 0;
@@ -72,8 +72,9 @@ void main(void){
 	float level;
 
 	vec2 textureCoords = pass_textureCoords;
-	float tiledAmount = tileAmount;
-	if(tiledAmount < 1.0) tiledAmount = 1.0;
+	vec2 tiledAmount = tileAmount;
+	if(tiledAmount.x < 1.0) tiledAmount.x = 1.0;
+	if(tiledAmount.y < 1.0) tiledAmount.y = 1.0;
 	textureCoords *= tiledAmount;
 
 	vec3 unitNormal = normalize(surfaceNormal);

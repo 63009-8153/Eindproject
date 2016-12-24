@@ -399,7 +399,7 @@ GLuint Loader::loadTextureInData(const char * imagepath, bool bmpAlign, bool cre
 		unsigned char * formattedData = new unsigned char[imageSize];
 		unsigned int formattedDataPosition = 0;
 		for (int row = (height - 1); row >= 0; row--) {
-			for (unsigned int colum = 0; colum < (width * 4); colum++) {
+			for (int colum = 0; colum < (width * 4); colum++) {
 				formattedData[formattedDataPosition++] = _data[(row * (width * 4)) + colum];
 			}
 		}
@@ -501,7 +501,7 @@ void Loader::loadTextureInData(const char * imagepath, bool bmpAlign, unsigned c
 		unsigned char * formattedData = new unsigned char[imageSize];
 		unsigned int formattedDataPosition = 0;
 		for (int row = (height - 1); row >= 0; row--) {
-			for (unsigned int colum = 0; colum < (width * 4); colum++) {
+			for (int colum = 0; colum < (width * 4); colum++) {
 				formattedData[formattedDataPosition++] = _data[(row * (width * 4)) + colum];
 			}
 		}
@@ -518,7 +518,7 @@ GLuint Loader::loadCubeMap(unsigned char * data[], glm::vec2 size[], GLenum type
 
 	for (unsigned int i = 0; i < 6; i++)
 	{
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGBA, size[i].x, size[i].y, 0, type, GL_UNSIGNED_BYTE, data[i]);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGBA, (GLsizei)size[i].x, (GLsizei)size[i].y, 0, type, GL_UNSIGNED_BYTE, data[i]);
 	}
 
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -723,7 +723,7 @@ GLuint Loader::loadBMPRGBA(const char * imagepath) {
 	FILE * file;
 	fopen_s(&file, imagepath, "rb");
 	if (!file) {
-		printf("Image could not be opened\n");
+		printf("Image %s could not be opened!\n", imagepath);
 		system("pause");
 		exit(0);
 	}

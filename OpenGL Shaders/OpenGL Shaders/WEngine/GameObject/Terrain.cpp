@@ -5,6 +5,21 @@
 Terrain::Terrain(){}
 Terrain::~Terrain(){}
 
+void Terrain::create(gameobject * model, glm::vec3 pos, glm::vec3 rot, GLuint textID0, GLuint textID1, GLuint textID2, GLuint textID3, GLuint textID4)
+{
+	TerrainObject = gameobject(model);
+
+	//Set its textures
+	TerrainObject.addTexture(textID0);
+	TerrainObject.addTexture(textID1);
+	TerrainObject.addTexture(textID2);
+	TerrainObject.addTexture(textID3);
+	TerrainObject.addTexture(textID4);
+
+	//Set the position in the world
+	TerrainObject.init(pos, rot, glm::vec3(1, 1, 1));
+}
+
 //Create a new flat terrain
 void Terrain::create(int gridX, int gridZ, Loader *loader, GLuint textID0, GLuint textID1, GLuint textID2, GLuint textID3, GLuint textID4)
 {

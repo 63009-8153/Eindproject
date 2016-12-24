@@ -99,7 +99,7 @@ void ShaderProgram::load(char vertexFile[], char fragmentFile[])
 	glDeleteShader(fragmentShaderID);
 
 	start();
-	loadTileAmount(1.0f);
+	loadTileAmount(glm::vec2(1.0f));
 	stop();
 
 	printf("Shader Loaded\n");
@@ -244,9 +244,9 @@ void ShaderProgram::loadLights(std::vector<Light*> lights) {
 	}
 }
 
-void ShaderProgram::loadTileAmount(float tiles)
+void ShaderProgram::loadTileAmount(glm::vec2 tiles)
 {
-	loadFloat(location_tileAmount, tiles);
+	loadVector(location_tileAmount, tiles);
 }
 
 //Get the source of a file and create a shader id
