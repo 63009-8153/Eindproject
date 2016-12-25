@@ -10,6 +10,7 @@ public:
 	~Tree();
 
 	void setTreeModel(gameobject * model);
+	void setTreeTexture(GLuint textID);
 
 	void addTreePos(float x, float y, float z);
 	void addTreePos(glm::vec3 pos);
@@ -22,5 +23,6 @@ public:
 private:
 	std::vector<Model> trees;
 	gameobject treeModel;
+	GLuint texture;
 };
 

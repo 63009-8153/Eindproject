@@ -17,11 +17,17 @@ void Tree::setTreeModel(gameobject * model)
 	treeModel.init();
 }
 
+void Tree::setTreeTexture(GLuint textID)
+{
+	texture = textID;
+}
+
 void Tree::addTreePos(float x, float y, float z)
 {
 	Model newtree;
 	newtree.setModel(&treeModel);
 	newtree.Initialise(glm::vec3(x, y, z), glm::vec3(0.0f), glm::vec3(1.0f));
+	newtree.getModel()->addTexture(texture);
 	trees.push_back(newtree);
 }
 

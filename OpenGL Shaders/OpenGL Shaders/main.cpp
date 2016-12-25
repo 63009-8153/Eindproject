@@ -16,6 +16,10 @@
 #define SSAA 2
 #define FXAA 3
 
+#define SMALL_OPTIMIZE_DIST 100.0f
+#define OPTIMIZE_DIST 150.0f
+#define LARGE_OPTIMIZE_DIST 1000.0f
+
 #define UPDATE_CYCLES_PER_SECOND 60
 clock_t programStartClock = std::clock();
 
@@ -108,7 +112,7 @@ Tree  trees;
 Terrain FM_M_FLATTERRAIN;
 Model FM_M_TERRAIN;
 Model FM_M_AMBULANCE[5 * 2];
-Model FM_M_COMMAND_TENT[2];
+Model FM_M_COMMAND_TENT;
 Model FM_M_ARMY_TENT[3 * 6];
 Model FM_M_ARMY_TRUCK[5 * 6];
 Model FM_M_BARRIER[25];
@@ -340,14 +344,13 @@ int main() {
 		waterRenderer.setMoveFactor(currentWaterMoveFactor);
 		
 		/* ========= Add models to list for rendering ============== */
+
+		unsigned int i = 0;
 		
 		switch (currentArea)
 		{
-		case FORREST_AREA:
-
-			break;
 		case SAFE_AREA:
-			unsigned int i = 0;
+			
 			// Add Floor model to renderList
 			modelRenderer.addToRenderList(SA_M_Floor.getModel());
 			// Add Building models to renderList
@@ -370,6 +373,114 @@ int main() {
 
 			break;
 
+		case FORREST_AREA:
+			// Add the flat terrain to the terrain renderer
+			terrainRenderer.addToRenderList(FM_M_FLATTERRAIN.getModel());
+			// Add the background terrain to the renderList
+			normalModelRenderer.addToRenderList(FM_M_TERRAIN.getModel());
+
+			// == RENDER LIST == 
+
+			// Add all trees that are within the optimization distance to the renderList
+			for (i = 0; i < trees.getTreeCount(); i++){
+				if (glm::distance(trees.getTreeAt(i)->getPosition(), camera.position) < OPTIMIZE_DIST){
+					modelRenderer.addToRenderList(trees.getTreeAt(i));
+				}
+			}
+			// Add all army trucks that are within the optimization distance to the renderList
+			for (i = 0; i < 6; i++){
+				if (glm::distance(FM_M_ARMY_TRUCK[5 * i].getModel()->getPosition(), camera.position) < OPTIMIZE_DIST){
+					for (unsigned int j = 0; j < 5; j++) modelRenderer.addToRenderList(FM_M_ARMY_TRUCK[(5 * i) + j].getModel());
+				}
+			}
+			// Add all roadlights that are within the optimization distance to the renderList
+			for (i = 0; i < 24; i++){
+				if (glm::distance(FM_M_ROADLIGHT[3 * i].getModel()->getPosition(), camera.position) < OPTIMIZE_DIST){
+					for (unsigned int j = 0; j < 3; j++) modelRenderer.addToRenderList(FM_M_ROADLIGHT[(3 * i) + j].getModel());
+				}
+			}
+			// Add all Military bunkers that are within the optimization distance to the renderList
+			for (i = 0; i < 3; i++){
+				if (glm::distance(FM_M_MILITARY_BUNKER[3 * i].getModel()->getPosition(), camera.position) < LARGE_OPTIMIZE_DIST){
+					for (unsigned int j = 0; j < 3; j++) modelRenderer.addToRenderList(FM_M_MILITARY_BUNKER[(3 * i) + j].getModel());
+				}
+			}
+			// Add all traffic cones that are within the optimization distance to the renderList
+			for (i = 0; i < 14; i++){
+				if (glm::distance(FM_M_TRAFFICCONE[i].getModel()->getPosition(), camera.position) < SMALL_OPTIMIZE_DIST){
+					modelRenderer.addToRenderList(FM_M_TRAFFICCONE[i].getModel());
+				}
+			}
+			// Add rails that are within the optimization distance to the renderList
+			if (glm::distance(FM_M_RAIL[0].getModel()->getPosition(), camera.position) < LARGE_OPTIMIZE_DIST) {
+				modelRenderer.addToRenderList(FM_M_RAIL[0].getModel());
+				modelRenderer.addToRenderList(FM_M_RAIL[1].getModel());
+			}
+			// Add all town houses that are within the optimization distance to the renderList
+			for (i = 0; i < 2; i++){
+				if (glm::distance(FM_M_TOWNHOUSE[i].getModel()->getPosition(), camera.position) < LARGE_OPTIMIZE_DIST) {
+					modelRenderer.addToRenderList(FM_M_TOWNHOUSE[i].getModel());
+				}
+			}
+
+			// == NORMAL RENDER LIST ==
+
+			// Add all ambulances that are within the optimization distance to the renderList
+			for (i = 0; i < 2; i++){
+				if (glm::distance(FM_M_AMBULANCE[5 * i].getModel()->getPosition(), camera.position) < OPTIMIZE_DIST) {
+					for (unsigned int j = 0; j < 5; j++) normalModelRenderer.addToRenderList(FM_M_AMBULANCE[(5 * i) + j].getModel());
+				}
+			}
+			// Add the command tent that is within the optimization distance to the renderList
+			if (glm::distance(FM_M_COMMAND_TENT.getModel()->getPosition(), camera.position) < LARGE_OPTIMIZE_DIST) {
+				normalModelRenderer.addToRenderList(FM_M_COMMAND_TENT.getModel());
+			}
+			// Add all army tents that are within the optimization distance to the renderList
+			for (i = 0; i < 6; i++) {
+				if (glm::distance(FM_M_ARMY_TENT[3 * i].getModel()->getPosition(), camera.position) < OPTIMIZE_DIST) {
+					for (unsigned int j = 0; j < 3; j++) normalModelRenderer.addToRenderList(FM_M_ARMY_TENT[(3 * i) + j].getModel());
+				}
+			}
+			// Add all barriers that are within the optimization distance to the renderList
+			for (i = 0; i < 25; i++) {
+				if (glm::distance(FM_M_BARRIER[i].getModel()->getPosition(), camera.position) < SMALL_OPTIMIZE_DIST) {
+					normalModelRenderer.addToRenderList(FM_M_BARRIER[i].getModel());
+				}
+			}
+			// Add all containers that are within the optimization distance to the renderList
+			for (i = 0; i < 12; i++) {
+				if (glm::distance(FM_M_CONTAINER[i].getModel()->getPosition(), camera.position) < OPTIMIZE_DIST) {
+					normalModelRenderer.addToRenderList(FM_M_CONTAINER[i].getModel());
+				}
+			}
+			// Add broken fence 1 that is within the optimization distance to the renderList
+			if (glm::distance(FM_M_BROKEN_FENCE1[0].getModel()->getPosition(), camera.position) < OPTIMIZE_DIST) {
+				for (i = 0; i < 3; i++) normalModelRenderer.addToRenderList(FM_M_BROKEN_FENCE1[i].getModel());
+			}
+			// Add broken fence 2 that is within the optimization distance to the renderList
+			if (glm::distance(FM_M_BROKEN_FENCE2[0].getModel()->getPosition(), camera.position) < OPTIMIZE_DIST) {
+				for (i = 0; i < 3; i++) normalModelRenderer.addToRenderList(FM_M_BROKEN_FENCE2[i].getModel());
+			}
+			// Add all fences that are within the optimization distance to the renderList
+			for (i = 0; i < 164; i++) {
+				if (glm::distance(FM_M_FENCE[3 * i].getModel()->getPosition(), camera.position) < OPTIMIZE_DIST) {
+					for (unsigned int j = 0; j < 3; j++) normalModelRenderer.addToRenderList(FM_M_FENCE[(3 * i) + j].getModel());
+				}
+			}
+			// Add all fences that are within the optimization distance to the renderList
+			for (i = 0; i < 3; i++){
+				normalModelRenderer.addToRenderList(FM_M_ROAD[i].getModel());
+			}
+			// Add the statue that is within the optimization distance to the renderList
+			if (glm::distance(FM_M_STATUE.getModel()->getPosition(), camera.position) < SMALL_OPTIMIZE_DIST) {
+				normalModelRenderer.addToRenderList(FM_M_STATUE.getModel());
+			}
+			// Add the well that is within the optimization distance to the renderList
+			if (glm::distance(FM_M_WELL.getModel()->getPosition(), camera.position) < OPTIMIZE_DIST) {
+				normalModelRenderer.addToRenderList(FM_M_WELL.getModel());
+			}
+
+			break;
 		}
 
 		//Add water to the renderer list
@@ -967,17 +1078,16 @@ void LoadGraphics_SafeArea()
 // Load Forrest Map Graphics
 void LoadGraphics_ForrestMap()
 {
-	//SA_TN_Pallets = loader.loadTexture("res/Safe_Area/Pallet/Textures/Pallet_norm.bmp", false);
-	//TODO: Set tree texture
+	trees.setTreeTexture(loader.loadTexture("res/Forrest_Area/Trees/Simple_Tree/Textures/texture.bmp", true));
 
 	FM_T_FLATTERRAIN[0] = loader.loadTexture("res/Forrest_Area/Terrain/Ground/Textures/TerrainBlendMap.bmp", false);
-	/*FM_T_FLATTERRAIN[1] = loader.loadTexture("res/Forrest_Area/Terrain/Ground/Textures/black.bmp", true);
+	FM_T_FLATTERRAIN[1] = loader.loadTexture("res/Forrest_Area/Terrain/Ground/Textures/black.bmp", true);
 	FM_T_FLATTERRAIN[2] = loader.loadTexture("res/Forrest_Area/Terrain/Ground/Textures/red.bmp", true);
 	FM_T_FLATTERRAIN[3] = loader.loadTexture("res/Forrest_Area/Terrain/Ground/Textures/green.bmp", true);
 	FM_T_FLATTERRAIN[4] = loader.loadTexture("res/Forrest_Area/Terrain/Ground/Textures/blue.bmp", true);
-*/
+
 	FM_T_TERRAIN = loader.loadTexture("res/Forrest_Area/Terrain/Mountains/Textures/Ring_Of_Doom_Texture.bmp", true);
-	FM_TN_TERRAIN = loader.loadTexture("res/Forrest_Area/Terrain/Mountains/Textures/Ring_Of_Doom_Normal.bmp", true);
+	FM_TN_TERRAIN = loader.loadTexture("res/Forrest_Area/Terrain/Mountains/Textures/Ring_Of_Doom_Normal.bmp", false);
 
 	FM_T_AMBULANCE[0] = loader.loadTexture("res/Forrest_Area/Ambulance/Textures/veh_ambulance_dam_02_d.bmp", true);
 	FM_T_AMBULANCE[1] = loader.loadTexture("res/Forrest_Area/Ambulance/Textures/veh_ambulance_dam_02_1_d.bmp", true);
@@ -985,21 +1095,21 @@ void LoadGraphics_ForrestMap()
 	FM_T_AMBULANCE[3] = loader.loadTexture("res/Forrest_Area/Ambulance/Textures/veh_ambulance_wheels_d.bmp", true);
 	FM_T_AMBULANCE[4] = loader.loadTexture("res/Forrest_Area/Ambulance/Textures/veh_ambulance_windows_dam_d.bmp", true);
 
-	FM_TN_AMBULANCE[0] = loader.loadTexture("res/Forrest_Area/Ambulance/Textures/veh_ambulance_dam_02_n.bmp", true);
-	FM_TN_AMBULANCE[1] = loader.loadTexture("res/Forrest_Area/Ambulance/Textures/veh_ambulance_dam_02_1_n.bmp", true);
-	FM_TN_AMBULANCE[2] = loader.loadTexture("res/Forrest_Area/Ambulance/Textures/veh_ambulance_logo_dam_n.bmp", true);
-	FM_TN_AMBULANCE[3] = loader.loadTexture("res/Forrest_Area/Ambulance/Textures/veh_ambulance_wheels_n.bmp", true);
-	FM_TN_AMBULANCE[4] = loader.loadTexture("res/Forrest_Area/Ambulance/Textures/veh_ambulance_windows_dam_n.bmp", true);
+	FM_TN_AMBULANCE[0] = loader.loadTexture("res/Forrest_Area/Ambulance/Textures/veh_ambulance_dam_02_n.bmp", false);
+	FM_TN_AMBULANCE[1] = loader.loadTexture("res/Forrest_Area/Ambulance/Textures/veh_ambulance_dam_02_1_n.bmp", false);
+	FM_TN_AMBULANCE[2] = loader.loadTexture("res/Forrest_Area/Ambulance/Textures/veh_ambulance_logo_dam_n.bmp", false);
+	FM_TN_AMBULANCE[3] = loader.loadTexture("res/Forrest_Area/Ambulance/Textures/veh_ambulance_wheels_n.bmp", false);
+	FM_TN_AMBULANCE[4] = loader.loadTexture("res/Forrest_Area/Ambulance/Textures/veh_ambulance_windows_dam_n.bmp", false);
 
 	FM_T_COMMAND_TENT = loader.loadTexture("res/Forrest_Area/Army_Command_Tent/Textures/Tent_Defuse.bmp", true);
-	FM_TN_COMMAND_TENT = loader.loadTexture("res/Forrest_Area/Army_Command_Tent/Textures/Tent_Normal.bmp", true);
+	FM_TN_COMMAND_TENT = loader.loadTexture("res/Forrest_Area/Army_Command_Tent/Textures/Tent_Normal.bmp", false);
 
 	FM_T_ARMY_TENT[0] = loader.loadTexture("res/Forrest_Area/Army_Tent/Textures/inter.bmp", true);
 	FM_T_ARMY_TENT[1] = loader.loadTexture("res/Forrest_Area/Army_Tent/Textures/outer.bmp", true);
 	FM_T_ARMY_TENT[2] = loader.loadTexture("res/Forrest_Area/Army_Tent/Textures/Window.bmp", true);
 
-	FM_TN_ARMY_TENT[0] = loader.loadTexture("res/Forrest_Area/Army_Tent/Textures/inter_bump.bmp", true);
-	FM_TN_ARMY_TENT[1] = loader.loadTexture("res/Forrest_Area/Army_Tent/Textures/outer_bump.bmp", true);
+	FM_TN_ARMY_TENT[0] = loader.loadTexture("res/Forrest_Area/Army_Tent/Textures/inter_bump.bmp", false);
+	FM_TN_ARMY_TENT[1] = loader.loadTexture("res/Forrest_Area/Army_Tent/Textures/outer_bump.bmp", false);
 
 	FM_T_ARMY_TRUCK[0] = loader.loadTexture("res/Forrest_Area/Army_Truck/Textures/box-furgon.bmp", true);
 	FM_T_ARMY_TRUCK[1] = loader.loadTexture("res/Forrest_Area/Army_Truck/Textures/cabin.bmp", true);
@@ -1008,17 +1118,17 @@ void LoadGraphics_ForrestMap()
 	FM_T_ARMY_TRUCK[4] = loader.loadTexture("res/Forrest_Area/Army_Truck/Textures/U3_wheel.bmp", true);
 
 	FM_T_BARRIER = loader.loadTexture("res/Forrest_Area/Barrier/Textures/Barrier.bmp", true);
-	FM_TN_BARRIER = loader.loadTexture("res/Forrest_Area/Barrier/Textures/Normal.bmp", true);
+	FM_TN_BARRIER = loader.loadTexture("res/Forrest_Area/Barrier/Textures/Normal.bmp", false);
 
 	FM_T_CONTAINER = loader.loadTexture("res/Forrest_Area/Container/Textures/Cargo01_D.bmp", true);
-	FM_TN_CONTAINER = loader.loadTexture("res/Forrest_Area/Container/Textures/Cargo01_N.bmp", true);
+	FM_TN_CONTAINER = loader.loadTexture("res/Forrest_Area/Container/Textures/Cargo01_N.bmp", false);
 
 	FM_T_FENCE[0] = loader.loadTexture("res/Forrest_Area/Fences/Textures/logends.bmp", true);
-	FM_TN_FENCE[0] = loader.loadTexture("res/Forrest_Area/Fences/Textures/logends_NRM.bmp", true);
+	FM_TN_FENCE[0] = loader.loadTexture("res/Forrest_Area/Fences/Textures/logends_NRM.bmp", false);
 	FM_T_FENCE[1] = loader.loadTexture("res/Forrest_Area/Fences/Textures/logs.bmp", true);
-	FM_TN_FENCE[1] = loader.loadTexture("res/Forrest_Area/Fences/Textures/logs_NRM.bmp", true);
+	FM_TN_FENCE[1] = loader.loadTexture("res/Forrest_Area/Fences/Textures/logs_NRM.bmp", false);
 	FM_T_FENCE[2] = loader.loadTexture("res/Forrest_Area/Fences/Textures/planks.bmp", true);
-	FM_TN_FENCE[2] = loader.loadTexture("res/Forrest_Area/Fences/Textures/planks_NRM.bmp", true);
+	FM_TN_FENCE[2] = loader.loadTexture("res/Forrest_Area/Fences/Textures/planks_NRM.bmp", false);
 
 	FM_T_BROKENFENCE1[0] = loader.loadTexture("res/Forrest_Area/Fences/Textures/logends.bmp", true);
 	FM_T_BROKENFENCE1[1] = loader.loadTexture("res/Forrest_Area/Fences/Textures/logs.bmp", true);
@@ -1039,10 +1149,10 @@ void LoadGraphics_ForrestMap()
 	FM_T_TRAFFICCONE = loader.loadTexture("res/Forrest_Area/Traffic_Cone/Textures/cone2.bmp", true);
 
 	FM_T_ROAD = loader.loadTexture("res/Forrest_Area/Roads/Textures/Roadstraight.bmp", true);
-	FM_TN_ROAD = loader.loadTexture("res/Forrest_Area/Roads/Textures/Roadstraight_NORMAL.bmp", true);
+	FM_TN_ROAD = loader.loadTexture("res/Forrest_Area/Roads/Textures/Roadstraight_NORMAL.bmp", false);
 
 	FM_T_STATUE = loader.loadTexture("res/Forrest_Area/Statue/Textures/statue_d.bmp", true);
-	FM_TN_STATUE = loader.loadTexture("res/Forrest_Area/Statue/Textures/statue_n.bmp", true);
+	FM_TN_STATUE = loader.loadTexture("res/Forrest_Area/Statue/Textures/statue_n.bmp", false);
 
 	FM_T_RAIL[0] = loader.loadTexture("res/Forrest_Area/Rails/Textures/Truck_1524_reils.bmp", true);
 	FM_T_RAIL[1] = loader.loadTexture("res/Forrest_Area/Rails/Textures/Truck_1524_sleppers.bmp", true);
@@ -1050,7 +1160,7 @@ void LoadGraphics_ForrestMap()
 	FM_T_TOWNHOUSE = loader.loadTexture("res/Forrest_Area/Town_House/Textures/BuildingsTallHouse0065_2_M.bmp", true);
 
 	FM_T_WELL = loader.loadTexture("res/Forrest_Area/Well/Textures/well_01_Diff.bmp", true);
-	FM_TN_WELL = loader.loadTexture("res/Forrest_Area/Well/Textures/well_01_Norm.bmp", true);
+	FM_TN_WELL = loader.loadTexture("res/Forrest_Area/Well/Textures/well_01_Norm.bmp", false);
 
 }
 
@@ -1178,7 +1288,7 @@ void LoadModels_ForrestMap()
 	{
 		multiPos = glm::vec3(-244.072f, -0.061f, -447.298f);
 		multiRot = glm::vec3(0.0f);
-		loadModel(FM_M_COMMAND_TENT[0], "res/Forrest_Area/Army_Command_Tent/CommandTents.obj", multiPos, multiRot, glm::vec3(1.0f), FM_T_COMMAND_TENT, FM_TN_COMMAND_TENT, 100.0f, 1.0f, 0.1f);
+		loadModel(FM_M_COMMAND_TENT, "res/Forrest_Area/Army_Command_Tent/CommandTents.obj", multiPos, multiRot, glm::vec3(1.0f), FM_T_COMMAND_TENT, FM_TN_COMMAND_TENT, 100.0f, 1.0f, 0.1f);
 	}
 
 	// == ARMY_TENT ==
@@ -2121,7 +2231,15 @@ void loadModel(Model &model, // Variable to set
 	float ambientLight) // Reflectivity
 {
 	// Load modeldata and set the variable.
-	model.setModel(&loader.loadObjFile(modelFilename.c_str(), false, false));
+
+	if (modelFilename == "res/Forrest_Area/Terrain/Mountains/Mountains.obj")
+	{
+		model.setModel(&loader.loadObjFile(modelFilename.c_str(), true, true));
+	}
+	else {
+		model.setModel(&loader.loadObjFile(modelFilename.c_str(), false, false));
+	}
+	
 	// Initialise model
 	model.Initialise(pos, rot, scale);
 

@@ -167,11 +167,13 @@ gameobject Loader::loadObjFile(const char * path, bool writeParsed, bool forcePa
 	//If there are more texture coords than vertices, we need to parse the obj file further so the texture aligns properly.
 	if (temp_uvs.size() > temp_vertices.size() || forceParse) {
 		printf("Starting parsing file: %s!\n", path);
-
+		int count = 0;
 		for (unsigned int i = (faces.size() - 1); i > 0; i--) {
+			printf("%d of: %d\n", faces.size(), ++count);
+
 			for (unsigned int j = 0; j < i; j++) {
 				if (i == j) continue;
-
+				
 				for (unsigned int l = 0; l < 3; l++) {
 					for (unsigned int k = 0; k < 3; k++) {
 						if (faces[i].vertices[l] == faces[j].vertices[k] && faces[i].uvs[l] != faces[j].uvs[k]) {
