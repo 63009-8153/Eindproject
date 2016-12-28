@@ -170,7 +170,6 @@ gameobject Loader::loadObjFile(const char * path, bool writeParsed, bool forcePa
 		int count = 0;
 		for (unsigned int i = (faces.size() - 1); i > 0; i--) {
 			printf("%d of: %d\n", faces.size(), ++count);
-
 			for (unsigned int j = 0; j < i; j++) {
 				if (i == j) continue;
 				

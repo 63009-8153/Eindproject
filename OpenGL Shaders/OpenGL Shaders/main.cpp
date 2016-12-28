@@ -2231,14 +2231,7 @@ void loadModel(Model &model, // Variable to set
 	float ambientLight) // Reflectivity
 {
 	// Load modeldata and set the variable.
-
-	if (modelFilename == "res/Forrest_Area/Terrain/Mountains/Mountains.obj")
-	{
-		model.setModel(&loader.loadObjFile(modelFilename.c_str(), true, true));
-	}
-	else {
-		model.setModel(&loader.loadObjFile(modelFilename.c_str(), false, false));
-	}
+	model.setModel(&loader.loadObjFile(modelFilename.c_str(), false, false));
 	
 	// Initialise model
 	model.Initialise(pos, rot, scale);
