@@ -156,7 +156,7 @@ void initLights();
 // Initialise the client
 void initialiseClient(char ipAddress[39], char port[5]);
 // Client loop
-void clientLoop();
+void clientLoop(void *);
 
 // Network functions
 void SendInitData();
@@ -257,7 +257,6 @@ int main() {
 	handleMouseInput(true);
 	
 	do {
-		clientLoop();
 
 		//renderWaterCubeMap();
 		//GuiElements[0].rotation = (float)frame / 100.0f;
@@ -413,6 +412,9 @@ int main() {
 		// Clamp x to -90 and 90 deg
 		if (rot.x < -90.0f) rot.x = -90.0f;
 		else if (rot.x > 90.0f) rot.x = 90.0f;
+		// Clamp y to -360 and 360 deg
+		if (rot.y > 360) rot.y -= 360.0f;
+		else if (rot.y < -360) rot.y += 360.0f;
 		
 		// Set the player rotation from mouse input
 		player.setRotation(rot);
@@ -435,26 +437,6 @@ int main() {
 
 		//if (glfwGetKey(window, GLFW_KEY_KP_4) == GLFW_PRESS) camera.position.z += 0.1f; // left
 		//else if (glfwGetKey(window, GLFW_KEY_KP_6) == GLFW_PRESS) camera.position.z -= 0.1f; //right
-
-		//glm::vec3 p = SA_M_Pallets[1].getRotation();
-
-		//if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) p.x += 0.01f;
-		//else if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS) p.x -= 0.01f;
-
-		//if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) p.y += 0.01f;
-		//else if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS) p.y -= 0.01f;
-
-		//if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) p.z += 0.01f;
-		//else if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS) p.z -= 0.01f;
-
-		//printf("Rot: %f, %f, %f\n", glm::degrees(p.x), glm::degrees(p.y), glm::degrees(p.z));
-
-		//SA_M_Pallets[1].setRotation(p);
-
-		/*glm::vec3 r = SA_M_Barrels[1].getRotation();
-		r.z += deltaTime;
-		r.x += deltaTime / 2;
-		SA_M_Barrels[1].setRotation(r);*/
 
 		//Set title to hold fps info
 		std::string fpsStr = std::string(PROGRAM_NAME) + " FPS: " + std::to_string(fps) + " deltaTime: " + std::to_string(deltaTime * 100) + " Mouse: x: " + std::to_string(rot.x) + " y: " + std::to_string(rot.y);
@@ -781,14 +763,15 @@ void initialiseClient(char ipAddress[39], char port[5])
 
 	networkUpdateFunction = SendInitData;
 
-	clientRunning = true;
+	_beginthread(clientLoop, 0, NULL);
 }
 // The client loop
-void clientLoop()
+void clientLoop(void *)
 {
+	clientRunning = true;
 
 	// Client networking loop
-	if (clientRunning) {
+	while(clientRunning){
 		// Receive and parse data.
 		client.updateClient();
 
@@ -804,6 +787,9 @@ void clientLoop()
 		clientLoopDeltaTime = (((float)(std::clock() - programStartClock) / (float)CLOCKS_PER_SEC)) - clientLoopLastRenderTime; //Time in miliseconds it took for the last update cycle.
 		clientLoopLastRenderTime = (((float)(std::clock() - programStartClock) / (float)CLOCKS_PER_SEC));
 	}
+
+	// End of function, end the thread and release its memory.
+	_endthread();
 }
 
 // Send intitialisation data
