@@ -124,8 +124,9 @@ void main(void){
 	if(usesSpecularMap > 0.5){
 		vec4 mapInfo = texture(specularMap, textureCoords);
 		totalSpecular *= mapInfo.r;
-		if(mapInfo.g > 0.5){
-			totalDiffuse = vec3(1.0);
+
+		if(mapInfo.g > 0.1){
+			totalDiffuse = vec3(1.0) * mapInfo.g;
 		}
 	}
 
@@ -145,4 +146,6 @@ void main(void){
 	}
 	if(usesReflectionCubeMap > 0.5) out_Color = mix(out_Color, reflecRefractColour, reflectionColourRatio);
 	//out_Color = reflecRefractColour;
+
+	out_Color = mix(vec4(skyColour, 1.0), out_Color, visibility);
 }
