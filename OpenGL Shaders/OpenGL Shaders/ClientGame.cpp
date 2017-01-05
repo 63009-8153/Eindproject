@@ -172,6 +172,8 @@ void ClientGame::getPlayerData(Player & player)
 			// Set the velocity
 			player.setVelocity(allClients[i].velocity);
 
+			player.networkAnimType = allClients[i].animType;
+
 			return;
 		}
 	}

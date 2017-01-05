@@ -129,6 +129,9 @@ Model FM_M_RAIL[2];
 Model FM_M_TOWNHOUSE[2];
 Model FM_M_WELL;
 
+std::vector<gameobject> animationModels;
+std::vector<s_anim> playerAnimations;
+
 std::vector<texture2D> GuiElements;
 texture2D GuiCherry;
 
@@ -346,6 +349,8 @@ int main() {
 		/* ========= Add models to list for rendering ============== */
 
 		unsigned int i = 0;
+
+		modelRenderer.addToRenderList(player.getAnimModel());
 		
 		switch (currentArea)
 		{
@@ -579,24 +584,8 @@ int main() {
 		// Poll all events
 		glfwPollEvents();
 
-		//// Update mouse input and lock it in the middle of the screen
-		glm::vec2 changedMousePos = handleMouseInput(true);
-		changedMousePos *= mouseSensitivity;
-
-		//// Rotate the x and y axis of the player with the mouse
-		glm::vec3 rot = player.getRotation();
-		rot.y -= changedMousePos.x * 0.1f;
-		rot.x -= changedMousePos.y * 0.1f;
-
-		// Clamp x to -90 and 90 deg
-		if (rot.x < -90.0f) rot.x = -90.0f;
-		else if (rot.x > 90.0f) rot.x = 90.0f;
-		// Clamp y to -360 and 360 deg
-		if (rot.y > 360) rot.y -= 360.0f;
-		else if (rot.y < -360) rot.y += 360.0f;
-		
-		// Set the player rotation from mouse input
-		player.setRotation(rot);
+		player.update();
+		player.updateAnimation(player.networkAnimType);
 
 
 		// Get and update the player with its new position, it's health and the rest But not the rotation!!!
@@ -609,7 +598,7 @@ int main() {
 		camera.rotation = glm::radians(player.getRotation());
 		// Set the camera position
 		//camera.position = player.getPosition();
-		//camera.position.y += 4.0f;
+		camera.position.y = 6.0f;
 
 		if (glfwGetKey(window, GLFW_KEY_KP_8) == GLFW_PRESS) camera.position.x += 2.0f; // up
 		else if (glfwGetKey(window, GLFW_KEY_KP_2) == GLFW_PRESS) camera.position.x -= 2.0f; //down
@@ -628,7 +617,7 @@ int main() {
 		//else if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) p.x -= 0.5f; //right
 		//FM_M_ROAD[1].setPosition(p);
 
-		////Set title to hold fps info
+		//Set title to hold fps info
 		std::string fpsStr = std::string(PROGRAM_NAME) + " FPS: " + std::to_string(fps) + " deltaTime: " + std::to_string(deltaTime * 100) /*+ " Mouse: x: " + std::to_string(rot.x) + " y: " + std::to_string(rot.y)*/;
 		DisplayManager::setDisplayTitle(fpsStr.c_str());
 
@@ -1192,6 +1181,12 @@ void loadModels()
 
 	// Load all the models for the forrest map.
 	LoadModels_ForrestMap();
+
+	player.loadAnimations("res/PlayerAnimations/Walk_Forward/", 31, 62, true);
+	player.loadAnimations("res/PlayerAnimations/Run_Forward/", 16, 62, true);
+	player.loadAnimations("res/PlayerAnimations/Walk_Backward/", 31, 62, true);
+	player.loadAnimations("res/PlayerAnimations/Walk_Left/", 31, 62, true);
+	player.loadAnimations("res/PlayerAnimations/Walk_Right/", 31, 62, true);
 }
 // Load Safe Area Models
 void loadModels_SafeArea()
@@ -1310,7 +1305,7 @@ void LoadModels_ForrestMap()
 	{
 		float shine = 100.0f,
 			reflect = 0.1f,
-			ambient = 0.1f;
+			ambient = 0.25f;
 
 		multiPos = glm::vec3(-244.072f, -0.061f, -447.298f);
 		multiRot = glm::vec3(0.0f);
@@ -1321,7 +1316,7 @@ void LoadModels_ForrestMap()
 	{
 		float shine = 100.0f,
 			reflect = 0.1f,
-			ambient = 0.1f;
+			ambient = 0.2f;
 
 		multiPos = glm::vec3(-323.534f, 20.376f, -75.994f);
 		multiRot = glm::vec3(0.0f, glm::radians(90.0f), 0.0f);
@@ -1341,15 +1336,15 @@ void LoadModels_ForrestMap()
 	{
 		float shine = 100.0f,
 			reflect = 0.1f,
-			ambient = 0.1f;
+			ambient = 0.2f;
 
 		float rshine = 30.0f,
 			rreflect = 0.25f,
-			rambient = 0.1f;
+			rambient = 0.2f;
 
 		float rrshine = 80.0f,
 			rrreflect = 0.5f,
-			rrambient = 0.1f;
+			rrambient = 0.2f;
 
 		multiPos = glm::vec3(-221.392f, 0.0f, -158.281f);
 		multiRot = glm::vec3(0.0f, glm::radians(-46.325f), 0.0f);
@@ -1371,7 +1366,7 @@ void LoadModels_ForrestMap()
 	{
 		float shine = 100.0f,
 			reflect = 0.1f,
-			ambient = 0.1f;
+			ambient = 0.15f;
 
 		loadModel(FM_M_BARRIER[0], "res/Forrest_Area/Barrier/barrier.obj", glm::vec3(-143.101f, 1.833f, -496.647f), glm::vec3(0.0f, glm::radians(-171.108f), 0.0f), glm::vec3(1.0f), FM_T_BARRIER, FM_TN_BARRIER, shine, reflect, ambient);
 		loadModel(FM_M_BARRIER[1],  FM_M_BARRIER[0], glm::vec3(-138.153f, 1.833f, -497.33f), glm::vec3(0.0f, glm::radians(-2.893f), 0.0f), glm::vec3(1.0f), FM_T_BARRIER, FM_TN_BARRIER, shine, reflect, ambient);
@@ -1408,7 +1403,7 @@ void LoadModels_ForrestMap()
 	{
 		float shine = 35.0f,
 			reflect = 0.5f,
-			ambient = 0.2f;
+			ambient = 0.25f;
 
 		loadModel(FM_M_CONTAINER[0], "res/Forrest_Area/Container/Container.obj", glm::vec3(-31.262f, 0.0f, -161.87f), glm::vec3(0.0f, glm::radians(-56.409f), 0.0f), glm::vec3(1.0f), FM_T_CONTAINER, FM_TN_CONTAINER, shine, reflect, ambient);
 		loadModel(FM_M_CONTAINER[1],  FM_M_CONTAINER[0], glm::vec3(-31.262f, 10.397f, -161.87f), glm::vec3(0.0f, glm::radians(109.951f), 0.0f), glm::vec3(1.0f), FM_T_CONTAINER, FM_TN_CONTAINER, shine, reflect, ambient);
@@ -1638,17 +1633,17 @@ void LoadModels_ForrestMap()
 	{
 		float shine = 100.0f,
 			reflect = 0.1f,
-			ambient = 0.1f;
+			ambient = 0.2f;
 
 		multiPos = glm::vec3(-313.2f, 12.943f, -341.934f);
 		multiRot = glm::vec3(0.0f, glm::radians(-90.0f), 0.0f);
-		loadModel(FM_M_MILITARY_BUNKER[0], "res/Forrest_Area/Military_Bunker/Bunker_roof.obj", multiPos, multiRot, glm::vec3(1.0f), FM_T_MILITARY_BUNKER[0], 60.0f, 0.25f, 0.1f);
+		loadModel(FM_M_MILITARY_BUNKER[0], "res/Forrest_Area/Military_Bunker/Bunker_roof.obj", multiPos, multiRot, glm::vec3(1.0f), FM_T_MILITARY_BUNKER[0], 60.0f, 0.25f, ambient);
 		loadModel(FM_M_MILITARY_BUNKER[1], "res/Forrest_Area/Military_Bunker/Bunker_Side1.obj", multiPos, multiRot, glm::vec3(1.0f), FM_T_MILITARY_BUNKER[1], shine, reflect, ambient);
 		loadModel(FM_M_MILITARY_BUNKER[2], "res/Forrest_Area/Military_Bunker/Bunker_Side2.obj", multiPos, multiRot, glm::vec3(1.0f), FM_T_MILITARY_BUNKER[2], shine, reflect, ambient);
 
 		multiPos = glm::vec3(-274.797f, 12.943f, -199.188f);
 		multiRot = glm::vec3(0.0f);
-		loadModel(FM_M_MILITARY_BUNKER[3], FM_M_MILITARY_BUNKER[0], multiPos, multiRot, glm::vec3(1.0f), FM_T_MILITARY_BUNKER[0], 60.0f, 0.25f, 0.1f);
+		loadModel(FM_M_MILITARY_BUNKER[3], FM_M_MILITARY_BUNKER[0], multiPos, multiRot, glm::vec3(1.0f), FM_T_MILITARY_BUNKER[0], 60.0f, 0.25f, ambient);
 		loadModel(FM_M_MILITARY_BUNKER[4], FM_M_MILITARY_BUNKER[1], multiPos, multiRot, glm::vec3(1.0f), FM_T_MILITARY_BUNKER[1], shine, reflect, ambient);
 		loadModel(FM_M_MILITARY_BUNKER[5], FM_M_MILITARY_BUNKER[2], multiPos, multiRot, glm::vec3(1.0f), FM_T_MILITARY_BUNKER[2], shine, reflect, ambient);
 
@@ -1828,7 +1823,7 @@ void loadArmyTent(int iteration, glm::vec3 pos, glm::vec3 rot)
 {
 	float shine = 100.0f,
 		reflect = 0.1f,
-		ambient = 0.1f;
+		ambient = 0.2f;
 
 	loadModel(FM_M_ARMY_TENT[(iteration * 3)],	   FM_M_ARMY_TENT[0], pos, rot, glm::vec3(1.0f), FM_T_ARMY_TENT[0], FM_TN_ARMY_TENT[0], shine, reflect, ambient);
 	loadModel(FM_M_ARMY_TENT[(iteration * 3) + 1], FM_M_ARMY_TENT[1], pos, rot, glm::vec3(1.0f), FM_T_ARMY_TENT[1], FM_TN_ARMY_TENT[1], shine, reflect, ambient);
@@ -1839,15 +1834,15 @@ void loadArmyTruck(int iteration, glm::vec3 pos, glm::vec3 rot)
 {
 	float shine = 100.0f,
 		reflect = 0.1f,
-		ambient = 0.1f;
+		ambient = 0.2f;
 
 	float rshine = 30.0f,
 		rreflect = 0.25f,
-		rambient = 0.1f;
+		rambient = 0.2f;
 
 	float rrshine = 80.0f,
 		rrreflect = 0.5f,
-		rrambient = 0.1f;
+		rrambient = 0.2f;
 
 	loadModel(FM_M_ARMY_TRUCK[(iteration * 5)],		FM_M_ARMY_TRUCK[0], pos, rot, glm::vec3(1.0f), FM_T_ARMY_TRUCK[0], shine, reflect, ambient);
 	loadModel(FM_M_ARMY_TRUCK[(iteration * 5) + 1], FM_M_ARMY_TRUCK[1], pos, rot, glm::vec3(1.0f), FM_T_ARMY_TRUCK[1], rshine, rreflect, rambient);
