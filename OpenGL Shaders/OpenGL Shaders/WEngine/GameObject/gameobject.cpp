@@ -21,7 +21,7 @@ gameobject::gameobject(gameobject *object){
 	hasReflectionCubeMap = false;
 	hasRefractionCubeMap = false;
 
-	tiledAmount = 1.0f;
+	tiledAmount = glm::vec2(1.0f);
 }
 gameobject::gameobject(int _vaoID, int _vertexCount)
 {
@@ -41,7 +41,7 @@ gameobject::gameobject(int _vaoID, int _vertexCount)
 	hasReflectionCubeMap = false;
 	hasRefractionCubeMap = false;
 
-	tiledAmount = 1.0f;
+	tiledAmount = glm::vec2(1.0f);
 }
 
 //Gameobject destructor
@@ -241,12 +241,12 @@ float gameobject::getReflectivity()
 	return reflectivity;
 }
 
-void gameobject::setTiledAmount(float amount)
+void gameobject::setTiledAmount(glm::vec2 amount)
 {
 	tiledAmount = amount;
 }
 
-float gameobject::getTiledAmount()
+glm::vec2 gameobject::getTiledAmount()
 {
 	return tiledAmount;
 }

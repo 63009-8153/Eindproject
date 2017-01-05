@@ -31,7 +31,7 @@ void GuiRenderer::render(std::vector<texture2D> *textures)
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glDisable(GL_DEPTH_TEST);
 
-	for (int i = 0; i < textures->size(); i++)
+	for (unsigned int i = 0; i < textures->size(); i++)
 	{
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, textures->at(i).textureid);
