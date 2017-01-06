@@ -2,15 +2,15 @@
 
 enum animationType{
 	IDLE			= 0,
-	DYING			= 1,
 
-	WALK_FORWARD	= 10,
-	WALK_BACKWARD	= 11,
-	WALK_LEFT		= 12,
-	WALK_RIGHT		= 13,
+	WALK_FORWARD	= 1,
+	WALK_BACKWARD	= 2,
+	WALK_LEFT		= 3,
+	WALK_RIGHT		= 4,
 
-	RUN_FORWARD		= 20,
-	
+	RUN_FORWARD		= 5,
+
+	DYING			= 6
 };
 
 // Struct for animation

@@ -26,7 +26,7 @@ uniform vec3 skyColour;
 
 uniform float ambientLight;
 
-const float tileAmount = 100.0;
+const float tileAmount = 200.0;
 
 //Uneven numbers. So 1, 3, 5, etc.
 const float PCFFilterCount = 3.0;

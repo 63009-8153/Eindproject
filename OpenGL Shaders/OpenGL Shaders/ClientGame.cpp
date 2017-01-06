@@ -2,14 +2,28 @@
 
 // Constructor
 ClientGame::ClientGame() {
+	networkConnected = false;
 }
 // Constructor
 // Connect to the server on ipAddress and port
 ClientGame::ClientGame(char ipAddress[39], char port[5])
 {
+	networkConnected = true;
+
 	//Create a new clientNetwork with IP-Address and Port
 	network = new ClientNetwork(ipAddress, port);
 	errors = network->getErrors();
+
+	for (int i = 0; i < errors.size(); i++) {
+		switch (errors[i]) {
+			case ALL_CONNECTING_SOCKETS_ERROR:
+				networkConnected = false;
+				break;
+
+			default:
+				break;
+		}
+	}
 
 	lobbyTimer = MAX_STARTTIME;
 }
@@ -22,6 +36,8 @@ ClientGame::~ClientGame()
 // Update the client with server data.
 void ClientGame::updateClient()
 {
+	if (!networkConnected) return;
+
 	int data_length = network->receivePackets(network_data);
 
     // No data recieved
@@ -136,6 +152,8 @@ void ClientGame::updateClient()
 // Disconnect from the server.
 void ClientGame::disconnect()
 {
+	if (!networkConnected) return;
+
 	const unsigned int packet_size = sizeof(ClientSendPacket);
 	char packet_data[packet_size];
 
@@ -151,12 +169,42 @@ void ClientGame::disconnect()
 // Update the playerdata of own playerData
 void ClientGame::setPlayerData(Player & player)
 {
+	if (!networkConnected) return;
+
 	myPlayerData.rotation = player.getRotation();
+}
+
+// Update the player with specified playerData
+void ClientGame::getPlayerData(Player & player, int index)
+{
+	if (!networkConnected) return;
+
+	if (allClients[index].playerID == myClientID) {
+		player.active = false;
+		return;
+	}
+
+	player.active = allClients[index].activePlayer;
+
+	if (player.active) {
+
+		// Set the position
+		player.setPosition(allClients[index].position);
+		player.setRotation(allClients[index].rotation);
+
+		// Set the health
+		player.health = allClients[index].health;
+		player.maxHealth = allClients[index].maxHealth;
+
+		player.networkAnimType = allClients[index].animType;
+	}
 }
 
 // Update the playerdata of own playerData
 void ClientGame::getPlayerData(Player & player)
 {
+	if (!networkConnected) return;
+
 	for (unsigned int i = 0; i < MAX_LOBBYSIZE; i++)
 	{
 		// If the current client is myplayer client
@@ -172,6 +220,8 @@ void ClientGame::getPlayerData(Player & player)
 			// Set the velocity
 			player.setVelocity(allClients[i].velocity);
 
+
+			printf("Client %d anim %d\n", i, allClients[i].animType);
 			player.networkAnimType = allClients[i].animType;
 
 			return;
@@ -183,6 +233,8 @@ void ClientGame::getPlayerData(Player & player)
 // This function is only to be send during the game
 void ClientGame::sendPlayerData()
 {
+	if (!networkConnected) return;
+
 	const unsigned int packet_size = sizeof(ClientSendPacket);
 	char packet_data[packet_size];
 
@@ -207,6 +259,8 @@ void ClientGame::sendPlayerData()
 // This function is only to be send during the lobby
 void ClientGame::sendLobbyUpdate()
 {
+	if (!networkConnected) return;
+
 	const unsigned int packet_size = sizeof(ClientSendPacketLobby);
 	char packet_data[packet_size];
 
@@ -231,6 +285,8 @@ void ClientGame::sendLobbyUpdate()
 // Send an heartbeat response packet to the server
 void ClientGame::sendHeartbeatPacket()
 {
+	if (!networkConnected) return;
+
 	const unsigned int packet_size = sizeof(ClientSendPacket);
 	char packet_data[packet_size];
 
@@ -245,6 +301,8 @@ void ClientGame::sendHeartbeatPacket()
 // Add an actionType to the next packet send to the server.
 void ClientGame::addActionType(actionTypes type)
 {
+	if (!networkConnected) return;
+
 	// If we are not at MAX_ACTIONS add the action, else dont add it.
 	if (nextActionTypes.size() < MAX_ACTIONS) {
 		// Check if the action is not already in the action list.
@@ -264,6 +322,8 @@ void ClientGame::addActionType(actionTypes type)
 
 bool ClientGame::hasActionType()
 {
+	if (!networkConnected) return false;
+
 	if (nextActionTypes.size() > 0) return true;
 	return false;
 }

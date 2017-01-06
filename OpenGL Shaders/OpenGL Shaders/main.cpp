@@ -325,6 +325,8 @@ int main() {
 	//Initialise gameState
 	gameState = 1;
 
+	player.active = true;
+
 	// Hide the cursor
 	DisplayManager::gameCursor();
 //TODO: glfwCreateCursor can set a picture of the cursor
@@ -350,7 +352,13 @@ int main() {
 
 		unsigned int i = 0;
 
+
 		modelRenderer.addToRenderList(player.getAnimModel());
+		for (int i = 0; i < MAX_LOBBYSIZE; i++) {
+			if (otherPlayers[i].active) {
+				modelRenderer.addToRenderList(otherPlayers[i].getAnimModel());
+			}
+		}
 		
 		switch (currentArea)
 		{
@@ -586,10 +594,15 @@ int main() {
 
 		player.update();
 		player.updateAnimation(player.networkAnimType);
-
+		for (int i = 0; i < MAX_LOBBYSIZE; i++) {
+			otherPlayers[i].updateAnimation(otherPlayers[i].networkAnimType);
+		}
 
 		// Get and update the player with its new position, it's health and the rest But not the rotation!!!
 		client.getPlayerData(player);
+		for (int i = 0; i < MAX_LOBBYSIZE; i++) {
+			client.getPlayerData(otherPlayers[i], i);
+		}
 
 		// Set the rotation of the player for the next update
 		client.setPlayerData(player);
@@ -611,11 +624,7 @@ int main() {
 		
 		if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS) currentArea = SAFE_AREA;
 		else if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS) currentArea = FORREST_AREA;
-		
-		//glm::vec3 p = FM_M_ROAD[1].getPosition();
-		//if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) p.x += 0.5f; // left
-		//else if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) p.x -= 0.5f; //right
-		//FM_M_ROAD[1].setPosition(p);
+
 
 		//Set title to hold fps info
 		std::string fpsStr = std::string(PROGRAM_NAME) + " FPS: " + std::to_string(fps) + " deltaTime: " + std::to_string(deltaTime * 100) /*+ " Mouse: x: " + std::to_string(rot.x) + " y: " + std::to_string(rot.y)*/;
@@ -1024,6 +1033,8 @@ void loadGraphics()
 
 	// Load all the graphics for the forrest map.
 	LoadGraphics_ForrestMap();
+
+	player.animationTexture = loader.loadTexture("res/PlayerAnimations/Textures/playerTextureArmy.bmp", true);
 }
 // Load Safe Area Graphics
 void LoadGraphics_SafeArea()
@@ -1170,23 +1181,19 @@ void LoadGraphics_ForrestMap()
 // Load all models
 void loadModels()
 {
-	// ===  TERRAIN  ===
-	//Create terrains with a heightmap, set position and all multitexture textures
-	//terrains[0].createWithHeightmap("res/heightmap.bmp", -1, -1, &loader, floorTextureGrass, floorTextureR, floorTextureG, floorTextureB, floorBlendMap);
-	//terrains[0].getModel()->setAmbientLight(0.2f);
-	//terrains[0].getModel()->setShadowMap(shadowRenderer.getShadowDepthTexture());
-
 	// Load all the models for the safe area.
 	loadModels_SafeArea();
 
 	// Load all the models for the forrest map.
 	LoadModels_ForrestMap();
 
+	player.loadAnimations("res/PlayerAnimations/Idle/", 32, 15, true);
 	player.loadAnimations("res/PlayerAnimations/Walk_Forward/", 31, 62, true);
-	player.loadAnimations("res/PlayerAnimations/Run_Forward/", 16, 62, true);
 	player.loadAnimations("res/PlayerAnimations/Walk_Backward/", 31, 62, true);
 	player.loadAnimations("res/PlayerAnimations/Walk_Left/", 31, 62, true);
 	player.loadAnimations("res/PlayerAnimations/Walk_Right/", 31, 62, true);
+	player.loadAnimations("res/PlayerAnimations/Run_Forward/", 16, 62, true);
+	
 }
 // Load Safe Area Models
 void loadModels_SafeArea()

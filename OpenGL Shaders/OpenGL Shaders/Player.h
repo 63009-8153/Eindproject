@@ -38,11 +38,13 @@ class Player : public Model
 
 		int networkAnimType;
 
+		bool active;
+
 	private:
 
 		int currentAnimationType,
 			currentAnimationFrame;
-		double waitTime;
+		double animationExtraTime;
 };
 
 #endif

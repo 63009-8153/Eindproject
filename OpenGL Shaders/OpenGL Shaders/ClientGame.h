@@ -30,9 +30,12 @@ public:
 	// Disconnect from the server.
 	void disconnect();
 
-	// Update the playerdata of own playerData
+	// Update the playerdata of own player
 	void setPlayerData(Player &player);
-	// Update the playerdata of own playerData
+
+	// Update the player with specified playerData
+	void getPlayerData(Player &player, int index);
+	// Update the player of own playerData
 	void getPlayerData(Player &player);
 
 	// Send playerData to the server.
@@ -59,6 +62,8 @@ public:
 
 	bool gameStarting,
 		 gameStarted;
+
+	bool networkConnected;
 
 	// The startTimer
 	float lobbyTimer;

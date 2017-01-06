@@ -5,6 +5,13 @@
 //Constructor
 Player::Player()
 {
+	currentAnimationType = IDLE;
+	networkAnimType = IDLE;
+	currentAnimationFrame = 0;
+
+	animationExtraTime = 0;
+
+	active = false;
 }
 //Destructor
 Player::~Player()
@@ -27,8 +34,12 @@ void Player::init(glm::vec3 position, glm::vec3 rotation, glm::vec3 scale, float
 	attackStrength = 100.0f;
 
 	currentAnimationType = IDLE;
+	networkAnimType = IDLE;
+	currentAnimationFrame = 0;
 
-	waitTime = 0;
+	animationExtraTime = 0;
+
+	active = false;
 }
 
 //Set the amount of damage the player does.
@@ -37,13 +48,14 @@ void Player::setAttackStrength(float dmg)
 	attackStrength = dmg;
 }
 
-gameobject * Player::getAnimModel()
+gameobject *Player::getAnimModel()
 {
 	if (currentAnimationFrame >= animationModels.size()) currentAnimationFrame = (animationModels.size() - 1);
 
-	animationModels[currentAnimationFrame].setPosition(glm::vec3(0.0, 4.0, 0.0));
-	animationModels[currentAnimationFrame].setRotation(glm::radians(getRotation()));
+	animationModels[currentAnimationFrame].setPosition(glm::vec3(0.0));
+	animationModels[currentAnimationFrame].setRotation(glm::radians(-glm::vec3(0.0f, getRotation().y + 180.0f, 0.0f)));
 	animationModels[currentAnimationFrame].setScale(glm::vec3(0.04f));
+
 	return &animationModels[currentAnimationFrame];
 }
 
@@ -51,7 +63,7 @@ int Player::loadAnimations(char * animationFolder, int frames, double fps, bool 
 {
 	s_anim a;
 	a.startframe = animationModels.size();
-	a.endframe	 = a.startframe + frames;
+	a.endframe	 = a.startframe + (frames - 1);
 	a.loop  = loop;
 	a.fps = fps;
 
@@ -65,6 +77,7 @@ int Player::loadAnimations(char * animationFolder, int frames, double fps, bool 
 		gameobject model = loader.loadObjFile(filepath.c_str(), false, false);
 		model.init();
 		model.addTexture(animationTexture);
+		model.setAmbientLight(0.15f);
 
 		animationModels.push_back(model);
 	}
@@ -74,21 +87,27 @@ int Player::loadAnimations(char * animationFolder, int frames, double fps, bool 
 
 void Player::updateAnimation(int currentType)
 {
+	if (!active) return;
+	if (currentType < 0 || currentType > 5) currentType = currentAnimationType;
+
 	bool animationEnded = false;
 
 	// Get the amount of time each animationframe has to take
 	double animationFrameTime = (1.0 / playerAnimations[currentAnimationType].fps);
 	// Calculate how many animaitionframes have past since the last update
-	int newFrames = (int)floor(deltaTime / animationFrameTime);
+	int newFrames = (int)floor((deltaTime + animationExtraTime) / animationFrameTime);
+
+	// Amount of time since last animation frame minus the time of the amount of frames we do this update.
+	animationExtraTime = ((deltaTime + animationExtraTime) - (newFrames * animationFrameTime));
 
 	// If the currentAnimationFrame plus the amount of new frames is less than or equal to the last frame of the animation, add the amount of newFrames to the animation
-	if ((currentAnimationFrame + newFrames) < playerAnimations[currentAnimationType].endframe) currentAnimationFrame += newFrames;
+	if ((currentAnimationFrame + newFrames) < (playerAnimations[currentAnimationType].endframe)) currentAnimationFrame += newFrames;
 	else if (playerAnimations[currentAnimationType].loop) {
 		// If we want to loop and the amount of new frames is over the end, get the amount of frames past the end.
 		int overEndFrames = (currentAnimationFrame + newFrames);
 		// While the overEndFrames is over the last frame of the animation, subtract the amount of frames in the animation from the amount of frames we are over the end.
-		while (overEndFrames > playerAnimations[currentAnimationType].endframe - 1) {
-			overEndFrames -= (playerAnimations[currentAnimationType].endframe - playerAnimations[currentAnimationType].startframe) - 1;
+		while (overEndFrames > (playerAnimations[currentAnimationType].endframe)) {
+			overEndFrames -= (playerAnimations[currentAnimationType].endframe - playerAnimations[currentAnimationType].startframe) + 1;
 		}
 
 		// Set the new current animationframe to be the new frame
@@ -99,13 +118,13 @@ void Player::updateAnimation(int currentType)
 	}
 	else {
 		// If the animation is at its end, and the animation does not loop, set the current frame to the last frame of the animation.
-		currentAnimationFrame = playerAnimations[currentAnimationType].endframe - 1;
+		currentAnimationFrame = playerAnimations[currentAnimationType].endframe;
 		// Set the animation to be ended
 		animationEnded = true;
 	}
 
 	// If the current animation is not the same as the requested animation and the current animation is done playing, set the new animation and start it.
-	if (currentType != currentAnimationType && animationEnded) {
+	if (currentType != currentAnimationType) {
 		currentAnimationType = currentType;
 		resetAnimation();
 	}
@@ -136,6 +155,4 @@ void Player::update()
 
 	// Set the player rotation from mouse input
 	setRotation(rot);
-
-	waitTime += deltaTime;
 }
