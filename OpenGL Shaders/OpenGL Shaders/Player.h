@@ -25,8 +25,8 @@ class Player : public Model
 
 		gameobject *getAnimModel();
 
-		int loadAnimations(char *animationFolder, int frames, double fps, bool loop);
-		GLuint animationTexture;
+		static int loadAnimations(char *animationFolder, int frames, double fps, bool loop);
+		static GLuint animationTexture;
 
 		void updateAnimation(int currentType);
 		void resetAnimation();

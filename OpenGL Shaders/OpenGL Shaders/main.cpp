@@ -132,6 +132,9 @@ Model FM_M_WELL;
 std::vector<gameobject> animationModels;
 std::vector<s_anim> playerAnimations;
 
+std::vector<gameobject> enemyAnimationModels;
+std::vector<s_anim> enemyAnimations;
+
 std::vector<texture2D> GuiElements;
 texture2D GuiCherry;
 
@@ -325,8 +328,6 @@ int main() {
 	//Initialise gameState
 	gameState = 1;
 
-	player.active = true;
-
 	// Hide the cursor
 	DisplayManager::gameCursor();
 //TODO: glfwCreateCursor can set a picture of the cursor
@@ -351,14 +352,6 @@ int main() {
 		/* ========= Add models to list for rendering ============== */
 
 		unsigned int i = 0;
-
-
-		modelRenderer.addToRenderList(player.getAnimModel());
-		for (int i = 0; i < MAX_LOBBYSIZE; i++) {
-			if (otherPlayers[i].active) {
-				modelRenderer.addToRenderList(otherPlayers[i].getAnimModel());
-			}
-		}
 		
 		switch (currentArea)
 		{
@@ -523,6 +516,13 @@ int main() {
 
 			modelRenderer.render(lights, &camera, glm::vec4(0, -1, 0, 100000));
 			normalModelRenderer.render(lights, &camera, glm::vec4(0, -1, 0, 100000));
+
+			player.getAnimModel()->Draw(modelRenderer.shader, lights, &camera, glm::vec4(0, -1, 0, 100000));
+			for (int i = 0; i < MAX_LOBBYSIZE; i++) {
+				if (otherPlayers[i].active) {
+					otherPlayers[i].getAnimModel()->Draw(modelRenderer.shader, lights, &camera, glm::vec4(0, -1, 0, 100000));
+				}
+			}
 		
 		sceneRenderer.unbindFrameBuffer();
 
@@ -1034,7 +1034,10 @@ void loadGraphics()
 	// Load all the graphics for the forrest map.
 	LoadGraphics_ForrestMap();
 
-	player.animationTexture = loader.loadTexture("res/PlayerAnimations/Textures/playerTextureArmy.bmp", true);
+	Player::animationTexture = loader.loadTexture("res/PlayerAnimations/Textures/playerTextureArmy.bmp", true);
+	
+//TODO: Enemy Animation Texture
+	Enemy::animationTexture = loader.loadTexture("res/EnemyAnimations/Textures/.bmp", true);
 }
 // Load Safe Area Graphics
 void LoadGraphics_SafeArea()
@@ -1187,13 +1190,16 @@ void loadModels()
 	// Load all the models for the forrest map.
 	LoadModels_ForrestMap();
 
-	player.loadAnimations("res/PlayerAnimations/Idle/", 32, 15, true);
-	player.loadAnimations("res/PlayerAnimations/Walk_Forward/", 31, 62, true);
-	player.loadAnimations("res/PlayerAnimations/Walk_Backward/", 31, 62, true);
-	player.loadAnimations("res/PlayerAnimations/Walk_Left/", 31, 62, true);
-	player.loadAnimations("res/PlayerAnimations/Walk_Right/", 31, 62, true);
-	player.loadAnimations("res/PlayerAnimations/Run_Forward/", 16, 62, true);
+	Player::loadAnimations("res/PlayerAnimations/Idle/", 32, 15, true);
+	Player::loadAnimations("res/PlayerAnimations/Walk_Forward/", 31, 62, true);
+	Player::loadAnimations("res/PlayerAnimations/Walk_Backward/", 31, 62, true);
+	Player::loadAnimations("res/PlayerAnimations/Walk_Left/", 31, 62, true);
+	Player::loadAnimations("res/PlayerAnimations/Walk_Right/", 31, 62, true);
+	Player::loadAnimations("res/PlayerAnimations/Run_Forward/", 16, 62, true);
 	
+//TODO: Enemy Animations
+	Enemy::loadAnimations("res/EnemyAnimations/Run_Forward/", 16, 62, true);
+	Enemy::loadAnimations("res/EnemyAnimations/Dying/", 16, 62, true);
 }
 // Load Safe Area Models
 void loadModels_SafeArea()
