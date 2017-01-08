@@ -8,19 +8,23 @@ texture2D::texture2D()
 	height = 0;
 	filesize = 0;
 	textureid = -1;
+
+	position = glm::vec2(0.0f);
+	rotation = 0.0f;
+	scale = glm::vec2(1.0f);
 }
 texture2D::~texture2D()
 {
 }
 
-void texture2D::loadImage(const char * filename, bool generateMipmaps)
+void texture2D::loadImage(const char * filename, bool bmpAlign, bool generateMipmaps)
 {
-	textureid = loader.loadTextureInVector(filename, generateMipmaps, data, width, height, filesize, imageType);
+	textureid = loader.loadTextureInData(filename, bmpAlign, generateMipmaps, data, width, height, filesize, imageType);
 }
 
-void texture2D::loadImage(const char * filename)
+void texture2D::loadImage(const char * filename, bool bmpAlign)
 {
-	loader.loadTextureInVector(filename, data, width, height, filesize, imageType);
+	loader.loadTextureInData(filename, bmpAlign, data, width, height, filesize, imageType);
 }
 
 glm::vec4 texture2D::getPixelValue(int x, int y)

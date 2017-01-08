@@ -82,6 +82,8 @@ void MasterRenderer::renderUpdated(std::vector<Light*> lights, Camera *camera, g
 	shader.loadClipPlane(clipPlane);
 	shader.loadLights(lights);
 
+	shader.loadCameraPosition(camera->position);
+
 	shader.loadViewMatrix(camera->getDifferentViewMatrix(newCameraPosition, newCameraRotation));
 	shader.loadProjectionMatrix(camera->getDifferentProjectionMatrix(fov));
 
@@ -116,6 +118,9 @@ void MasterRenderer::render(std::vector<Light*> lights, Camera *camera, glm::vec
 
 	shader.loadClipPlane(clipPlane);
 	shader.loadLights(lights);
+
+	shader.loadCameraPosition(camera->position);
+
 	shader.loadViewMatrix(camera->getViewMatrix());
 
 	GLfloat near_plane = camera->Near, far_plane = camera->Far;

@@ -72,9 +72,18 @@ void ShaderProgram::load(char vertexFile[], char fragmentFile[])
 	location_normalMap = getUniformLocation("normalMap");
 	location_shadowMap = getUniformLocation("shadowMap");
 
+	location_enviromentCubeMap = getUniformLocation("enviromentCubeMap");
+	location_usesReflectionCubeMap = getUniformLocation("usesReflectionCubeMap");
+	location_usesRefractionCubeMap = getUniformLocation("usesRefractionCubeMap");
+	location_reflectionRefractionRatio = getUniformLocation("reflectionRefractionRatio");
+	location_reflectionColourRatio = getUniformLocation("reflectionColourRatio");
+
 	location_plane = getUniformLocation("plane");
 	
 	location_lightSpaceMatrix = getUniformLocation("lightSpaceMatrix");
+	location_cameraPosition = getUniformLocation("cameraPosition");
+
+	location_tileAmount = getUniformLocation("tileAmount");
 
 	for (int i = 0; i < MAX_LIGHTS; i++) {
 		location_lightPosition[i] = getUniformLocation("lightPosition[" + std::to_string(i) + "]");
@@ -88,6 +97,10 @@ void ShaderProgram::load(char vertexFile[], char fragmentFile[])
 
 	glDeleteShader(vertexShaderID);
 	glDeleteShader(fragmentShaderID);
+
+	start();
+	loadTileAmount(glm::vec2(1.0f));
+	stop();
 
 	printf("Shader Loaded\n");
 }
@@ -176,6 +189,27 @@ void ShaderProgram::loadUseSpecularMap(bool useSpecularMap)
 {
 	loadBoolean(location_usesSpecularMap, useSpecularMap);
 }
+void ShaderProgram::loadUseReflectionCubeMap(bool useReflectionCubeMap)
+{
+	loadBoolean(location_usesReflectionCubeMap, useReflectionCubeMap);
+}
+void ShaderProgram::loadUseRefractionCubeMap(bool useRefractionCubeMap)
+{
+	loadBoolean(location_usesRefractionCubeMap, useRefractionCubeMap);
+}
+void ShaderProgram::loadReflectionRefractionRatio(float value)
+{
+	loadFloat(location_reflectionRefractionRatio, value);
+}
+void ShaderProgram::loadReflectionColourRatio(float value)
+{
+	loadFloat(location_reflectionColourRatio, value);
+}
+
+void ShaderProgram::loadCameraPosition(glm::vec3 pos)
+{
+	loadVector(location_cameraPosition, pos);
+}
 
 void ShaderProgram::connectTextureUnits() {
 	loadInt(location_texture0, 0);
@@ -186,6 +220,8 @@ void ShaderProgram::connectTextureUnits() {
 	loadInt(location_normalMap, 5);
 	loadInt(location_shadowMap, 6);
 	loadInt(location_specularMap, 7);
+
+	loadInt(location_enviromentCubeMap, 8);
 }
 
 void ShaderProgram::loadClipPlane(glm::vec4 plane) {
@@ -206,6 +242,11 @@ void ShaderProgram::loadLights(std::vector<Light*> lights) {
 			loadVector(location_attenuation[i], glm::vec3(1, 0, 0));
 		}
 	}
+}
+
+void ShaderProgram::loadTileAmount(glm::vec2 tiles)
+{
+	loadVector(location_tileAmount, tiles);
 }
 
 //Get the source of a file and create a shader id

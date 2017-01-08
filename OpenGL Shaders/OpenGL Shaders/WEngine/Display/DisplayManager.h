@@ -24,7 +24,9 @@ public:
 	static void hideWindow();
 
 	static void setCursorOption(int value);
-
+	static void showCursor();
+	static void hideCursor();
+	static void gameCursor();
 
 	static int updateDisplay();
 

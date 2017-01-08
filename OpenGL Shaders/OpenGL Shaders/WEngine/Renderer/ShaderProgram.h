@@ -28,11 +28,20 @@ public:
 	void loadLightSpaceMatrix(glm::mat4 matrix);
 	void loadUseSpecularMap(bool useSpecularMap);
 
+	void loadUseReflectionCubeMap(bool useReflectionCubeMap);
+	void loadUseRefractionCubeMap(bool useRefractionCubeMap);
+	void loadReflectionRefractionRatio(float value);
+	void loadReflectionColourRatio(float value);
+
+	void loadCameraPosition(glm::vec3 pos);
+
 	void connectTextureUnits();
 
 	void loadClipPlane(glm::vec4 plane);
 
 	void loadLights(std::vector<Light*> lights);
+
+	void loadTileAmount(glm::vec2 tiles);
 
 private:
 	int programID;
@@ -66,12 +75,21 @@ private:
 	GLuint	location_specularMap,
 			location_usesSpecularMap;
 
+	GLuint	location_enviromentCubeMap,
+			location_usesReflectionCubeMap,
+			location_usesRefractionCubeMap,
+			location_reflectionRefractionRatio,
+			location_reflectionColourRatio;
+
 	GLuint	location_numberOfRows,
 			location_offset;
 
 	GLuint	location_plane;
 
-	GLuint	location_lightSpaceMatrix;
+	GLuint	location_lightSpaceMatrix,
+		location_cameraPosition;
+
+	GLuint  location_tileAmount;
 
 	static int loadShader(char file[], GLenum type);
 

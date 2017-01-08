@@ -76,6 +76,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
+    <IncludePath>C:\libs\include;$(IncludePath)</IncludePath>
+    <ReferencePath>C:\libs\bin;$(ReferencePath)</ReferencePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -84,6 +86,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
+    <IncludePath>C:\libs\include;$(IncludePath)</IncludePath>
+    <ReferencePath>C:\libs\bin;$(ReferencePath)</ReferencePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -110,10 +114,13 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>C:\libs\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>C:\libs\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>opengl32.lib;glew32.lib;glew32s.lib;glfw3.lib;glfw3dll.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -147,16 +154,25 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>C:\libs\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>C:\libs\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>opengl32.lib;glew32.lib;glew32s.lib;glfw3.lib;glfw3dll.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="ClientGame.cpp" />
+    <ClCompile Include="ClientNetwork.cpp" />
+    <ClCompile Include="Enemy.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Model.cpp" />
+    <ClCompile Include="Player.cpp" />
+    <ClCompile Include="Tree.cpp" />
     <ClCompile Include="WEngine\Camera\camera.cpp" />
     <ClCompile Include="WEngine\Display\DisplayManager.cpp" />
     <ClCompile Include="WEngine\FrameBuffers\framebuffer.cpp" />
@@ -168,11 +184,14 @@
     <ClCompile Include="WEngine\lodePNG\lodepng.cpp" />
     <ClCompile Include="WEngine\PostProcessing\PostProcessRenderer.cpp" />
     <ClCompile Include="WEngine\PostProcessing\PostProcessShaderProgram.cpp" />
+    <ClCompile Include="WEngine\Renderer\GuiRenderer.cpp" />
+    <ClCompile Include="WEngine\Renderer\GuiShaderProgram.cpp" />
     <ClCompile Include="WEngine\Renderer\MasterRenderer.cpp" />
     <ClCompile Include="WEngine\Renderer\renderer.cpp" />
     <ClCompile Include="WEngine\Renderer\ShaderProgram.cpp" />
     <ClCompile Include="WEngine\Shadows\ShadowBox.cpp" />
     <ClCompile Include="WEngine\Shadows\ShadowMasterRenderer.cpp" />
+    <ClCompile Include="WEngine\Texture\Material.cpp" />
     <ClCompile Include="WEngine\Texture\texture2D.cpp" />
     <ClCompile Include="WEngine\Texture\textureCubemap.cpp" />
     <ClCompile Include="WEngine\Utils\File.cpp" />
@@ -181,6 +200,24 @@
     <ClCompile Include="WEngine\Water\WaterShaderProgram.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="actionTypes.h" />
+    <ClInclude Include="areaTypes.h" />
+    <ClInclude Include="ClientGame.h" />
+    <ClInclude Include="ClientNetwork.h" />
+    <ClInclude Include="ClientPackage.h" />
+    <ClInclude Include="ClientPacketLobby.h" />
+    <ClInclude Include="Enemy.h" />
+    <ClInclude Include="enemyData.h" />
+    <ClInclude Include="Header.h" />
+    <ClInclude Include="networkData.h" />
+    <ClInclude Include="NetworkHeader.h" />
+    <ClInclude Include="Model.h" />
+    <ClInclude Include="networkingErrors.h" />
+    <ClInclude Include="NetworkServices.h" />
+    <ClInclude Include="packetTypes.h" />
+    <ClInclude Include="Player.h" />
+    <ClInclude Include="playerData.h" />
+    <ClInclude Include="Tree.h" />
     <ClInclude Include="WEngine\Camera\camera.h" />
     <ClInclude Include="WEngine\Display\DisplayManager.h" />
     <ClInclude Include="WEngine\FrameBuffers\framebuffer.h" />
@@ -193,11 +230,14 @@
     <ClInclude Include="WEngine\lodePNG\lodepng.h" />
     <ClInclude Include="WEngine\PostProcessing\PostProcessRenderer.h" />
     <ClInclude Include="WEngine\PostProcessing\PostProcessShaderProgram.h" />
+    <ClInclude Include="WEngine\Renderer\GuiRenderer.h" />
+    <ClInclude Include="WEngine\Renderer\GuiShaderProgram.h" />
     <ClInclude Include="WEngine\Renderer\MasterRenderer.h" />
     <ClInclude Include="WEngine\Renderer\renderer.h" />
     <ClInclude Include="WEngine\Renderer\ShaderProgram.h" />
     <ClInclude Include="WEngine\Shadows\ShadowBox.h" />
     <ClInclude Include="WEngine\Shadows\ShadowMasterRenderer.h" />
+    <ClInclude Include="WEngine\Texture\Material.h" />
     <ClInclude Include="WEngine\Texture\texture2D.h" />
     <ClInclude Include="WEngine\Texture\textureCubemap.h" />
     <ClInclude Include="WEngine\Usage.h" />
@@ -213,6 +253,8 @@
     <None Include="WEngine\Shaders\AntiAliasing\SSAA.fs" />
     <None Include="WEngine\Shaders\Default\Default.fs" />
     <None Include="WEngine\Shaders\Default\Default.vs" />
+    <None Include="WEngine\Shaders\Gui\GuiShader.fs" />
+    <None Include="WEngine\Shaders\Gui\GuiShader.vs" />
     <None Include="WEngine\Shaders\NormalMaps\NormalMap.fs" />
     <None Include="WEngine\Shaders\NormalMaps\NormalMap.vs" />
     <None Include="WEngine\Shaders\PostProcessing\brightFilter.fs" />

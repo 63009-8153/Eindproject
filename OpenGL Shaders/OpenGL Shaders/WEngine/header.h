@@ -33,11 +33,11 @@
 #include <string.h>
 #include <stdarg.h>
 #include <algorithm>
-
+#include <float.h>
+#include <process.h>
 
 //Own includes
 #include "Utils/Maths.h"
-#include <float.h>
 
 //Define PI
 #define _PI       3.14159265358979323846   // pi

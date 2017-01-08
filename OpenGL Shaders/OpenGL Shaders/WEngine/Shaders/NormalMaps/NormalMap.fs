@@ -6,6 +6,7 @@ in vec3 toLightVector[4];
 in vec3 toCameraVector;
 in float visibility;
 in vec4 FragPosLightSpace;
+in vec3 viewVector;
 
 out vec4 out_Color;
 
@@ -15,6 +16,12 @@ uniform sampler2D shadowMap;
 uniform sampler2D specularMap;
 uniform float usesSpecularMap;
 
+uniform samplerCube enviromentCubeMap;
+uniform float usesReflectionCubeMap;
+uniform float usesRefractionCubeMap;
+uniform float reflectionRefractionRatio;
+uniform float reflectionColourRatio;
+
 uniform vec3 lightColour[4];
 uniform vec3 attenuation[4];
 uniform float shineDamper;
@@ -22,6 +29,8 @@ uniform float reflectivity;
 uniform vec3 skyColour;
 
 uniform float ambientLight;
+
+uniform vec2 tileAmount;
 
 const float levels = 3.0;
 const float useCelShading = 0;
@@ -61,11 +70,17 @@ void main(void){
 
 	float level;
 
+	vec2 textureCoords = pass_textureCoords;
+	vec2 tiledAmount = tileAmount;
+	if(tiledAmount.x < 1.0) tiledAmount.x = 1.0;
+	if(tiledAmount.y < 1.0) tiledAmount.y = 1.0;
+	textureCoords *= tiledAmount;
+
 	// Model normal
 	vec3 unitNormal = normalize(surfaceNormal);
 	
     // Get tangent space normal
-    vec3 tangent_normal = normalize(texture(normalMap, pass_textureCoords).xyz * 2.0 - 1.0);
+    vec3 tangent_normal = normalize(texture(normalMap, textureCoords).xyz * 2.0 - 1.0);
 		
 	// Calculate tangent
 	vec3 tangent = normalize( max( cross(unitNormal, vec3(0.0, 0.0, 1.0)) , cross(unitNormal, vec3(0.0, 1.0, 0.0)) ) );
@@ -115,13 +130,13 @@ void main(void){
 	float shadow = ShadowCalculation(FragPosLightSpace, unitNormal, normalize(toLightVector[0]));
 	totalDiffuse = max(totalDiffuse, ambientLight) * shadow;
 
-	vec4 textureColour = texture(textureSampler0, pass_textureCoords);
+	vec4 textureColour = texture(textureSampler0, textureCoords);
 	if(textureColour.a < 0.7){
 		discard;
 	}
 
 	if(usesSpecularMap > 0.5){
-		vec4 mapInfo = texture(specularMap, pass_textureCoords);
+		vec4 mapInfo = texture(specularMap, textureCoords);
 		totalSpecular *= mapInfo.r;
 		if(mapInfo.g > 0.5){
 			totalDiffuse = vec3(1.0);
@@ -136,4 +151,19 @@ void main(void){
 	//out_Color = vec4(vec3(shadow), 1.0);
 	out_Color = mix(vec4(skyColour, 1.0), out_Color, visibility);
 	//out_Color = vec4(vec3(tangent),1.0);
+
+	vec3 reflectedVector = reflect(viewVector, unitNormal);
+	vec3 refractedVector = refract(viewVector, unitNormal, 1.0/1.33);
+
+	vec4 reflecRefractColour;
+	if(usesReflectionCubeMap > 0.5){
+		reflecRefractColour = texture(enviromentCubeMap, reflectedVector);
+	}
+	if(usesRefractionCubeMap > 0.5){
+		vec4 refractedColour = texture(enviromentCubeMap, refractedVector);
+		reflecRefractColour = mix(reflecRefractColour, refractedColour, reflectionRefractionRatio);
+	}
+	if(usesReflectionCubeMap > 0.5) out_Color = mix(out_Color, reflecRefractColour, reflectionColourRatio);
+	//out_Color = reflecRefractColour;
+	//out_Color = vec4(reflectedVector, 1.0);
 }

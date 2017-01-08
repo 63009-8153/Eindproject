@@ -18,6 +18,10 @@ gameobject::gameobject(gameobject *object){
 	hasSpecularMap = false;
 	hasNormalMap = false;
 	hasShadowMap = false;
+	hasReflectionCubeMap = false;
+	hasRefractionCubeMap = false;
+
+	tiledAmount = glm::vec2(1.0f);
 }
 gameobject::gameobject(int _vaoID, int _vertexCount)
 {
@@ -34,6 +38,10 @@ gameobject::gameobject(int _vaoID, int _vertexCount)
 	hasSpecularMap = false;
 	hasNormalMap = false;
 	hasShadowMap = false;
+	hasReflectionCubeMap = false;
+	hasRefractionCubeMap = false;
+
+	tiledAmount = glm::vec2(1.0f);
 }
 
 //Gameobject destructor
@@ -58,11 +66,17 @@ void gameobject::addTexture(GLuint textID)
 {
 	textureID.push_back(textID);
 }
+
 void gameobject::setNormalMap(GLuint textID)
 {
 	normalMapID = textID;
 	hasNormalMap = true;
 }
+GLuint gameobject::getNormalMapID()
+{
+	return normalMapID;
+}
+
 void gameobject::setShadowMap(GLuint textID)
 {
 	shadowMapID = textID;
@@ -72,6 +86,7 @@ GLuint gameobject::getShadowMapID()
 {
 	return shadowMapID;
 }
+
 void gameobject::setSpecularMap(GLuint textID)
 {
 	specularMapID = textID;
@@ -80,6 +95,23 @@ void gameobject::setSpecularMap(GLuint textID)
 GLuint gameobject::getSpecularMapID()
 {
 	return specularMapID;
+}
+
+void gameobject::setEnviromentCubeMapID(GLuint textID)
+{
+	enviromentCubeMap = textID;
+}
+GLuint gameobject::getEnviromentCubeMapID()
+{
+	return enviromentCubeMap;
+}
+void gameobject::setReflectionRatio(float value)
+{
+	reflectionRatio = value;
+}
+void gameobject::setReflectionRefractionRatio(float value)
+{
+	reflectionRefractionRatio = value;
 }
 
 void gameobject::setTextureAtlasTexture(GLuint textID, int nrRows, int textIndex) 
@@ -107,10 +139,7 @@ GLuint gameobject::getTextureID(int position)
 	if (position >= textureID.size()) return -1;
 	return textureID[position];
 }
-GLuint gameobject::getNormalMapID()
-{
-	return normalMapID;
-}
+
 int gameobject::getTextureAmount()
 {
 	return textureID.size();
@@ -122,6 +151,16 @@ void gameobject::init(glm::vec3 pos, glm::vec3 rot, glm::vec3 scal)
 	rotation = rot;
 	scale = scal;
 
+	shineDamper = -1;
+	reflectivity = -1;
+
+	useFakeLighting = false;
+	cullFaces = true;
+
+	ambientLight = 0.1f;
+}
+void gameobject::init()
+{
 	shineDamper = -1;
 	reflectivity = -1;
 
@@ -200,4 +239,14 @@ float gameobject::getShineDamper()
 float gameobject::getReflectivity()
 {
 	return reflectivity;
+}
+
+void gameobject::setTiledAmount(glm::vec2 amount)
+{
+	tiledAmount = amount;
+}
+
+glm::vec2 gameobject::getTiledAmount()
+{
+	return tiledAmount;
 }

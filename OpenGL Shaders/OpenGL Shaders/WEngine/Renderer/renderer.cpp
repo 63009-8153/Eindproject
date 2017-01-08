@@ -23,6 +23,9 @@ void Renderer::render(std::map<GLuint, std::vector<gameobject>> *gameobjects)
 			//Prepare each models own variables
 			prepareModelInstance(&it->second[i]);
 
+			// Set the tile amount in the shader
+			shader->loadTileAmount(it->second[i].getTiledAmount());
+
 			//If the model is supposed to be using both sides, disable culling
 			if (!it->second[i].cullFaces) MasterRenderer::DisableCulling();
 
@@ -45,27 +48,10 @@ void Renderer::prepareMassModel(gameobject *object)
 	//Use the positions location
 	glEnableVertexAttribArray(0); //Enable using VAO position 0 (positions)
 	glEnableVertexAttribArray(1); //Enable using VAO position 1 (uv coords)
-	glEnableVertexAttribArray(2); //Enable using VAO position 2 (uv coords)
+	glEnableVertexAttribArray(2); //Enable using VAO position 2 (normal coords)
 	glEnableVertexAttribArray(3); //Enable using VAO position 3 (tangents)
 
 	int textureAmount = object->getTextureAmount();
-
-	//If model has a normal map load this to texture 5
-	if (object->hasNormalMap) {
-		glActiveTexture(GL_TEXTURE5);
-		glBindTexture(GL_TEXTURE_2D, object->getNormalMapID());
-	}
-
-	if (object->hasShadowMap) {
-		glActiveTexture(GL_TEXTURE6);
-		glBindTexture(GL_TEXTURE_2D, object->getShadowMapID());
-	}
-
-	shader->loadUseSpecularMap(object->hasSpecularMap);
-	if (object->hasSpecularMap) {
-		glActiveTexture(GL_TEXTURE7);
-		glBindTexture(GL_TEXTURE_2D, object->getSpecularMapID());
-	}
 
 	shader->loadNumberOfRows(object->numberOfRows);
 
@@ -96,7 +82,7 @@ void Renderer::unbindModel()
 {
 	glDisableVertexAttribArray(0); //Stop using VAO position 0 (positions)
 	glDisableVertexAttribArray(1); //Stop using VAO position 1 (uv coords)
-	glDisableVertexAttribArray(2); //Stop using VAO position 2 (uv coords)
+	glDisableVertexAttribArray(2); //Stop using VAO position 2 (normal coords)
 	glDisableVertexAttribArray(3); //Stop using VAO position 3 (tangents)
 
 	//Unbind vao
@@ -108,6 +94,33 @@ void Renderer::prepareModelInstance(gameobject *object)
 	//Load the hasTransparency in the shader
 	shader->loadFakeLighting(object->useFakeLighting);
 	shader->loadAmbientLight(object->getAmbientLight());
+
+	//If model has a normal map load this to texture 5
+	if (object->hasNormalMap) {
+		glActiveTexture(GL_TEXTURE5);
+		glBindTexture(GL_TEXTURE_2D, object->getNormalMapID());
+	}
+	//If model has a shadow map load this to texture 6
+	if (object->hasShadowMap) {
+		glActiveTexture(GL_TEXTURE6);
+		glBindTexture(GL_TEXTURE_2D, object->getShadowMapID());
+	}
+	//If model has a specular map load this to texture 7
+	shader->loadUseSpecularMap(object->hasSpecularMap);
+	if (object->hasSpecularMap) {
+		glActiveTexture(GL_TEXTURE7);
+		glBindTexture(GL_TEXTURE_2D, object->getSpecularMapID());
+	}
+	//If model has a enviroment cubemap load this to texture 8
+	if (object->hasReflectionCubeMap) {
+		glActiveTexture(GL_TEXTURE8);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, object->getEnviromentCubeMapID());
+	}
+	shader->loadUseReflectionCubeMap(object->hasReflectionCubeMap);
+	shader->loadUseRefractionCubeMap(object->hasRefractionCubeMap);
+
+	shader->loadReflectionRefractionRatio(object->reflectionRefractionRatio);
+	shader->loadReflectionColourRatio(object->reflectionRatio);
 
 	//Create a transformation matrix from the object data
 	glm::mat4 transformationMatrix = Maths::createTransformationMatrix(object->getPosition(), object->getRotation(), object->getScale());

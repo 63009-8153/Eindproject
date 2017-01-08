@@ -13,178 +13,350 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="WEngine">
+      <UniqueIdentifier>{b387e95b-f70e-4a95-be33-e9860b8aca21}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="WEngine\Header Files">
+      <UniqueIdentifier>{be1a7737-0062-4347-8e6b-c10b477e7150}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="WEngine\Source Files">
+      <UniqueIdentifier>{0d40ef9c-0d9a-4864-9112-bae8fe9a8f39}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="WEngine\Shaders">
+      <UniqueIdentifier>{be95e04b-1d9c-44cc-bc21-4ab7a6e0b10c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Game">
+      <UniqueIdentifier>{7f8ff266-4a3d-4c42-93bc-28ef4b381fbb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Network">
+      <UniqueIdentifier>{36c439d0-1fdc-4dbd-9d41-7026e4f53d62}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Game\Header Files">
+      <UniqueIdentifier>{420c71f7-8dfd-4ced-abf4-3e02bfc1556f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Game\Source Files">
+      <UniqueIdentifier>{33c61b7c-a64f-4c1e-9127-f8f5fd7a63ed}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Network\Header Files">
+      <UniqueIdentifier>{665a4467-3353-455a-bda7-d079ffc8bc11}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Network\Source Files">
+      <UniqueIdentifier>{d2728fbc-a9b2-47c8-94ab-dac1d99abd20}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="WEngine\Water\WaterMasterRenderer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="WEngine\Water\WaterShaderProgram.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="WEngine\Utils\File.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="WEngine\Utils\loader.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="WEngine\Shadows\ShadowBox.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="WEngine\Shadows\ShadowMasterRenderer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="WEngine\Renderer\MasterRenderer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="WEngine\Renderer\renderer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="WEngine\Renderer\ShaderProgram.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="WEngine\PostProcessing\PostProcessRenderer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="WEngine\Lights\Light.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="WEngine\GameObject\gameobject.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="WEngine\GameObject\Terrain.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="WEngine\GameObject\WaterTile.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="WEngine\FrameBuffers\framebuffer.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="WEngine\Camera\camera.cpp">
+      <Filter>WEngine\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="WEngine\Display\DisplayManager.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>WEngine\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="WEngine\Camera\camera.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="WEngine\Utils\File.cpp">
+      <Filter>WEngine\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="WEngine\FrameBuffers\framebuffer.cpp">
+      <Filter>WEngine\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="WEngine\GameObject\gameobject.cpp">
+      <Filter>WEngine\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="WEngine\Renderer\GuiRenderer.cpp">
+      <Filter>WEngine\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="WEngine\Renderer\GuiShaderProgram.cpp">
+      <Filter>WEngine\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="WEngine\Lights\Light.cpp">
+      <Filter>WEngine\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="WEngine\Utils\loader.cpp">
+      <Filter>WEngine\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="WEngine\lodePNG\lodepng.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>WEngine\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="WEngine\Renderer\MasterRenderer.cpp">
+      <Filter>WEngine\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="WEngine\Texture\Material.cpp">
+      <Filter>WEngine\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="WEngine\PostProcessing\PostProcessRenderer.cpp">
+      <Filter>WEngine\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="WEngine\PostProcessing\PostProcessShaderProgram.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>WEngine\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="WEngine\Texture\texture2D.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="WEngine\Renderer\renderer.cpp">
+      <Filter>WEngine\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="WEngine\Renderer\ShaderProgram.cpp">
+      <Filter>WEngine\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="WEngine\Shadows\ShadowBox.cpp">
+      <Filter>WEngine\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="WEngine\Shadows\ShadowMasterRenderer.cpp">
+      <Filter>WEngine\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="WEngine\GameObject\skybox.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>WEngine\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="WEngine\GameObject\Terrain.cpp">
+      <Filter>WEngine\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="WEngine\Texture\texture2D.cpp">
+      <Filter>WEngine\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="WEngine\Texture\textureCubemap.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>WEngine\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="WEngine\Water\WaterMasterRenderer.cpp">
+      <Filter>WEngine\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="WEngine\Water\WaterShaderProgram.cpp">
+      <Filter>WEngine\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="WEngine\GameObject\WaterTile.cpp">
+      <Filter>WEngine\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Model.cpp">
+      <Filter>Game\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Enemy.cpp">
+      <Filter>Game\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Player.cpp">
+      <Filter>Game\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ClientNetwork.cpp">
+      <Filter>Network\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ClientGame.cpp">
+      <Filter>Network\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Tree.cpp">
+      <Filter>Game\Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="WEngine\Usage.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="WEngine\header.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="WEngine\Water\WaterMasterRenderer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="WEngine\Water\WaterShaderProgram.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="WEngine\Utils\File.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="WEngine\Utils\loader.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="WEngine\Utils\Maths.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="WEngine\Shadows\ShadowBox.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="WEngine\Shadows\ShadowMasterRenderer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="WEngine\Renderer\MasterRenderer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="WEngine\Renderer\renderer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="WEngine\Renderer\ShaderProgram.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="WEngine\PostProcessing\PostProcessRenderer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="WEngine\Lights\Light.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="WEngine\GameObject\gameobject.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="WEngine\GameObject\Terrain.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="WEngine\GameObject\WaterTile.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="WEngine\FrameBuffers\framebuffer.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="WEngine\Camera\camera.h">
+      <Filter>WEngine\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="WEngine\Display\DisplayManager.h">
-      <Filter>Header Files</Filter>
+      <Filter>WEngine\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="WEngine\Camera\camera.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="WEngine\Utils\File.h">
+      <Filter>WEngine\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="WEngine\FrameBuffers\framebuffer.h">
+      <Filter>WEngine\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="WEngine\GameObject\gameobject.h">
+      <Filter>WEngine\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="WEngine\Renderer\GuiRenderer.h">
+      <Filter>WEngine\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="WEngine\Renderer\GuiShaderProgram.h">
+      <Filter>WEngine\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="WEngine\Lights\Light.h">
+      <Filter>WEngine\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="WEngine\Utils\loader.h">
+      <Filter>WEngine\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="WEngine\lodePNG\lodepng.h">
-      <Filter>Header Files</Filter>
+      <Filter>WEngine\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="WEngine\Renderer\MasterRenderer.h">
+      <Filter>WEngine\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="WEngine\Texture\Material.h">
+      <Filter>WEngine\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="WEngine\Utils\Maths.h">
+      <Filter>WEngine\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="WEngine\PostProcessing\PostProcessRenderer.h">
+      <Filter>WEngine\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="WEngine\PostProcessing\PostProcessShaderProgram.h">
-      <Filter>Header Files</Filter>
+      <Filter>WEngine\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="WEngine\Texture\texture2D.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="WEngine\Renderer\renderer.h">
+      <Filter>WEngine\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="WEngine\Renderer\ShaderProgram.h">
+      <Filter>WEngine\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="WEngine\Shadows\ShadowBox.h">
+      <Filter>WEngine\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="WEngine\Shadows\ShadowMasterRenderer.h">
+      <Filter>WEngine\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="WEngine\GameObject\skybox.h">
-      <Filter>Header Files</Filter>
+      <Filter>WEngine\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="WEngine\GameObject\Terrain.h">
+      <Filter>WEngine\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="WEngine\Texture\texture2D.h">
+      <Filter>WEngine\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="WEngine\Texture\textureCubemap.h">
-      <Filter>Header Files</Filter>
+      <Filter>WEngine\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="WEngine\Water\WaterMasterRenderer.h">
+      <Filter>WEngine\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="WEngine\Water\WaterShaderProgram.h">
+      <Filter>WEngine\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="WEngine\GameObject\WaterTile.h">
+      <Filter>WEngine\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="WEngine\Usage.h">
+      <Filter>WEngine\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="WEngine\header.h">
+      <Filter>WEngine\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Model.h">
+      <Filter>Game\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Enemy.h">
+      <Filter>Game\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Player.h">
+      <Filter>Game\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Header.h">
+      <Filter>Game\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="NetworkServices.h">
+      <Filter>Network\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="NetworkHeader.h">
+      <Filter>Network\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="playerData.h">
+      <Filter>Network\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="enemyData.h">
+      <Filter>Network\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="packetTypes.h">
+      <Filter>Network\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="actionTypes.h">
+      <Filter>Network\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ClientPackage.h">
+      <Filter>Network\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ClientPacketLobby.h">
+      <Filter>Network\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="networkData.h">
+      <Filter>Network\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ClientNetwork.h">
+      <Filter>Network\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ClientGame.h">
+      <Filter>Network\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="networkingErrors.h">
+      <Filter>Network\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="areaTypes.h">
+      <Filter>Network\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Tree.h">
+      <Filter>Game\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="WEngine\Shaders\Water\WaterShader.fs" />
-    <None Include="WEngine\Shaders\Water\WaterShader.vs" />
-    <None Include="WEngine\Shaders\Terrain\Terrain.fs" />
-    <None Include="WEngine\Shaders\Terrain\Terrain.vs" />
-    <None Include="WEngine\Shaders\Shadows\ShadowShader.fs" />
-    <None Include="WEngine\Shaders\Shadows\ShadowShader.vs" />
-    <None Include="WEngine\Shaders\PostProcessing\ContrastEffect.fs" />
-    <None Include="WEngine\Shaders\PostProcessing\ContrastEffect.vs" />
-    <None Include="WEngine\Shaders\NormalMaps\NormalMap.fs" />
-    <None Include="WEngine\Shaders\NormalMaps\NormalMap.vs" />
-    <None Include="WEngine\Shaders\Default\Default.fs" />
-    <None Include="WEngine\Shaders\Default\Default.vs" />
-    <None Include="WEngine\Shaders\PostProcessing\GaussionBlur.fs" />
-    <None Include="WEngine\Shaders\PostProcessing\HorizontalGaussionBlur.vs" />
-    <None Include="WEngine\Shaders\PostProcessing\VerticalGaussionBlur.vs" />
-    <None Include="WEngine\Shaders\PostProcessing\brightFilter.fs" />
-    <None Include="WEngine\Shaders\PostProcessing\combineFilter.fs" />
-    <None Include="WEngine\Shaders\PostProcessing\simpleVertex.vs" />
-    <None Include="WEngine\Shaders\Skybox\Skybox.fs" />
-    <None Include="WEngine\Shaders\Skybox\Skybox.vs" />
-    <None Include="WEngine\Shaders\AntiAliasing\AAVertex.vs" />
-    <None Include="WEngine\Shaders\AntiAliasing\FXAA.fs" />
-    <None Include="WEngine\Shaders\AntiAliasing\SSAA.fs" />
+    <None Include="WEngine\Shaders\AntiAliasing\AAVertex.vs">
+      <Filter>WEngine\Shaders</Filter>
+    </None>
+    <None Include="WEngine\Shaders\PostProcessing\brightFilter.fs">
+      <Filter>WEngine\Shaders</Filter>
+    </None>
+    <None Include="WEngine\Shaders\PostProcessing\combineFilter.fs">
+      <Filter>WEngine\Shaders</Filter>
+    </None>
+    <None Include="WEngine\Shaders\PostProcessing\ContrastEffect.fs">
+      <Filter>WEngine\Shaders</Filter>
+    </None>
+    <None Include="WEngine\Shaders\PostProcessing\ContrastEffect.vs">
+      <Filter>WEngine\Shaders</Filter>
+    </None>
+    <None Include="WEngine\Shaders\Default\Default.fs">
+      <Filter>WEngine\Shaders</Filter>
+    </None>
+    <None Include="WEngine\Shaders\Default\Default.vs">
+      <Filter>WEngine\Shaders</Filter>
+    </None>
+    <None Include="WEngine\Shaders\AntiAliasing\FXAA.fs">
+      <Filter>WEngine\Shaders</Filter>
+    </None>
+    <None Include="WEngine\Shaders\PostProcessing\GaussionBlur.fs">
+      <Filter>WEngine\Shaders</Filter>
+    </None>
+    <None Include="WEngine\Shaders\Gui\GuiShader.fs">
+      <Filter>WEngine\Shaders</Filter>
+    </None>
+    <None Include="WEngine\Shaders\Gui\GuiShader.vs">
+      <Filter>WEngine\Shaders</Filter>
+    </None>
+    <None Include="WEngine\Shaders\PostProcessing\HorizontalGaussionBlur.vs">
+      <Filter>WEngine\Shaders</Filter>
+    </None>
+    <None Include="WEngine\Shaders\NormalMaps\NormalMap.fs">
+      <Filter>WEngine\Shaders</Filter>
+    </None>
+    <None Include="WEngine\Shaders\NormalMaps\NormalMap.vs">
+      <Filter>WEngine\Shaders</Filter>
+    </None>
+    <None Include="WEngine\Shaders\Shadows\ShadowShader.fs">
+      <Filter>WEngine\Shaders</Filter>
+    </None>
+    <None Include="WEngine\Shaders\Shadows\ShadowShader.vs">
+      <Filter>WEngine\Shaders</Filter>
+    </None>
+    <None Include="WEngine\Shaders\PostProcessing\simpleVertex.vs">
+      <Filter>WEngine\Shaders</Filter>
+    </None>
+    <None Include="WEngine\Shaders\Skybox\Skybox.fs">
+      <Filter>WEngine\Shaders</Filter>
+    </None>
+    <None Include="WEngine\Shaders\Skybox\Skybox.vs">
+      <Filter>WEngine\Shaders</Filter>
+    </None>
+    <None Include="WEngine\Shaders\AntiAliasing\SSAA.fs">
+      <Filter>WEngine\Shaders</Filter>
+    </None>
+    <None Include="WEngine\Shaders\Terrain\Terrain.fs">
+      <Filter>WEngine\Shaders</Filter>
+    </None>
+    <None Include="WEngine\Shaders\Terrain\Terrain.vs">
+      <Filter>WEngine\Shaders</Filter>
+    </None>
+    <None Include="WEngine\Shaders\PostProcessing\VerticalGaussionBlur.vs">
+      <Filter>WEngine\Shaders</Filter>
+    </None>
+    <None Include="WEngine\Shaders\Water\WaterShader.fs">
+      <Filter>WEngine\Shaders</Filter>
+    </None>
+    <None Include="WEngine\Shaders\Water\WaterShader.vs">
+      <Filter>WEngine\Shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>
