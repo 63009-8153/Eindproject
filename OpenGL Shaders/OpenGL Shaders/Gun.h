@@ -1,0 +1,23 @@
+#ifndef __GUN__
+#define __GUN__
+
+#include "Header.h"
+
+#include "Model.h"
+#include "Player.h"
+
+extern Model GUN_WALTER;
+extern Player player;
+
+class Gun : public Model
+{
+public:
+	Gun();
+	~Gun();
+
+
+
+private:
+
+};
+#endif // !__GUN__

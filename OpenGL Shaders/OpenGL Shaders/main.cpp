@@ -107,6 +107,7 @@ GLuint	FM_T_RAIL[2];
 GLuint	FM_T_TOWNHOUSE;
 GLuint	FM_T_WELL,
 		FM_TN_WELL;
+GLuint  T_GUN_WALTER;
 
 Tree  trees;
 Terrain FM_M_FLATTERRAIN;
@@ -128,6 +129,7 @@ Model FM_M_STATUE;
 Model FM_M_RAIL[2];
 Model FM_M_TOWNHOUSE[2];
 Model FM_M_WELL;
+Model GUN_WALTER;
 
 std::vector<texture2D> GuiElements;
 texture2D GuiCherry;
@@ -1179,7 +1181,9 @@ void loadModels()
 	// Load all the models for the forrest map.
 	LoadModels_ForrestMap();
 
-	loadModel(Walter, "res/Models/objects/walter_pk_48/walter.obj",);
+
+	T_GUN_WALTER = loader.loadTexture("res/Models/objects/walter_pk_48/black.bmp", false);
+	loadModel(GUN_WALTER, "res/Models/objects/walter_pk_48/walter.obj", glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), T_GUN_WALTER, 100.0f, 0.1f, 0.4f);
 
 
 }

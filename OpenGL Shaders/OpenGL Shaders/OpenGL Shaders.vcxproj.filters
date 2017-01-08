@@ -141,6 +141,9 @@
     <ClCompile Include="Tree.cpp">
       <Filter>Game\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Gun.cpp">
+      <Filter>Game\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="WEngine\Camera\camera.h">
@@ -279,6 +282,9 @@
       <Filter>Network\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Tree.h">
+      <Filter>Game\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Gun.h">
       <Filter>Game\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
