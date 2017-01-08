@@ -1178,6 +1178,10 @@ void loadModels()
 
 	// Load all the models for the forrest map.
 	LoadModels_ForrestMap();
+
+	loadModel(Walter, "res/Models/objects/walter_pk_48/walter.obj",);
+
+
 }
 // Load Safe Area Models
 void loadModels_SafeArea()
