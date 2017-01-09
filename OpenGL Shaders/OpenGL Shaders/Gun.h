@@ -15,6 +15,7 @@ public:
 	Gun();
 	~Gun();
 
+	void Init(glm::vec3 position, glm::vec3 rotation);
 
 
 private:
