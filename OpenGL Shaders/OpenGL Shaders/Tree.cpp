@@ -60,9 +60,9 @@ void Tree::initialseNewTrees()
 	}
 }
 
-int Tree::getTreeCount()
+unsigned int Tree::getTreeCount()
 {
-	return (int)trees.size();
+	return (unsigned int)trees.size();
 }
 
 gameobject* Tree::getTreeAt(int iteration)

@@ -2,6 +2,8 @@
 
 #include "Player.h"
 
+GLuint Player::animationTexture;
+
 //Constructor
 Player::Player()
 {

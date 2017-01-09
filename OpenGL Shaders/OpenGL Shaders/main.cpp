@@ -252,7 +252,7 @@ void loadTreeModels();
 
 
 int main() {
-
+	player.active = true;
 	// ============  NETWORKING LOGIC =================
 
 	// Initialise, set the client and connect to the server.
@@ -504,11 +504,12 @@ int main() {
 		glFinish();
 		frameStartTime = glfwGetTime();
 
-		//Render scene to multisampled framebuffer
+		//Render scene to multisampled anti-aliased framebuffer
 		sceneRenderer.bindRenderToTextureFrameBuffer();
 			MasterRenderer::prepare();
 
 			//Render everything
+
 			skybox.render(&camera);
 
 			terrainRenderer.render(lights, &camera, glm::vec4(0, -1, 0, 100000));
@@ -517,6 +518,7 @@ int main() {
 			modelRenderer.render(lights, &camera, glm::vec4(0, -1, 0, 100000));
 			normalModelRenderer.render(lights, &camera, glm::vec4(0, -1, 0, 100000));
 
+			// Render all player animations
 			player.getAnimModel()->Draw(modelRenderer.shader, lights, &camera, glm::vec4(0, -1, 0, 100000));
 			for (int i = 0; i < MAX_LOBBYSIZE; i++) {
 				if (otherPlayers[i].active) {
@@ -1037,7 +1039,7 @@ void loadGraphics()
 	Player::animationTexture = loader.loadTexture("res/PlayerAnimations/Textures/playerTextureArmy.bmp", true);
 	
 //TODO: Enemy Animation Texture
-	Enemy::animationTexture = loader.loadTexture("res/EnemyAnimations/Textures/.bmp", true);
+	//Enemy::animationTexture = loader.loadTexture("res/EnemyAnimations/Textures/.bmp", true);
 }
 // Load Safe Area Graphics
 void LoadGraphics_SafeArea()
@@ -1087,7 +1089,6 @@ void LoadGraphics_SafeArea()
 	SA_T_SandBag  = loader.loadTexture("res/Safe_Area/SandBags/Textures/sandbags_d.bmp", true);
 	SA_TN_SandBag = loader.loadTexture("res/Safe_Area/SandBags/Textures/sandbags_n.bmp", false);
 }
-
 // Load Forrest Map Graphics
 void LoadGraphics_ForrestMap()
 {
@@ -1182,6 +1183,7 @@ void LoadGraphics_ForrestMap()
 }
 
 // Load all models
+
 void loadModels()
 {
 	// Load all the models for the safe area.
@@ -1198,8 +1200,8 @@ void loadModels()
 	Player::loadAnimations("res/PlayerAnimations/Run_Forward/", 16, 62, true);
 	
 //TODO: Enemy Animations
-	Enemy::loadAnimations("res/EnemyAnimations/Run_Forward/", 16, 62, true);
-	Enemy::loadAnimations("res/EnemyAnimations/Dying/", 16, 62, true);
+	//Enemy::loadAnimations("res/EnemyAnimations/Run_Forward/", 16, 62, true);
+	//Enemy::loadAnimations("res/EnemyAnimations/Dying/", 16, 62, true);
 }
 // Load Safe Area Models
 void loadModels_SafeArea()

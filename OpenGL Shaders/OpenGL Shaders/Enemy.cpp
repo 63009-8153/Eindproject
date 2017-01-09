@@ -2,6 +2,8 @@
 
 #include "Enemy.h"
 
+GLuint Enemy::animationTexture;
+
 //Constructor
 Enemy::Enemy()
 {
