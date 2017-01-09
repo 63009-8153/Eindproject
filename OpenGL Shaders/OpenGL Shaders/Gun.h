@@ -7,7 +7,6 @@
 #include "Player.h"
 
 extern Model GUN_WALTER;
-extern Player player;
 
 class Gun : public Model
 {
@@ -16,7 +15,7 @@ public:
 	~Gun();
 
 	void Init(glm::vec3 position, glm::vec3 rotation);
-
+	void Update(glm::vec3 position, glm::vec3 rotation);
 
 private:
 

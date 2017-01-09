@@ -25,6 +25,8 @@ void Player::init(glm::vec3 position, glm::vec3 rotation, glm::vec3 scale, float
 
 	//Set attackStrength to knife damage
 	attackStrength = 100.0f;
+
+	gun.Init(position, rotation);
 }
 
 //Set the amount of damage the player does.
