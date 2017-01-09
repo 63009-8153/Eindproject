@@ -322,8 +322,12 @@ int main() {
 
 	//renderWaterCubeMap();
 
-	// ===  Add GUI elements to the renderig list  ===
+	// ===  Add GUI elements to the rendering list  ===
 	//GuiElements.push_back(GuiCherry);
+
+	// Clear the GuiElements from the renderlist
+	//GuiElements.clear();
+
 
 	//Initialise gameState
 	gameState = 1;
@@ -334,6 +338,14 @@ int main() {
 
 	// Set the mouse in the middle of the screen at start so there is no unwanted staring rotation
 	handleMouseInput(true);
+
+	/*
+	//Mouse button input
+	glfwSetInputMode(window, GLFW_STICKY_MOUSE_BUTTONS, 1);
+	int state = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
+	if (state == GLFW_PRESS)
+		upgrade_cow();
+	*/
 	
 	do {
 
@@ -519,8 +531,8 @@ int main() {
 			normalModelRenderer.render(lights, &camera, glm::vec4(0, -1, 0, 100000));
 
 			// Render all player animations
-			player.getAnimModel()->Draw(modelRenderer.shader, lights, &camera, glm::vec4(0, -1, 0, 100000));
-			for (int i = 0; i < MAX_LOBBYSIZE; i++) {
+			player.getAnimModel()->Draw(modelRenderer.shader, lights, &camera, glm::vec4(0, -1, 0, 100000)); // Own player
+			for (int i = 0; i < MAX_LOBBYSIZE; i++) { // Other players
 				if (otherPlayers[i].active) {
 					otherPlayers[i].getAnimModel()->Draw(modelRenderer.shader, lights, &camera, glm::vec4(0, -1, 0, 100000));
 				}
@@ -744,10 +756,13 @@ void loadAndInitialiseGUI()
 {
 	// Load cherry tree as GUI element
 	GuiCherry.loadImage("res/Cherry/cherry.bmp", true, false);
-	GuiCherry.rotation = glm::radians(10.0f);
-	GuiCherry.scale = glm::vec2(0.5f);
-	GuiCherry.position = glm::vec2(-0.5f, 0.5f);
+		GuiCherry.setRotation(10.0f);
+		GuiCherry.setScale(glm::vec2(0.5f));
+		GuiCherry.setPosition(glm::vec2(0.5f, 1.5f));
+
+
 }
+
 // Render water textures
 void renderWaterTextures()
 {
