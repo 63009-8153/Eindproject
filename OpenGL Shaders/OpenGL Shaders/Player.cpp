@@ -1,4 +1,4 @@
-#include "Header.h"
+
 
 #include "Player.h"
 
@@ -38,5 +38,7 @@ void Player::setAttackStrength(float dmg)
 //Update the player
 void Player::update()
 {
+	gun.Update(getPosition(), getRotation());
 	//TODO: player update
+	
 }

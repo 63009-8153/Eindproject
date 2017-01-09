@@ -4,15 +4,16 @@
 #include "Header.h"
 
 #include "Model.h"
-#include "Player.h"
 
 extern Model GUN_WALTER;
 
-class Gun : public Model
+class Gun
 {
 public:
 	Gun();
 	~Gun();
+
+	Model gun_model;
 
 	void Init(glm::vec3 position, glm::vec3 rotation);
 	void Update(glm::vec3 position, glm::vec3 rotation);
