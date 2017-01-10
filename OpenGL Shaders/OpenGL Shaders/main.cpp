@@ -356,16 +356,16 @@ int main() {
 		case SAFE_AREA:
 			
 			// Add Floor model to renderList
-			//modelRenderer.addToRenderList(SA_M_Floor.getModel());
+			modelRenderer.addToRenderList(SA_M_Floor.getModel());
 			// Add Building models to renderList
-			//for(i = 0; i < (1 * 5); i++) modelRenderer.addToRenderList(SA_M_Building[i].getModel());
+			for(i = 0; i < (1 * 5); i++) modelRenderer.addToRenderList(SA_M_Building[i].getModel());
 			// Add Barrel models to renderList
 			for (i = 0; i < 6; i++) modelRenderer.addToRenderList(SA_M_Barrels[i].getModel());
 			// Add Crate2 model to renderList
 			modelRenderer.addToRenderList(SA_M_Crate2.getModel());
 
 			// add Walter_pk_48
-			normalModelRenderer.addToRenderList(GUN_WALTER.getModel());
+			normalModelRenderer.addToRenderList(player.gun.gun_model.getModel());
 
 			// Add AmmoBox models to renderList
 			for (i = 0; i < (3 * 7); i++) normalModelRenderer.addToRenderList(SA_M_AmmoBoxes[i].getModel());
