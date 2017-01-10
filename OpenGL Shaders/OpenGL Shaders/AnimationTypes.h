@@ -13,6 +13,12 @@ enum animationType{
 	DYING			= 6
 };
 
+enum enemyAnimationType {
+	WALK_FORWARD = 0,
+	ATTACK = 1,
+	DYING = 2
+};
+
 // Struct for animation
 typedef struct {
 	int startframe,

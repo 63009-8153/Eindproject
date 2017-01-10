@@ -38,6 +38,9 @@ public:
 	// Update the player of own playerData
 	void getPlayerData(Player &player);
 
+	// Update the enemy with specified enemyData index
+	void getEnemyData(Enemy &enem, int index);
+
 	// Send playerData to the server.
 	// This function is only to be send during the game
 	void sendPlayerData();

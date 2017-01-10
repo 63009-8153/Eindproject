@@ -40,6 +40,8 @@ float mouseSensitivity = 1.0f;
 Player player;
 Player otherPlayers[MAX_LOBBYSIZE];
 
+Enemy enemies[MAX_ENEMIES];
+
 Loader loader;
 Camera camera;
 
@@ -252,7 +254,6 @@ void loadTreeModels();
 
 
 int main() {
-	player.active = true;
 	// ============  NETWORKING LOGIC =================
 
 	// Initialise, set the client and connect to the server.
@@ -518,11 +519,19 @@ int main() {
 			modelRenderer.render(lights, &camera, glm::vec4(0, -1, 0, 100000));
 			normalModelRenderer.render(lights, &camera, glm::vec4(0, -1, 0, 100000));
 
-			// Render all player animations
+			// Render own player animation
 			player.getAnimModel()->Draw(modelRenderer.shader, lights, &camera, glm::vec4(0, -1, 0, 100000));
+			// Render all other player's animations
 			for (int i = 0; i < MAX_LOBBYSIZE; i++) {
 				if (otherPlayers[i].active) {
 					otherPlayers[i].getAnimModel()->Draw(modelRenderer.shader, lights, &camera, glm::vec4(0, -1, 0, 100000));
+				}
+			}
+
+			// Render all enemy animations
+			for (int i = 0; i < MAX_ENEMIES; i++) {
+				if (enemies[i].active) {
+					enemies[i].getAnimModel()->Draw(normalModelRenderer.shader, lights, &camera, glm::vec4(0, -1, 0, 100000));
 				}
 			}
 		
@@ -594,10 +603,22 @@ int main() {
 		// Poll all events
 		glfwPollEvents();
 
+		// Update own player
 		player.update();
+
+		// Update own animation
 		player.updateAnimation(player.networkAnimType);
+
 		for (int i = 0; i < MAX_LOBBYSIZE; i++) {
+			// Update all other player's animation
 			otherPlayers[i].updateAnimation(otherPlayers[i].networkAnimType);
+		}
+
+		for (int i = 0; i < MAX_ENEMIES; i++) {
+			// Update the enemy data with the data received from the server
+			client.getEnemyData(enemies[i], i);
+			// Update the enemy, this will also update the animation
+			enemies[i].update();
 		}
 
 		// Get and update the player with its new position, it's health and the rest But not the rotation!!!
@@ -1037,9 +1058,9 @@ void loadGraphics()
 	LoadGraphics_ForrestMap();
 
 	Player::animationTexture = loader.loadTexture("res/PlayerAnimations/Textures/playerTextureArmy.bmp", true);
-	
-//TODO: Enemy Animation Texture
-	//Enemy::animationTexture = loader.loadTexture("res/EnemyAnimations/Textures/.bmp", true);
+
+	Enemy::animationTexture = loader.loadTexture("res/EnemyAnimations/Textures/Iron_Man_D.bmp", true);
+	Enemy::animationNTexture = loader.loadTexture("res/EnemyAnimations/Textures/Iron_Man_N.bmp", true);
 }
 // Load Safe Area Graphics
 void LoadGraphics_SafeArea()
@@ -1199,9 +1220,9 @@ void loadModels()
 	Player::loadAnimations("res/PlayerAnimations/Walk_Right/", 31, 62, true);
 	Player::loadAnimations("res/PlayerAnimations/Run_Forward/", 16, 62, true);
 	
-//TODO: Enemy Animations
-	//Enemy::loadAnimations("res/EnemyAnimations/Run_Forward/", 16, 62, true);
-	//Enemy::loadAnimations("res/EnemyAnimations/Dying/", 16, 62, true);
+	Enemy::loadAnimations("res/EnemyAnimations/Walk_Forward/", 38, 62, true);
+	Enemy::loadAnimations("res/EnemyAnimations/Attack/", 40, 62, true);
+	Enemy::loadAnimations("res/EnemyAnimations/Dying/", 45, 62, true);
 }
 // Load Safe Area Models
 void loadModels_SafeArea()

@@ -229,6 +229,14 @@ void ClientGame::getPlayerData(Player & player)
 	}
 }
 
+// Update the enemy with specified enemyData index
+void ClientGame::getEnemyData(Enemy &enem, int index)
+{
+	if (!networkConnected) return;
+
+
+}
+
 // Send my playerData to the server.
 // This function is only to be send during the game
 void ClientGame::sendPlayerData()

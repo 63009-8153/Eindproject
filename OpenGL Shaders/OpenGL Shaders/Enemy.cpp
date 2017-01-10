@@ -3,6 +3,7 @@
 #include "Enemy.h"
 
 GLuint Enemy::animationTexture;
+GLuint Enemy::animationNTexture;
 
 //Constructor
 Enemy::Enemy()
@@ -33,7 +34,7 @@ void Enemy::init(glm::vec3 position, glm::vec3 rotation, glm::vec3 scale, float 
 	attackStrength = _attackStrength;
 	speed = glm::vec3(0.0f);
 
-	currentAnimationType = IDLE;
+	currentAnimationType = enemyAnimationType;
 	networkAnimType = IDLE;
 	currentAnimationFrame = 0;
 
@@ -88,6 +89,7 @@ int Enemy::loadAnimations(char * animationFolder, int frames, double fps, bool l
 		gameobject model = loader.loadObjFile(filepath.c_str(), false, false);
 		model.init();
 		model.addTexture(animationTexture);
+		model.setNormalMap(animationNTexture);
 		model.setAmbientLight(0.15f);
 
 		enemyAnimationModels.push_back(model);

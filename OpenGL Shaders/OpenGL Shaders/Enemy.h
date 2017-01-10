@@ -27,6 +27,7 @@ class Enemy : public Model
 
 		static int loadAnimations(char *animationFolder, int frames, double fps, bool loop);
 		static GLuint animationTexture;
+		static GLuint animationNTexture;
 
 		void updateAnimation(int currentType);
 		void resetAnimation();
