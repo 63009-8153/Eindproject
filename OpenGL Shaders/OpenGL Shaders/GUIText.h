@@ -30,7 +30,7 @@ class GUIText
 		* @param centered
 		*            - whether the text should be centered or not.
 		*/
-		public GUIText(string text, float fontSize, FontType font, glm::vec2 position, float maxLineLength,
+		GUIText(std::string text, float fontSize, FontType font, glm::vec2 position, float maxLineLength,
 			bool centered);
 
 		/**
@@ -96,25 +96,6 @@ class GUIText
 		*/
 		int getVertexCount();
 
-
-	private:
-		string textString;
-		float fontSize;
-
-		int textMeshVao;
-		int vertexCount;
-		glm::vec3 colour = glm::vec3(0.0f);
-
-		glm::vec2 position;
-		float lineMaxSize;
-		int numberOfLines;
-
-		FontType font;
-
-		bool centerText = false;
-
-	protected:
-
 		/**
 		* @return the font size of the text (a font size of 1 is normal).
 		*/
@@ -141,6 +122,23 @@ class GUIText
 		/**
 		* @return The string of text.
 		*/
-		string getTextString();
+		std::string getTextString();
+
+	private:
+		std::string textString;
+		float fontSize;
+
+		int textMeshVao;
+		int vertexCount;
+		glm::vec3 colour = glm::vec3(0.0f);
+
+		glm::vec2 position;
+		float lineMaxSize;
+		int numberOfLines;
+
+		FontType font;
+
+		bool centerText = false;
+
 };
 

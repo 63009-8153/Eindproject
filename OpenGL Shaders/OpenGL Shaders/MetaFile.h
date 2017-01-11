@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Character.h"
+
 #define PAD_TOP = 0;
 #define PAD_LEFT = 1;
 #define PAD_BOTTOM = 2;
@@ -16,6 +18,18 @@ public:
 	MetaFile();
 	~MetaFile();
 
+	/**
+	* Opens a font file in preparation for reading.
+	*
+	* @param file
+	*            - the font file.
+	*/
+	MetaFile(File file);
+
+	double getSpaceWidth();
+
+	Character getCharacter(int ascii);
+
 private:
 	double aspectRatio;
 
@@ -26,10 +40,10 @@ private:
 	int paddingWidth;
 	int paddingHeight;
 
-	Map<Integer, Character> metaData = new HashMap<Integer, Character>();
+	Map<int, Character> metaData = new HashMap<int, Character>();
 
 	BufferedReader reader;
-	Map<String, String> values = new HashMap<String, String>();
+	Map<string, string> values = new HashMap<string, string>();
 
 	/**
 	* Read in the next line and store the variable values.
@@ -46,7 +60,7 @@ private:
 	*            - the name of the variable.
 	* @return The value of the variable.
 	*/
-	int getValueOfVariable(String variable);
+	int getValueOfVariable(string variable);
 
 	/**
 	* Gets the array of ints associated with a variable on the current line.
@@ -55,7 +69,7 @@ private:
 	*            - the name of the variable.
 	* @return The int array of values associated with the variable.
 	*/
-	int[] getValuesOfVariable(String variable);
+	int[] getValuesOfVariable(string variable);
 
 	/**
 	* Closes the font file after finishing reading.
@@ -102,18 +116,5 @@ private:
 	* @return The data about the character.
 	*/
 	Character loadCharacter(int imageSize);
-
-protected:
-	/**
-	* Opens a font file in preparation for reading.
-	*
-	* @param file
-	*            - the font file.
-	*/
-	MetaFile(File file);
-
-	double getSpaceWidth();
-
-	Character getCharacter(int ascii);
 };
 

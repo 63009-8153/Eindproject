@@ -5,6 +5,8 @@ public:
 	TextMeshData();
 	~TextMeshData();
 
+	TextMeshData(float[] vertexPositions, float[] textureCoords);
+	
 	float[] getVertexPositions();
 
 	float[] getTextureCoords();
@@ -15,9 +17,6 @@ private:
 
 	float[] vertexPositions;
 	float[] textureCoords;
-
-protected:
-	TextMeshData(float[] vertexPositions, float[] textureCoords);
 
 };
 
