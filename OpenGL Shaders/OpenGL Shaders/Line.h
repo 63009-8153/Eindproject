@@ -1,6 +1,10 @@
 #pragma once
 
+#include "Header.h"
+
+class Word;
 #include "Word.h"
+
 class Line
 {
 	public:
@@ -28,7 +32,7 @@ class Line
 		*            - the word to try to add.
 		* @return {@code true} if the word has successfully been added to the line.
 		*/
-		bool attemptToAddWord(Word word);
+		bool attemptToAddWord(Word &word);
 
 		/**
 		* @return The max length of the line.
@@ -48,7 +52,7 @@ class Line
 		double maxLength;
 		double spaceSize;
 
-		std::vector<Word> words = new std::vector<Word>();
+		std::vector<Word> words;
 		double currentLineLength = 0;
 
 };

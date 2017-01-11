@@ -34,8 +34,8 @@ void Enemy::init(glm::vec3 position, glm::vec3 rotation, glm::vec3 scale, float 
 	attackStrength = _attackStrength;
 	speed = glm::vec3(0.0f);
 
-	currentAnimationType = enemyAnimationType;
-	networkAnimType = IDLE;
+	currentAnimationType = ENEM_WALK_FORWARD;
+	networkAnimType = ENEM_WALK_FORWARD;
 	currentAnimationFrame = 0;
 
 	animationExtraTime = 0;

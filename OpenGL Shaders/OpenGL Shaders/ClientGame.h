@@ -8,6 +8,7 @@
 #include "ClientNetwork.h"
 
 #include "Player.h"
+#include "Enemy.h"
 
 extern void(*networkUpdateFunction)(void);
 extern void SendInitData();

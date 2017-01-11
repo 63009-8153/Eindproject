@@ -1,120 +1,127 @@
 #pragma once
 
+#include "Header.h"
+
+class Character;
 #include "Character.h"
 
-#define PAD_TOP = 0;
-#define PAD_LEFT = 1;
-#define PAD_BOTTOM = 2;
-#define PAD_RIGHT = 3;
+#define PAD_TOP 0
+#define PAD_LEFT 1
+#define PAD_BOTTOM 2
+#define PAD_RIGHT 3
 
-#define DESIRED_PADDING = 3;
+#define DESIRED_PADDING 3
 
-#define SPLITTER = " ";
-#define NUMBER_SEPARATOR = ",";
+#define SPLITTER ' '
+#define NUMBER_SEPARATOR ','
+
+#define LINE_HEIGHT 0.03f
+#define SPACE_ASCII 32
 
 class MetaFile
 {
-public:
-	MetaFile();
-	~MetaFile();
+	public:
+		MetaFile();
+		~MetaFile();
 
-	/**
-	* Opens a font file in preparation for reading.
-	*
-	* @param file
-	*            - the font file.
-	*/
-	MetaFile(File file);
+		/**
+		* Opens a font file in preparation for reading.
+		*
+		* @param file
+		*            - the font file.
+		*/
+		MetaFile(char * filepath);
 
-	double getSpaceWidth();
+		double getSpaceWidth();
 
-	Character getCharacter(int ascii);
+		Character getCharacter(int ascii);
 
-private:
-	double aspectRatio;
+	private:
+		double aspectRatio;
 
-	double verticalPerPixelSize;
-	double horizontalPerPixelSize;
-	double spaceWidth;
-	int[] padding;
-	int paddingWidth;
-	int paddingHeight;
+		double verticalPerPixelSize;
+		double horizontalPerPixelSize;
+		double spaceWidth;
+		int *padding;
+		int paddingWidth;
+		int paddingHeight;
 
-	Map<int, Character> metaData = new HashMap<int, Character>();
+		FILE * file;
 
-	BufferedReader reader;
-	Map<string, string> values = new HashMap<string, string>();
+		std::map<int, Character> metaData;
 
-	/**
-	* Read in the next line and store the variable values.
-	*
-	* @return {@code true} if the end of the file hasn't been reached.
-	*/
-	bool processNextLine();
+		std::map<std::string, std::string> values;
 
-	/**
-	* Gets the {@code int} value of the variable with a certain name on the
-	* current line.
-	*
-	* @param variable
-	*            - the name of the variable.
-	* @return The value of the variable.
-	*/
-	int getValueOfVariable(string variable);
+		/**
+		* Read in the next line and store the variable values.
+		*
+		* @return {@code true} if the end of the file hasn't been reached.
+		*/
+		bool processNextLine();
 
-	/**
-	* Gets the array of ints associated with a variable on the current line.
-	*
-	* @param variable
-	*            - the name of the variable.
-	* @return The int array of values associated with the variable.
-	*/
-	int[] getValuesOfVariable(string variable);
+		/**
+		* Gets the {@code int} value of the variable with a certain name on the
+		* current line.
+		*
+		* @param variable
+		*            - the name of the variable.
+		* @return The value of the variable.
+		*/
+		int getValueOfVariable(std::string variable);
 
-	/**
-	* Closes the font file after finishing reading.
-	*/
-	void close();
+		/**
+		* Gets the array of ints associated with a variable on the current line.
+		*
+		* @param variable
+		*            - the name of the variable.
+		* @return The int array of values associated with the variable.
+		*/
+		int* getValuesOfVariable(std::string variable);
 
-	/**
-	* Opens the font file, ready for reading.
-	*
-	* @param file
-	*            - the font file.
-	*/
-	void openFile(File file);
+		/**
+		* Closes the font file after finishing reading.
+		*/
+		void close();
 
-	/**
-	* Loads the data about how much padding is used around each character in
-	* the texture atlas.
-	*/
-	void loadPaddingData();
+		/**
+		* Opens the font file, ready for reading.
+		*
+		* @param file
+		*            - the font file.
+		*/
+		void openFile(char * filepath);
 
-	/**
-	* Loads information about the line height for this font in pixels, and uses
-	* this as a way to find the conversion rate between pixels in the texture
-	* atlas and screen-space.
-	*/
-	void loadLineSizes();
+		/**
+		* Loads the data about how much padding is used around each character in
+		* the texture atlas.
+		*/
+		void loadPaddingData();
 
-	/**
-	* Loads in data about each character and stores the data in the
-	* {@link Character} class.
-	*
-	* @param imageWidth
-	*            - the width of the texture atlas in pixels.
-	*/
-	void loadCharacterData(int imageWidth);
+		/**
+		* Loads information about the line height for this font in pixels, and uses
+		* this as a way to find the conversion rate between pixels in the texture
+		* atlas and screen-space.
+		*/
+		void loadLineSizes();
 
-	/**
-	* Loads all the data about one character in the texture atlas and converts
-	* it all from 'pixels' to 'screen-space' before storing. The effects of
-	* padding are also removed from the data.
-	*
-	* @param imageSize
-	*            - the size of the texture atlas in pixels.
-	* @return The data about the character.
-	*/
-	Character loadCharacter(int imageSize);
+		/**
+		* Loads in data about each character and stores the data in the
+		* {@link Character} class.
+		*
+		* @param imageWidth
+		*            - the width of the texture atlas in pixels.
+		*/
+		void loadCharacterData(int imageWidth);
+
+		/**
+		* Loads all the data about one character in the texture atlas and converts
+		* it all from 'pixels' to 'screen-space' before storing. The effects of
+		* padding are also removed from the data.
+		*
+		* @param imageSize
+		*            - the size of the texture atlas in pixels.
+		* @return The data about the character.
+		*/
+		Character loadCharacter(int imageSize);
 };
 

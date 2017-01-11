@@ -14,9 +14,9 @@ enum animationType{
 };
 
 enum enemyAnimationType {
-	WALK_FORWARD = 0,
-	ATTACK = 1,
-	DYING = 2
+	ENEM_WALK_FORWARD = 0,
+	ENEM_ATTACK = 1,
+	ENEM_DYING = 2
 };
 
 // Struct for animation

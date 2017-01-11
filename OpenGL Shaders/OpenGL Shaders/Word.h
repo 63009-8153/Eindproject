@@ -1,5 +1,8 @@
 #pragma once
 
+#include "Header.h"
+
+class Character;
 #include "Character.h"
 
 class Word
@@ -18,12 +21,12 @@ class Word
 		* Adds a character to the end of the current word and increases the screen-space width of the word.
 		* @param character - the character to be added.
 		*/
-		void addCharacter(Character character);
+		void addCharacter(Character &character);
 
 		/**
 		* @return The list of characters in the word.
 		*/
-		List<Character> getCharacters();
+		std::vector<Character> getCharacters();
 
 		/**
 		* @return The width of the word in terms of screen size.
@@ -32,7 +35,7 @@ class Word
 
 	private:
 
-		List<Character> characters = new ArrayList<Character>();
+		std::vector<Character> characters;
 		double width = 0;
 		double fontSize;
 

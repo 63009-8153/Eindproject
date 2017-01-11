@@ -12,23 +12,23 @@ Word::~Word()
 * Create a new empty word.
 * @param fontSize - the font size of the text which this word is in.
 */
-Word::Word(double fontSize) {
-	fontSize = fontSize;
+Word::Word(double _fontSize) {
+	fontSize = _fontSize;
 }
 
 /**
 * Adds a character to the end of the current word and increases the screen-space width of the word.
 * @param character - the character to be added.
 */
-void Word::addCharacter(Character character) {
-	characters.add(character);
+void Word::addCharacter(Character &character) {
+	characters.push_back(character);
 	width += character.getxAdvance() * fontSize;
 }
 
 /**
 * @return The list of characters in the word.
 */
-List<Character> Word::getCharacters() {
+std::vector<Character> Word::getCharacters() {
 	return characters;
 }
 

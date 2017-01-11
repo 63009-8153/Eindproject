@@ -8,20 +8,22 @@ TextMeshData::~TextMeshData()
 {
 }
 
-float[] TextMeshData::getVertexPositions() {
+TextMeshData::TextMeshData(float* _vertexPositions, int _vertexAmount, float *_textureCoords, int _textureAmount) {
+	memcpy(vertexPositions, _vertexPositions, _vertexAmount);
+	vertexCount = _vertexAmount;
+
+	memcpy(textureCoords, _textureCoords, _textureAmount);
+	textureCount = _textureAmount;
+}
+
+float* TextMeshData::getVertexPositions() {
 	return vertexPositions;
 }
 
-float[] TextMeshData::getTextureCoords() {
+float* TextMeshData::getTextureCoords() {
 	return textureCoords;
 }
 
 int TextMeshData::getVertexCount() {
-	return vertexPositions.length / 2;
-}
-
-
-TextMeshData::TextMeshData(float[] vertexPositions, float[] textureCoords) {
-	vertexPositions = vertexPositions;
-	textureCoords = textureCoords;
+	return vertexCount / 2;
 }

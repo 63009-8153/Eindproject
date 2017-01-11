@@ -18,9 +18,9 @@ Line::~Line()
 * @param maxLength
 *            - the screen-space maximum length of a line.
 */
-Line::Line(double spaceWidth, double fontSize, double maxLength) {
+Line::Line(double spaceWidth, double fontSize, double _maxLength) {
 	spaceSize = spaceWidth * fontSize;
-	maxLength = maxLength;
+	maxLength = _maxLength;
 }
 
 /**
@@ -32,12 +32,15 @@ Line::Line(double spaceWidth, double fontSize, double maxLength) {
 *            - the word to try to add.
 * @return {@code true} if the word has successfully been added to the line.
 */
-bool Line::attemptToAddWord(Word word) {
+bool Line::attemptToAddWord(Word &word) {
 	double additionalLength = word.getWordWidth();
-	additionalLength += !words.isEmpty() ? spaceSize : 0;
+
+	additionalLength += !words.empty() ? spaceSize : 0;
+
 	if (currentLineLength + additionalLength <= maxLength) {
-		words.add(word);
+		words.push_back(word);
 		currentLineLength += additionalLength;
+
 		return true;
 	}
 	else {
@@ -62,6 +65,6 @@ double Line::getLineLength() {
 /**
 * @return The list of words in the line.
 */
-List<Word> Line::getWords() {
+std::vector<Word> Line::getWords() {
 	return words;
 }

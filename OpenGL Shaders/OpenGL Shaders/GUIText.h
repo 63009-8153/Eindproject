@@ -1,4 +1,10 @@
 #pragma once
+
+#include "Header.h"
+
+class FontType;
+#include "FontType.h"
+
 class GUIText
 {
 	public:
@@ -30,8 +36,7 @@ class GUIText
 		* @param centered
 		*            - whether the text should be centered or not.
 		*/
-		GUIText(std::string text, float fontSize, FontType font, glm::vec2 position, float maxLineLength,
-			bool centered);
+		GUIText(std::string text, float fontSize, FontType &font, glm::vec2 position, float maxLineLength, bool centered);
 
 		/**
 		* Remove the text from the screen.
@@ -41,7 +46,7 @@ class GUIText
 		/**
 		* @return The font used by this text.
 		*/
-		FontType getFont();
+		FontType* getFont();
 
 		/**
 		* Set the colour of the text.
@@ -136,7 +141,7 @@ class GUIText
 		float lineMaxSize;
 		int numberOfLines;
 
-		FontType font;
+		FontType *font;
 
 		bool centerText = false;
 

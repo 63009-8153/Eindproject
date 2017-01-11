@@ -47,3 +47,6 @@
 #define _PI_4     0.785398163397448309616  // pi / 4
 
 #define USE_DISTANCE 5.0f
+
+#define SCREEN_WIDTH 1024
+#define SCREEN_HEIGHT 761

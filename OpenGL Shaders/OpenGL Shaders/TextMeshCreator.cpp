@@ -8,50 +8,68 @@ TextMeshCreator::~TextMeshCreator()
 {
 }
 
-List<Line> TextMeshCreator::createStructure(GUIText text) {
-	char[] chars = text.getTextString().toCharArray();
-	List<Line> lines = new ArrayList<Line>();
-	Line currentLine = new Line(metaData.getSpaceWidth(), text.getFontSize(), text.getMaxLineSize());
-	Word currentWord = new Word(text.getFontSize());
-	for (char c : chars) {
+TextMeshCreator::TextMeshCreator(char * filepath) {
+	metaData = MetaFile(filepath);
+}
+
+std::vector<Line> TextMeshCreator::createStructure(GUIText &text) {
+	std::string charString = text.getTextString();
+
+	std::vector<Line> lines;
+
+	Line currentLine = Line(metaData.getSpaceWidth(), text.getFontSize(), text.getMaxLineSize());
+	Word currentWord = Word(text.getFontSize());
+
+	// Loop through all characters
+	for (int i = 0; i < charString.size(); i++) {
+		char c = charString[i];
+
 		int ascii = (int)c;
 		if (ascii == SPACE_ASCII) {
-			boolean added = currentLine.attemptToAddWord(currentWord);
+			bool added = currentLine.attemptToAddWord(currentWord);
 			if (!added) {
-				lines.add(currentLine);
-				currentLine = new Line(metaData.getSpaceWidth(), text.getFontSize(), text.getMaxLineSize());
+				lines.push_back(currentLine);
+				currentLine = Line(metaData.getSpaceWidth(), text.getFontSize(), text.getMaxLineSize());
 				currentLine.attemptToAddWord(currentWord);
 			}
-			currentWord = new Word(text.getFontSize());
+			currentWord = Word(text.getFontSize());
+
 			continue;
 		}
+
 		Character character = metaData.getCharacter(ascii);
 		currentWord.addCharacter(character);
 	}
+
 	completeStructure(lines, currentLine, currentWord, text);
+
 	return lines;
 }
 
-void TextMeshCreator::completeStructure(List<Line> lines, Line currentLine, Word currentWord, GUIText text) {
+void TextMeshCreator::completeStructure(std::vector<Line> &lines, Line &currentLine, Word &currentWord, GUIText & text) {
 	bool added = currentLine.attemptToAddWord(currentWord);
+
 	if (!added) {
-		lines.add(currentLine);
-		currentLine = new Line(metaData.getSpaceWidth(), text.getFontSize(), text.getMaxLineSize());
+		lines.push_back(currentLine);
+		currentLine = Line(metaData.getSpaceWidth(), text.getFontSize(), text.getMaxLineSize());
 		currentLine.attemptToAddWord(currentWord);
 	}
-	lines.add(currentLine);
+
+	lines.push_back(currentLine);
 }
 
-TextMeshData TextMeshCreator::createQuadVertices(GUIText text, List<Line> lines) {
+TextMeshData TextMeshCreator::createQuadVertices(GUIText &text, std::vector<Line> &lines) {
 	text.setNumberOfLines(lines.size());
-	double curserX = 0f;
-	double curserY = 0f;
-	List<Float> vertices = new ArrayList<Float>();
-	List<Float> textureCoords = new ArrayList<Float>();
+	double curserX = 0.0f;
+	double curserY = 0.0f;
+
+	std::vector<float> vertices, textureCoords;
+
 	for (Line line : lines) {
 		if (text.isCentered()) {
 			curserX = (line.getMaxLength() - line.getLineLength()) / 2;
 		}
+
 		for (Word word : line.getWords()) {
 			for (Character letter : word.getCharacters()) {
 				addVerticesForCharacter(curserX, curserY, letter, text.getFontSize(), vertices);
@@ -61,14 +79,16 @@ TextMeshData TextMeshCreator::createQuadVertices(GUIText text, List<Line> lines)
 			}
 			curserX += metaData.getSpaceWidth() * text.getFontSize();
 		}
+
 		curserX = 0;
 		curserY += LINE_HEIGHT * text.getFontSize();
 	}
-	return new TextMeshData(listToArray(vertices), listToArray(textureCoords));
+
+	return TextMeshData(listToArray(vertices), vertices.size(), listToArray(textureCoords), textureCoords.size());
 }
 
-void TextMeshCreator::addVerticesForCharacter(double curserX, double curserY, Character character, double fontSize,
-	List<Float> vertices) {
+void TextMeshCreator::addVerticesForCharacter(double curserX, double curserY, Character &character, double fontSize, std::vector<float> &vertices) {
+	
 	double x = curserX + (character.getxOffset() * fontSize);
 	double y = curserY + (character.getyOffset() * fontSize);
 	double maxX = x + (character.getSizeX() * fontSize);
@@ -77,54 +97,54 @@ void TextMeshCreator::addVerticesForCharacter(double curserX, double curserY, Ch
 	double properY = (-2 * y) + 1;
 	double properMaxX = (2 * maxX) - 1;
 	double properMaxY = (-2 * maxY) + 1;
+	
 	addVertices(vertices, properX, properY, properMaxX, properMaxY);
 }
 
-void TextMeshCreator::addVertices(List<Float> vertices, double x, double y, double maxX, double maxY) {
-	vertices.add((float)x);
-	vertices.add((float)y);
-	vertices.add((float)x);
-	vertices.add((float)maxY);
-	vertices.add((float)maxX);
-	vertices.add((float)maxY);
-	vertices.add((float)maxX);
-	vertices.add((float)maxY);
-	vertices.add((float)maxX);
-	vertices.add((float)y);
-	vertices.add((float)x);
-	vertices.add((float)y);
+void TextMeshCreator::addVertices(std::vector<float> &vertices, double x, double y, double maxX, double maxY) {
+	vertices.push_back((float)x);
+	vertices.push_back((float)y);
+	vertices.push_back((float)x);
+	vertices.push_back((float)maxY);
+	vertices.push_back((float)maxX);
+	vertices.push_back((float)maxY);
+	vertices.push_back((float)maxX);
+	vertices.push_back((float)maxY);
+	vertices.push_back((float)maxX);
+	vertices.push_back((float)y);
+	vertices.push_back((float)x);
+	vertices.push_back((float)y);
 }
 
-void TextMeshCreator::addTexCoords(List<Float> texCoords, double x, double y, double maxX, double maxY) {
-	texCoords.add((float)x);
-	texCoords.add((float)y);
-	texCoords.add((float)x);
-	texCoords.add((float)maxY);
-	texCoords.add((float)maxX);
-	texCoords.add((float)maxY);
-	texCoords.add((float)maxX);
-	texCoords.add((float)maxY);
-	texCoords.add((float)maxX);
-	texCoords.add((float)y);
-	texCoords.add((float)x);
-	texCoords.add((float)y);
+void TextMeshCreator::addTexCoords(std::vector<float> &texCoords, double x, double y, double maxX, double maxY) {
+	texCoords.push_back((float)x);
+	texCoords.push_back((float)y);
+	texCoords.push_back((float)x);
+	texCoords.push_back((float)maxY);
+	texCoords.push_back((float)maxX);
+	texCoords.push_back((float)maxY);
+	texCoords.push_back((float)maxX);
+	texCoords.push_back((float)maxY);
+	texCoords.push_back((float)maxX);
+	texCoords.push_back((float)y);
+	texCoords.push_back((float)x);
+	texCoords.push_back((float)y);
 }
 
 
-float[] TextMeshCreator::listToArray(List<Float> listOfFloats) {
-	float[] array = new float[listOfFloats.size()];
-	for (int i = 0; i < array.length; i++) {
-		array[i] = listOfFloats.get(i);
+float* TextMeshCreator::listToArray(std::vector<float> &listOfFloats) {
+	float *arr = new float[listOfFloats.size()];
+	for (int i = 0; i < listOfFloats.size(); i++) {
+		arr[i] = listOfFloats[i];
 	}
-	return array;
+
+	return arr;
 }
 
-TextMeshCreator::TextMeshCreator(File metaFile) {
-	metaData = new MetaFile(metaFile);
-}
+TextMeshData TextMeshCreator::createTextMesh(GUIText &text) {
+	std::vector<Line> lines = createStructure(text);
 
-TextMeshData TextMeshCreator::createTextMesh(GUIText text) {
-	List<Line> lines = createStructure(text);
 	TextMeshData data = createQuadVertices(text, lines);
+
 	return data;
 }

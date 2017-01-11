@@ -33,12 +33,11 @@ GUIText::~GUIText()
 * @param centered
 *            - whether the text should be centered or not.
 */
-GUIText::GUIText(string text, float fontSize, FontType font, glm::vec2 position, float maxLineLength,
-	bool centered) {
+GUIText::GUIText(std::string text, float _fontSize, FontType &_font, glm::vec2 _position, float maxLineLength, bool centered) {
 	textString = text;
-	fontSize = fontSize;
-	font = font;
-	position = position;
+	fontSize = _fontSize;
+	font = new FontType(_font);
+	position = _position;
 	lineMaxSize = maxLineLength;
 	centerText = centered;
 	// load text
@@ -54,7 +53,7 @@ void GUIText::remove() {
 /**
 * @return The font used by this text.
 */
-FontType GUIText::getFont() {
+FontType* GUIText::getFont() {
 	return font;
 }
 
@@ -69,7 +68,7 @@ FontType GUIText::getFont() {
 *            - blue value, between 0 and 1.
 */
 void GUIText::setColour(float r, float g, float b) {
-	colour.set(r, g, b);
+	colour = glm::vec3(r, g, b);
 }
 
 /**
@@ -161,6 +160,6 @@ float GUIText::getMaxLineSize() {
 /**
 * @return The string of text.
 */
-string GUIText::getTextString() {
+std::string GUIText::getTextString() {
 	return textString;
 }

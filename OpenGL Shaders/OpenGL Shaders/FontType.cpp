@@ -18,9 +18,9 @@ FontType::~FontType()
 *            - the font file containing information about each character in
 *            the texture atlas.
 */
-FontType::FontType(int textureAtlas, char * fontFile) {
-	textureAtlas = textureAtlas;
-	loader = TextMeshCreator(fontFile);
+FontType::FontType(int _textureAtlas, char * fontFile) {
+	textureAtlas = _textureAtlas;
+	loader = new TextMeshCreator(fontFile);
 }
 
 /**
@@ -39,6 +39,6 @@ int FontType::getTextureAtlas() {
 *            - the unloaded text.
 * @return Information about the vertices of all the quads.
 */
-TextMeshData FontType::loadText(GUIText text) {
-	return loader.createTextMesh(text);
+TextMeshData FontType::loadText(GUIText &text) {
+	return loader->createTextMesh(text);
 }

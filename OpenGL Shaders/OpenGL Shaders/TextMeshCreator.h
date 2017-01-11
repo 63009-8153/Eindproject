@@ -1,12 +1,25 @@
 #pragma once
 
+class MetaFile;
 #include "MetaFile.h"
+
+class Word;
 #include "Word.h"
+
+class Line;
 #include "Line.h"
+
+class GUIText;
+#include "GUIText.h"
+
+class Character;
 #include "Character.h"
 
-#define LINE_HEIGHT = 0.03f;
-#define SPACE_ASCII = 32;
+class TextMeshData;
+#include "TextMeshData.h"
+
+#define LINE_HEIGHT 0.03f
+#define SPACE_ASCII 32
 
 class TextMeshCreator
 {
@@ -14,27 +27,26 @@ class TextMeshCreator
 		TextMeshCreator();
 		~TextMeshCreator();
 
-		TextMeshCreator(File metaFile);
+		TextMeshCreator(char * filepath);
 
-		TextMeshData createTextMesh(GUIText text);
+		TextMeshData createTextMesh(GUIText &text);
 
 	private:
 		MetaFile metaData;
 
-		List<Line> createStructure(GUIText text);
+		std::vector<Line> createStructure(GUIText &text);
 
-		void completeStructure(List<Line> lines, Line currentLine, Word currentWord, GUIText text);
+		void completeStructure(std::vector<Line> &lines, Line &currentLine, Word &currentWord, GUIText &text);
 
-		TextMeshData createQuadVertices(GUIText text, List<Line> lines);
+		TextMeshData createQuadVertices(GUIText &text, std::vector<Line> &lines);
 
-		void addVerticesForCharacter(double curserX, double curserY, Character character, double fontSize,
-			List<float> vertices);
+		void addVerticesForCharacter(double curserX, double curserY, Character &character, double fontSize, std::vector<float> &vertices);
 
-		static void addVertices(List<float> vertices, double x, double y, double maxX, double maxY);
+		static void addVertices(std::vector<float> &vertices, double x, double y, double maxX, double maxY);
 
-		static void addTexCoords(List<float> texCoords, double x, double y, double maxX, double maxY);
+		static void addTexCoords(std::vector<float> &texCoords, double x, double y, double maxX, double maxY);
 
-
-		static float[] listToArray(List<float> listOfFloats);
+		// This does not keep the pointer valid, you should copy its contents after use!
+		static float* listToArray(std::vector<float> &listOfFloats);
 };
 

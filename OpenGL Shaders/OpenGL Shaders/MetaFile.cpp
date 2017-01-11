@@ -1,5 +1,21 @@
 #include "MetaFile.h"
 
+// String split functions
+void split(const std::string &s, char delim, std::vector<std::string> &elems) {
+	std::stringstream ss;
+	ss.str(s);
+	std::string item;
+
+	while (std::getline(ss, item, delim)) {
+		if(!item.empty()) elems.push_back(item);
+	}
+}
+std::vector<std::string> split(const std::string &s, char delim) {
+	std::vector<std::string> elems;
+	split(s, delim, elems);
+	return elems;
+}
+
 MetaFile::MetaFile()
 {
 }
@@ -9,27 +25,52 @@ MetaFile::~MetaFile()
 }
 
 /**
+* Opens a font file in preparation for reading.
+*
+* @param file
+*            - the font file.
+*/
+MetaFile::MetaFile(char * filepath) {
+	aspectRatio = (double)SCREEN_WIDTH / (double)SCREEN_HEIGHT;
+
+	openFile(filepath);
+
+	loadPaddingData();
+	loadLineSizes();
+
+	int imageWidth = getValueOfVariable("scaleW");
+
+	loadCharacterData(imageWidth);
+
+	close();
+}
+
+/**
 * Read in the next line and store the variable values.
 *
 * @return {@code true} if the end of the file hasn't been reached.
 */
 bool MetaFile::processNextLine() {
 	values.clear();
-	String line = null;
-	try {
-		line = reader.readLine();
-	}
-	catch (IOException e1) {
-	}
-	if (line == null) {
+
+	std::string line = std::string();
+
+	char lineHeader[128]; //Lineheader buffer
+
+	if (fgets(lineHeader, sizeof(lineHeader), file) == NULL) {
 		return false;
 	}
-	for (String part : line.split(SPLITTER)) {
-		String[] valuePairs = part.split("=");
-		if (valuePairs.length == 2) {
-			values.put(valuePairs[0], valuePairs[1]);
+
+	std::vector<std::string> parts = split(line, SPLITTER);
+
+	for (std::string part : parts) {
+		std::vector<std::string> valuePairs = split(part, '=');
+
+		if (values.size() == 2) {
+			values.insert(std::pair<std::string, std::string>(valuePairs[0], valuePairs[1]));
 		}
 	}
+
 	return true;
 }
 
@@ -41,8 +82,8 @@ bool MetaFile::processNextLine() {
 *            - the name of the variable.
 * @return The value of the variable.
 */
-int MetaFile::getValueOfVariable(String variable) {
-	return Integer.parseInt(values.get(variable));
+int MetaFile::getValueOfVariable(std::string variable) {
+	return std::stoi(values.find(variable)->second);
 }
 
 /**
@@ -52,12 +93,14 @@ int MetaFile::getValueOfVariable(String variable) {
 *            - the name of the variable.
 * @return The int array of values associated with the variable.
 */
-int[] MetaFile::getValuesOfVariable(String variable) {
-	String[] numbers = values.get(variable).split(NUMBER_SEPARATOR);
-	int[] actualValues = new int[numbers.length];
-	for (int i = 0; i < actualValues.length; i++) {
-		actualValues[i] = Integer.parseInt(numbers[i]);
+int* MetaFile::getValuesOfVariable(std::string variable) {
+	std::vector<std::string> numbers = split(values.find(variable)->second, NUMBER_SEPARATOR);
+
+	int *actualValues = new int[numbers.size()];
+	for (int i = 0; i < numbers.size(); i++) {
+		actualValues[i] = std::stoi(numbers[i]);
 	}
+
 	return actualValues;
 }
 
@@ -65,12 +108,7 @@ int[] MetaFile::getValuesOfVariable(String variable) {
 * Closes the font file after finishing reading.
 */
 void MetaFile::close() {
-	try {
-		reader.close();
-	}
-	catch (IOException e) {
-		e.printStackTrace();
-	}
+	fclose(file);
 }
 
 /**
@@ -79,13 +117,13 @@ void MetaFile::close() {
 * @param file
 *            - the font file.
 */
-void MetaFile::openFile(File file) {
-	try {
-		reader = new BufferedReader(new FileReader(file));
-	}
-	catch (Exception e) {
-		e.printStackTrace();
-		System.err.println("Couldn't read font meta file!");
+void MetaFile::openFile(char * filepath) {
+	fopen_s(&file, filepath, "r");
+	if (file == NULL) {
+		printf("Impossible to open file: %s!\n", filepath);
+
+		system("pause");
+		exit(0);
 	}
 }
 
@@ -95,9 +133,10 @@ void MetaFile::openFile(File file) {
 */
 void MetaFile::loadPaddingData() {
 	processNextLine();
-	this.padding = getValuesOfVariable("padding");
-	this.paddingWidth = padding[PAD_LEFT] + padding[PAD_RIGHT];
-	this.paddingHeight = padding[PAD_TOP] + padding[PAD_BOTTOM];
+
+	padding = getValuesOfVariable("padding");
+	paddingWidth = padding[PAD_LEFT] + padding[PAD_RIGHT];
+	paddingHeight = padding[PAD_TOP] + padding[PAD_BOTTOM];
 }
 
 /**
@@ -107,8 +146,9 @@ void MetaFile::loadPaddingData() {
 */
 void MetaFile::loadLineSizes() {
 	processNextLine();
+
 	int lineHeightPixels = getValueOfVariable("lineHeight") - paddingHeight;
-	verticalPerPixelSize = TextMeshCreator.LINE_HEIGHT / (double)lineHeightPixels;
+	verticalPerPixelSize = LINE_HEIGHT / (double)lineHeightPixels;
 	horizontalPerPixelSize = verticalPerPixelSize / aspectRatio;
 }
 
@@ -122,11 +162,10 @@ void MetaFile::loadLineSizes() {
 void MetaFile::loadCharacterData(int imageWidth) {
 	processNextLine();
 	processNextLine();
+
 	while (processNextLine()) {
 		Character c = loadCharacter(imageWidth);
-		if (c != null) {
-			metaData.put(c.getId(), c);
-		}
+		metaData.insert(std::pair<int, Character>(c.getId(), c));
 	}
 }
 
@@ -141,38 +180,30 @@ void MetaFile::loadCharacterData(int imageWidth) {
 */
 Character MetaFile::loadCharacter(int imageSize) {
 	int id = getValueOfVariable("id");
-	if (id == TextMeshCreator.SPACE_ASCII) {
-		this.spaceWidth = (getValueOfVariable("xadvance") - paddingWidth) * horizontalPerPixelSize;
-		return null;
+
+	if (id == SPACE_ASCII) {
+		spaceWidth = (getValueOfVariable("xadvance") - paddingWidth) * horizontalPerPixelSize;
+		return Character();
 	}
+
 	double xTex = ((double)getValueOfVariable("x") + (padding[PAD_LEFT] - DESIRED_PADDING)) / imageSize;
 	double yTex = ((double)getValueOfVariable("y") + (padding[PAD_TOP] - DESIRED_PADDING)) / imageSize;
+
 	int width = getValueOfVariable("width") - (paddingWidth - (2 * DESIRED_PADDING));
 	int height = getValueOfVariable("height") - ((paddingHeight)-(2 * DESIRED_PADDING));
+
 	double quadWidth = width * horizontalPerPixelSize;
 	double quadHeight = height * verticalPerPixelSize;
+
 	double xTexSize = (double)width / imageSize;
 	double yTexSize = (double)height / imageSize;
+
 	double xOff = (getValueOfVariable("xoffset") + padding[PAD_LEFT] - DESIRED_PADDING) * horizontalPerPixelSize;
 	double yOff = (getValueOfVariable("yoffset") + (padding[PAD_TOP] - DESIRED_PADDING)) * verticalPerPixelSize;
-	double xAdvance = (getValueOfVariable("xadvance") - paddingWidth) * horizontalPerPixelSize;
-	return new Character(id, xTex, yTex, xTexSize, yTexSize, xOff, yOff, quadWidth, quadHeight, xAdvance);
-}
 
-/**
-* Opens a font file in preparation for reading.
-*
-* @param file
-*            - the font file.
-*/
-MetaFile::MetaFile(File file) {
-	this.aspectRatio = (double)Display.getWidth() / (double)Display.getHeight();
-	openFile(file);
-	loadPaddingData();
-	loadLineSizes();
-	int imageWidth = getValueOfVariable("scaleW");
-	loadCharacterData(imageWidth);
-	close();
+	double xAdvance = (getValueOfVariable("xadvance") - paddingWidth) * horizontalPerPixelSize;
+
+	return Character(id, xTex, yTex, xTexSize, yTexSize, xOff, yOff, quadWidth, quadHeight, xAdvance);
 }
 
 double MetaFile::getSpaceWidth() {
@@ -180,5 +211,5 @@ double MetaFile::getSpaceWidth() {
 }
 
 Character MetaFile::getCharacter(int ascii) {
-	return metaData.get(ascii);
+	return metaData.find(ascii)->second;
 }

@@ -1,8 +1,15 @@
 #pragma once
 
+#include "Header.h"
+
+class TextMeshData;
 #include "TextMeshData.h"
-#include "TextMeshCreator.h"
+
+class GUIText;
 #include "GUIText.h"
+
+class TextMeshCreator;
+#include "TextMeshCreator.h"
 
 /**
  * Represents a font. It holds the font's texture atlas as well as having the
@@ -40,11 +47,11 @@ class FontType
 		*            - the unloaded text.
 		* @return Information about the vertices of all the quads.
 		*/
-		TextMeshData loadText(GUIText text);
+		TextMeshData loadText(GUIText &text);
 
 	private:
-		int textureAtlas;
-		TextMeshCreator loader;
 
+		int textureAtlas;
+		TextMeshCreator *loader;
 };
 

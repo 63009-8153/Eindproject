@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Header.h"
+
 class Character
 {
 	public:
@@ -7,7 +9,7 @@ class Character
 		~Character();
 
 		Character(int id, double xTextureCoord, double yTextureCoord, double xTexSize, double yTexSize,
-			double xOffset, double yOffset, double sizeX, double sizeY, double xAdvance);
+					double xOffset, double yOffset, double sizeX, double sizeY, double xAdvance);
 
 		int getId();
 
@@ -60,15 +62,16 @@ class Character
 		*/
 
 		int id;
-		double xTextureCoord;
-		double yTextureCoord;
-		double xMaxTextureCoord;
-		double yMaxTextureCoord;
-		double xOffset;
-		double yOffset;
-		double sizeX;
-		double sizeY;
-		double xAdvance;
+
+		double xTextureCoord,
+			yTextureCoord,
+			xMaxTextureCoord,
+			yMaxTextureCoord,
+			xOffset,
+			yOffset,
+			sizeX,
+			sizeY,
+			xAdvance;
 
 };
 
