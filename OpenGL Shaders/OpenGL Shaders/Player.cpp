@@ -137,6 +137,11 @@ void Player::resetAnimation()
 	currentAnimationFrame = playerAnimations[currentAnimationType].startframe;
 }
 
+bool Player::canUse(glm::vec3 useObjectOrigin, float maxDist)
+{
+	return (glm::distance(getPosition(), useObjectOrigin) <= maxDist);
+}
+
 //Update the player
 void Player::update()
 {

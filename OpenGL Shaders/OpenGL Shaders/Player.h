@@ -31,6 +31,7 @@ class Player : public Model
 		void updateAnimation(int currentType);
 		void resetAnimation();
 
+		bool canUse(glm::vec3 useObjectOrigin, float maxDist);
 
 		float health, maxHealth;
 		glm::vec3 speed;

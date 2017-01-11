@@ -502,6 +502,12 @@ int main() {
 		//Render the shadow texture
 		//renderShadowTexture(&sun);
 
+
+		// If we can use the useable object at the position we want to draw text that shows the user can use the object by pressing a button
+		if (player.canUse(glm::vec3(0.0), USE_DISTANCE)) {
+
+		}
+
 		glFinish();
 		frameStartTime = glfwGetTime();
 
@@ -730,6 +736,9 @@ void handleGameInput()
 	if (glfwGetKey(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) client.addActionType(SHOOT_ONCE);
 	
 	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) client.addActionType(JUMP);
+
+	// Handle input of using
+	if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS) client.addActionType(USE);
 }
 // Update time stuff
 void updateTime()
