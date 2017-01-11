@@ -82,6 +82,8 @@ gameobject Loader::loadToVAO(GLfloat positions[], int posCount, int dimensions)
 }
 
 gameobject Loader::loadObjFile(const char * path, bool writeParsed, bool forceParse) {
+	std::vector<face> faces;
+	
 	//Clear the faces vector
 	faces.clear();
 
@@ -161,7 +163,7 @@ gameobject Loader::loadObjFile(const char * path, bool writeParsed, bool forcePa
 	//Close file
 	fclose(file);
 
-	printf("Model loaded!\n");
+	printf("Model loaded! %s\n", path);
 
 	//If there are more texture coords than vertices, we need to parse the obj file further so the texture aligns properly.
 	if (temp_uvs.size() > temp_vertices.size() || forceParse) {
