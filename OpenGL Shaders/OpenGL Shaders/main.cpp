@@ -8,9 +8,7 @@
 #include "Model.h"
 #include "Player.h"
 
-#include "Tree.h" 
-
-#include <thread>
+#include "Tree.h"
 
 #define WAVE_SPEED 0.03
 
@@ -59,7 +57,6 @@ PostProcessRenderer sceneRenderer, antiAliasedRenderer;
 //Post Process image 
 PostProcessRenderer Contrast, VBlur, HBlur, brightFilter, combineFilter;
 
-std::thread area1, area2, animations;
 
 // == RENDER ELEMENTS ==
 
@@ -235,13 +232,8 @@ void loadGraphics();
 void LoadGraphics_SafeArea();
 // Load Forrest Map Graphics
 void LoadGraphics_ForrestMap();
-
-// Check if the threads that load the models are joinable
-bool modelLoadersJoinable();
 // Load all models
 void loadModels();
-// Load animation models
-void loadModels_Animations();
 // Load Safe Area Models
 void loadModels_SafeArea();
 // Load Forrest Map Models
@@ -323,16 +315,6 @@ int main() {
 	loadGraphics();
 	// Load all models and initialise
 	loadModels();
-	while (!modelLoadersJoinable()) {
-
-	}
-
-	
-	area1.join();
-	area2.join();
-	animations.join();
-
-	printf("!++++++========== END =============+++++++++++++!");
 
 	// ===  LIGHTS  ===
 	initLights();
@@ -353,7 +335,7 @@ int main() {
 	gameState = 1;
 
 	// Hide the cursor
-	//DisplayManager::gameCursor();
+	DisplayManager::gameCursor();
 //TODO: glfwCreateCursor can set a picture of the cursor
 
 	// Set the mouse in the middle of the screen at start so there is no unwanted staring rotation
@@ -565,12 +547,12 @@ int main() {
 				}
 			}
 
-			//// Render all enemy animations
-			//for (int i = 0; i < MAX_ENEMIES; i++) {
-			//	if (enemies[i].active) {
-			//		enemies[i].getAnimModel()->Draw(normalModelRenderer.shader, lights, &camera, glm::vec4(0, -1, 0, 100000));
-			//	}
-			//}
+			// Render all enemy animations
+			for (int i = 0; i < MAX_ENEMIES; i++) {
+				if (enemies[i].active) {
+					enemies[i].getAnimModel()->Draw(normalModelRenderer.shader, lights, &camera, glm::vec4(0, -1, 0, 100000));
+				}
+			}
 		
 		sceneRenderer.unbindFrameBuffer();
 
@@ -1247,68 +1229,26 @@ void LoadGraphics_ForrestMap()
 }
 
 // Load all models
-bool modelLoadersJoinable()
-{
-	if (area1.joinable() && area2.joinable() && animations.joinable()) return true;
-	return false;
-}
 
 void loadModels()
 {
-	//// Load all the models for the safe area.
-	//loadModels_SafeArea();
+	// Load all the models for the safe area.
+	loadModels_SafeArea();
 
-	//// Load all the models for the forrest map.
-	//LoadModels_ForrestMap();
+	// Load all the models for the forrest map.
+	LoadModels_ForrestMap();
 
-	// Start all threads to load the models
-	area1 = std::thread(loadModels_SafeArea);
-	area2 = std::thread(LoadModels_ForrestMap);
-	animations = std::thread(loadModels_Animations);
-}
-
-void loadModels_Animations1()
-{
 	Player::loadAnimations("res/PlayerAnimations/Idle/", 32, 15, true);
 	Player::loadAnimations("res/PlayerAnimations/Walk_Forward/", 31, 62, true);
 	Player::loadAnimations("res/PlayerAnimations/Walk_Backward/", 31, 62, true);
-}
-void loadModels_Animations4()
-{
 	Player::loadAnimations("res/PlayerAnimations/Walk_Left/", 31, 62, true);
 	Player::loadAnimations("res/PlayerAnimations/Walk_Right/", 31, 62, true);
 	Player::loadAnimations("res/PlayerAnimations/Run_Forward/", 16, 62, true);
-}
-
-void loadModels_Animations7()
-{
+	
 	Enemy::loadAnimations("res/EnemyAnimations/Walk_Forward/", 38, 62, true);
-}
-void loadModels_Animations8()
-{
 	Enemy::loadAnimations("res/EnemyAnimations/Attack/", 40, 62, true);
-}
-void loadModels_Animations9()
-{
 	Enemy::loadAnimations("res/EnemyAnimations/Dying/", 45, 62, true);
 }
-void loadModels_Animations()
-{
-	std::thread anim1(loadModels_Animations1),
-		anim4(loadModels_Animations4),
-		anim7(loadModels_Animations7),
-		anim8(loadModels_Animations8),
-		anim9(loadModels_Animations9);
-
-	anim1.join();
-	
-	anim4.join();
-	
-	anim7.join();
-	anim8.join();
-	anim9.join();
-}
-
 // Load Safe Area Models
 void loadModels_SafeArea()
 {
@@ -1388,9 +1328,6 @@ void loadModels_SafeArea()
 	// Load SandBag model.
 	loadModel(SA_M_SandBag[0], "res/Safe_Area/SandBags/SandBags.obj", glm::vec3(8.933f, -0.623, 10.087f), glm::vec3(0, glm::radians(66.783f), 0), glm::vec3(1.0f), SA_T_SandBag, SA_TN_SandBag, 100.0f, 0.1f, 0.1f);
 	loadModel(SA_M_SandBag[1], SA_M_SandBag[0], glm::vec3(-8.436f, -0.623, 4.834f), glm::vec3(0, glm::radians(89.368f), 0), glm::vec3(1.0f), SA_T_SandBag, SA_TN_SandBag, 100.0f, 0.1f, 0.1f);
-
-	// End of function, end the thread and release its memory.
-	_endthread();
 }
 
 // Load Forrest Map Models
@@ -1909,9 +1846,6 @@ void LoadModels_ForrestMap()
 
 		loadModel(FM_M_WELL, "res/Forrest_Area/Well/Well.obj", glm::vec3(43.876f, 0.0f, 305.417f), glm::vec3(0.0f, glm::radians(-141.404f), 0.0f), glm::vec3(1.0f), FM_T_WELL, FM_TN_WELL, shine, reflect, ambient);
 	}
-
-	// End of function, end the thread and release its memory.
-	_endthread();
 }
 // Load the Fence model
 void loadFence(int iteration, glm::vec3 pos, glm::vec3 rot)

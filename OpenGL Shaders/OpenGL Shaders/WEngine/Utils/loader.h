@@ -32,7 +32,7 @@ public:
 private:
 	std::vector<GLuint> vaos, vbos, textures;
 
-	//std::vector<face> faces;
+	std::vector<face> faces;
 
 	GLuint loadBMP(const char * imagepath);
 	GLuint loadBMPRGBA(const char * imagepath);
