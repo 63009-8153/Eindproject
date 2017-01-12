@@ -7,6 +7,8 @@
 
 #define SIZE 500
 
+extern glm::vec3 clearColor;
+
 class Skybox
 {
 public:

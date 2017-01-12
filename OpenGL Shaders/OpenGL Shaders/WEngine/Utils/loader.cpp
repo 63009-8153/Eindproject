@@ -82,7 +82,6 @@ gameobject Loader::loadToVAO(GLfloat positions[], int posCount, int dimensions)
 }
 
 gameobject Loader::loadObjFile(const char * path, bool writeParsed, bool forceParse) {
-
 	//Clear the faces vector
 	faces.clear();
 
