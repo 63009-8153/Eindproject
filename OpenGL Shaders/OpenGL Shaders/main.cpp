@@ -1068,7 +1068,7 @@ void SendGameData()
 	// Update key input
 	handleGameInput();
 
-	if(client.hasActionType())
+	//if(client.hasActionType())
 		client.sendPlayerData();
 }
 

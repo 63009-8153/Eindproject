@@ -15,6 +15,13 @@ extern void SendInitData();
 extern void SendLobbyData();
 extern void SendGameData();
 
+// My Client
+extern volatile playerData myPlayerData;
+// All clients
+extern volatile playerData allClients[MAX_LOBBYSIZE];
+// All enemies
+extern volatile enemyData  allEnemies[MAX_ENEMIES];
+
 class ClientGame
 {
 public:
@@ -71,6 +78,7 @@ public:
 
 	// The startTimer
 	float lobbyTimer;
+
 	// My Client
 	playerData myPlayerData;
 	// All clients
