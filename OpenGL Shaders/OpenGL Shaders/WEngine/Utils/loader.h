@@ -11,6 +11,7 @@ public:
 
 	gameobject loadToVAO(GLfloat positions[], int posCount, GLuint indices[], int indicesCount, GLfloat uvs[], int uvsSize, GLfloat normals[], int normalsSize);
 	gameobject loadToVAO(GLfloat positions[], int posCount, GLuint indices[], int indicesCount, GLfloat uvs[], int uvsSize, GLfloat normals[], int normalsSize, GLfloat tangents[], int tangentsSize);
+	gameobject loadToVAO(gameobject &object);
 	gameobject loadToVAO(GLfloat positions[], int posCount, int dimensions);
 
 	gameobject loadObjFile(const char * path, bool writeParsed, bool forceParse);
@@ -32,8 +33,6 @@ public:
 
 private:
 	std::vector<GLuint> vaos, vbos, textures;
-
-	std::vector<face> faces;
 
 	GLuint loadBMP(const char * imagepath);
 	GLuint loadBMPRGBA(const char * imagepath);
