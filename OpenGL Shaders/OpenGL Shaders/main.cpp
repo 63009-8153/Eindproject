@@ -254,6 +254,9 @@ void loadTreeModels();
 
 
 int main() {
+
+	player.active = true;
+
 	// ============  NETWORKING LOGIC =================
 
 	// Initialise, set the client and connect to the server.
@@ -1230,6 +1233,19 @@ void LoadGraphics_ForrestMap()
 
 // Load all models
 
+void loadAnimations()
+{
+	Player::loadAnimations("res/PlayerAnimations/Idle/", 32, 15, true);
+	Player::loadAnimations("res/PlayerAnimations/Walk_Forward/", 31, 62, true);
+	Player::loadAnimations("res/PlayerAnimations/Walk_Backward/", 31, 62, true);
+	Player::loadAnimations("res/PlayerAnimations/Walk_Left/", 31, 62, true);
+	Player::loadAnimations("res/PlayerAnimations/Walk_Right/", 31, 62, true);
+	Player::loadAnimations("res/PlayerAnimations/Run_Forward/", 16, 62, true);
+
+	Enemy::loadAnimations("res/EnemyAnimations/Walk_Forward/", 38, 62, true);
+	Enemy::loadAnimations("res/EnemyAnimations/Attack/", 40, 62, true);
+	Enemy::loadAnimations("res/EnemyAnimations/Dying/", 45, 62, true);
+}
 void loadModels()
 {
 	// Load all the models for the safe area.
@@ -1237,17 +1253,6 @@ void loadModels()
 
 	// Load all the models for the forrest map.
 	LoadModels_ForrestMap();
-
-	Player::loadAnimations("res/PlayerAnimations/Idle/", 32, 15, true);
-	Player::loadAnimations("res/PlayerAnimations/Walk_Forward/", 31, 62, true);
-	Player::loadAnimations("res/PlayerAnimations/Walk_Backward/", 31, 62, true);
-	Player::loadAnimations("res/PlayerAnimations/Walk_Left/", 31, 62, true);
-	Player::loadAnimations("res/PlayerAnimations/Walk_Right/", 31, 62, true);
-	Player::loadAnimations("res/PlayerAnimations/Run_Forward/", 16, 62, true);
-	
-	Enemy::loadAnimations("res/EnemyAnimations/Walk_Forward/", 38, 62, true);
-	Enemy::loadAnimations("res/EnemyAnimations/Attack/", 40, 62, true);
-	Enemy::loadAnimations("res/EnemyAnimations/Dying/", 45, 62, true);
 }
 // Load Safe Area Models
 void loadModels_SafeArea()

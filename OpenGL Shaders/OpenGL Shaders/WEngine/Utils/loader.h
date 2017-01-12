@@ -14,6 +14,7 @@ public:
 	gameobject loadToVAO(GLfloat positions[], int posCount, int dimensions);
 
 	gameobject loadObjFile(const char * path, bool writeParsed, bool forceParse);
+	gameobject loadObjFileData(const char * path, bool writeParsed, bool forceParse);
 
 	GLuint loadTexture(const char * imagepath, bool createMipmap);
 
