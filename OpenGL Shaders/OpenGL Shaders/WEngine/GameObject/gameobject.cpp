@@ -21,7 +21,7 @@ gameobject::gameobject(gameobject *object){
 	hasReflectionCubeMap = false;
 	hasRefractionCubeMap = false;
 
-	tiledAmount = 1.0f;
+	tiledAmount = glm::vec2(1.0f);
 }
 gameobject::gameobject(int _vaoID, int _vertexCount)
 {
@@ -41,7 +41,7 @@ gameobject::gameobject(int _vaoID, int _vertexCount)
 	hasReflectionCubeMap = false;
 	hasRefractionCubeMap = false;
 
-	tiledAmount = 1.0f;
+	tiledAmount = glm::vec2(1.0f);
 }
 
 //Gameobject destructor
@@ -241,12 +241,145 @@ float gameobject::getReflectivity()
 	return reflectivity;
 }
 
-void gameobject::setTiledAmount(float amount)
+void gameobject::setTiledAmount(glm::vec2 amount)
 {
 	tiledAmount = amount;
 }
 
-float gameobject::getTiledAmount()
+glm::vec2 gameobject::getTiledAmount()
 {
 	return tiledAmount;
+}
+
+void gameobject::Draw(ShaderProgram & shader, std::vector<Light*> lights, Camera * camera, glm::vec4 clipPlane)
+{
+	shader.start();
+
+	shader.loadClipPlane(clipPlane);
+	shader.loadLights(lights);
+
+	shader.loadCameraPosition(camera->position);
+
+	shader.loadViewMatrix(camera->getViewMatrix());
+
+	GLfloat near_plane = camera->Near, far_plane = camera->Far;
+	glm::mat4 lightProjection = glm::ortho(-500.0f, 500.0f, -500.0f, 500.0f, near_plane, far_plane);
+	glm::mat4 lightView = glm::lookAt(
+		lights[0]->getPosition(),//Eye Position
+		glm::vec3(0.0f, 0.0f, 0.0f),//Position it is looking at
+		glm::vec3(0.0f, 1.0f, 0.0f));//UP direction
+	shader.loadLightSpaceMatrix(lightProjection * lightView);
+
+	shader.loadSkyColour(clearColor);
+
+// == Prepare global model
+
+	// Use the vao of this object
+	glBindVertexArray(getVaoID());
+
+	//Use the positions location
+	glEnableVertexAttribArray(0); //Enable using VAO position 0 (positions)
+	glEnableVertexAttribArray(1); //Enable using VAO position 1 (uv coords)
+	glEnableVertexAttribArray(2); //Enable using VAO position 2 (normal coords)
+	glEnableVertexAttribArray(3); //Enable using VAO position 3 (tangents)
+
+	int textureAmount = getTextureAmount();
+
+	shader.loadNumberOfRows(numberOfRows);
+
+	//Use texture
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, getTextureID(0));
+	if (textureAmount >= 2) {
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, getTextureID(1));
+	}
+	if (textureAmount >= 3) {
+		glActiveTexture(GL_TEXTURE2);
+		glBindTexture(GL_TEXTURE_2D, getTextureID(2));
+	}
+	if (textureAmount >= 4) {
+		glActiveTexture(GL_TEXTURE3);
+		glBindTexture(GL_TEXTURE_2D, getTextureID(3));
+	}
+	if (textureAmount >= 5) {
+		glActiveTexture(GL_TEXTURE4);
+		glBindTexture(GL_TEXTURE_2D, getTextureID(4));
+	}
+	if (textureAmount > 6) {
+		printf("Maximum supported textures are 5!");
+	}
+
+// == End of Perpare global model
+// === Prepare model
+
+	//Load the hasTransparency in the shader
+	shader.loadFakeLighting(useFakeLighting);
+	shader.loadAmbientLight(getAmbientLight());
+
+	//If model has a normal map load this to texture 5
+	if (hasNormalMap) {
+		glActiveTexture(GL_TEXTURE5);
+		glBindTexture(GL_TEXTURE_2D, getNormalMapID());
+	}
+	//If model has a shadow map load this to texture 6
+	if (hasShadowMap) {
+		glActiveTexture(GL_TEXTURE6);
+		glBindTexture(GL_TEXTURE_2D, getShadowMapID());
+	}
+	//If model has a specular map load this to texture 7
+	shader.loadUseSpecularMap(hasSpecularMap);
+	if (hasSpecularMap) {
+		glActiveTexture(GL_TEXTURE7);
+		glBindTexture(GL_TEXTURE_2D, getSpecularMapID());
+	}
+	//If model has a enviroment cubemap load this to texture 8
+	if (hasReflectionCubeMap) {
+		glActiveTexture(GL_TEXTURE8);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, getEnviromentCubeMapID());
+	}
+	shader.loadUseReflectionCubeMap(hasReflectionCubeMap);
+	shader.loadUseRefractionCubeMap(hasRefractionCubeMap);
+
+	shader.loadReflectionRefractionRatio(reflectionRefractionRatio);
+	shader.loadReflectionColourRatio(reflectionRatio);
+
+	//Create a transformation matrix from the object data
+	glm::mat4 transformationMatrix = Maths::createTransformationMatrix(getPosition(), getRotation(), getScale());
+	//Load the transformation matrix into the shader for use
+	shader.loadTransformationMatrix(transformationMatrix);
+
+	shader.loadOffset(glm::vec2(getTextureXOffset(), getTextureYOffset()));
+
+	//Load the object shinyness and reflectivityness
+	shader.loadShineVariables(getShineDamper(), getReflectivity());
+
+// === End of Prepare model
+// ==== Render
+
+	// Set the tile amount in the shader
+	shader.loadTileAmount(getTiledAmount());
+
+	//If the model is supposed to be using both sides, disable culling
+	//if (!cullFaces) MasterRenderer::DisableCulling();
+
+	//Draw each model
+	glDrawElements(GL_TRIANGLES, getVertexCount(), GL_UNSIGNED_INT, 0);
+	//Always enable culling again
+	//if (!cullFaces) MasterRenderer::EnableCulling();
+
+// ==== End of Render
+// ===== Unbind
+
+	glDisableVertexAttribArray(0); //Stop using VAO position 0 (positions)
+	glDisableVertexAttribArray(1); //Stop using VAO position 1 (uv coords)
+	glDisableVertexAttribArray(2); //Stop using VAO position 2 (normal coords)
+	glDisableVertexAttribArray(3); //Stop using VAO position 3 (tangents)
+
+	//Unbind vao
+	glBindVertexArray(0);
+
+// ===== End of Unbind
+
+	shader.stop();
 }

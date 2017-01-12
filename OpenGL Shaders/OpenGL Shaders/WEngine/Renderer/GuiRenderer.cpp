@@ -31,12 +31,12 @@ void GuiRenderer::render(std::vector<texture2D> *textures)
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glDisable(GL_DEPTH_TEST);
 
-	for (int i = 0; i < textures->size(); i++)
+	for (unsigned int i = 0; i < textures->size(); i++)
 	{
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, textures->at(i).textureid);
 
-		glm::mat4 matrix = Maths::createTransformationMatrix(textures->at(i).position, textures->at(i).rotation, textures->at(i).scale);
+		glm::mat4 matrix = Maths::createTransformationMatrix(textures->at(i).getPosition(), textures->at(i).getRotationRad(), textures->at(i).getScale());
 		shader.loadTransformationMatrix(matrix);
 
 		glDrawArrays(GL_TRIANGLE_STRIP, 0, quad.getVertexCount());

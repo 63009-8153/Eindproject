@@ -12,6 +12,7 @@ struct playerData {
 	char playerName[MAX_NAMESIZE];
 	unsigned int playerNameSize;
 	bool activePlayer;
+	int animType;
 
 	playerData& operator =(const playerData& p)
 	{
@@ -22,6 +23,7 @@ struct playerData {
 		health = p.health;
 		maxHealth = p.maxHealth;
 		shooting = p.shooting;
+		animType = p.animType;
 
 		memcpy(playerName, p.playerName, MAX_NAMESIZE);
 		playerNameSize = p.playerNameSize;
@@ -39,6 +41,7 @@ struct playerData {
 		health = p.health;
 		maxHealth = p.maxHealth;
 		shooting = p.shooting;
+		animType = p.animType;
 
 		memcpy(playerName, p.playerName, MAX_NAMESIZE);
 		playerNameSize = p.playerNameSize;

@@ -82,7 +82,6 @@ gameobject Loader::loadToVAO(GLfloat positions[], int posCount, int dimensions)
 }
 
 gameobject Loader::loadObjFile(const char * path, bool writeParsed, bool forceParse) {
-
 	//Clear the faces vector
 	faces.clear();
 
@@ -167,11 +166,12 @@ gameobject Loader::loadObjFile(const char * path, bool writeParsed, bool forcePa
 	//If there are more texture coords than vertices, we need to parse the obj file further so the texture aligns properly.
 	if (temp_uvs.size() > temp_vertices.size() || forceParse) {
 		printf("Starting parsing file: %s!\n", path);
-
+		int count = 0;
 		for (unsigned int i = (faces.size() - 1); i > 0; i--) {
+			printf("%d of: %d\n", faces.size(), ++count);
 			for (unsigned int j = 0; j < i; j++) {
 				if (i == j) continue;
-
+				
 				for (unsigned int l = 0; l < 3; l++) {
 					for (unsigned int k = 0; k < 3; k++) {
 						if (faces[i].vertices[l] == faces[j].vertices[k] && faces[i].uvs[l] != faces[j].uvs[k]) {
@@ -399,7 +399,7 @@ GLuint Loader::loadTextureInData(const char * imagepath, bool bmpAlign, bool cre
 		unsigned char * formattedData = new unsigned char[imageSize];
 		unsigned int formattedDataPosition = 0;
 		for (int row = (height - 1); row >= 0; row--) {
-			for (unsigned int colum = 0; colum < (width * 4); colum++) {
+			for (int colum = 0; colum < (width * 4); colum++) {
 				formattedData[formattedDataPosition++] = _data[(row * (width * 4)) + colum];
 			}
 		}
@@ -501,7 +501,7 @@ void Loader::loadTextureInData(const char * imagepath, bool bmpAlign, unsigned c
 		unsigned char * formattedData = new unsigned char[imageSize];
 		unsigned int formattedDataPosition = 0;
 		for (int row = (height - 1); row >= 0; row--) {
-			for (unsigned int colum = 0; colum < (width * 4); colum++) {
+			for (int colum = 0; colum < (width * 4); colum++) {
 				formattedData[formattedDataPosition++] = _data[(row * (width * 4)) + colum];
 			}
 		}
@@ -518,7 +518,7 @@ GLuint Loader::loadCubeMap(unsigned char * data[], glm::vec2 size[], GLenum type
 
 	for (unsigned int i = 0; i < 6; i++)
 	{
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGBA, size[i].x, size[i].y, 0, type, GL_UNSIGNED_BYTE, data[i]);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGBA, (GLsizei)size[i].x, (GLsizei)size[i].y, 0, type, GL_UNSIGNED_BYTE, data[i]);
 	}
 
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -723,7 +723,7 @@ GLuint Loader::loadBMPRGBA(const char * imagepath) {
 	FILE * file;
 	fopen_s(&file, imagepath, "rb");
 	if (!file) {
-		printf("Image could not be opened\n");
+		printf("Image %s could not be opened!\n", imagepath);
 		system("pause");
 		exit(0);
 	}

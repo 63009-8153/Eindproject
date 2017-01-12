@@ -31,7 +31,7 @@ uniform vec3 skyColour;
 
 uniform float ambientLight;
 
-uniform float tileAmount;
+uniform vec2 tileAmount;
 
 const float levels = 3.0;
 const float useCelShading = 0;
@@ -72,8 +72,9 @@ void main(void){
 	float level;
 
 	vec2 textureCoords = pass_textureCoords;
-	float tiledAmount = tileAmount;
-	if(tiledAmount < 1.0) tiledAmount = 1.0;
+	vec2 tiledAmount = tileAmount;
+	if(tiledAmount.x < 1.0) tiledAmount.x = 1.0;
+	if(tiledAmount.y < 1.0) tiledAmount.y = 1.0;
 	textureCoords *= tiledAmount;
 
 	vec3 unitNormal = normalize(surfaceNormal);
@@ -123,8 +124,9 @@ void main(void){
 	if(usesSpecularMap > 0.5){
 		vec4 mapInfo = texture(specularMap, textureCoords);
 		totalSpecular *= mapInfo.r;
-		if(mapInfo.g > 0.5){
-			totalDiffuse = vec3(1.0);
+
+		if(mapInfo.g > 0.1){
+			totalDiffuse = vec3(1.0) * mapInfo.g;
 		}
 	}
 
@@ -144,4 +146,6 @@ void main(void){
 	}
 	if(usesReflectionCubeMap > 0.5) out_Color = mix(out_Color, reflecRefractColour, reflectionColourRatio);
 	//out_Color = reflecRefractColour;
+
+	out_Color = mix(vec4(skyColour, 1.0), out_Color, visibility);
 }

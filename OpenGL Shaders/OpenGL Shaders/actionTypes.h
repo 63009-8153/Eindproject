@@ -25,5 +25,6 @@ enum actionTypes {
 
 	// Weapon actions
 	SHOOT_ONCE		= 40,
-	SHOOT_HOLD		= 41,
+
+	USE				= 50
 };
