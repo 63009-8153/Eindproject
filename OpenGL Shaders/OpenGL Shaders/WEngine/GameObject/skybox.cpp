@@ -21,6 +21,7 @@ void Skybox::load(char vertexfile[], char fragmentfile[], Camera *camera, std::s
 
 	shader.start();
 	shader.loadProjectionMatrix(camera->getProjectionMatrix());
+	shader.loadSkyColour(clearColor);
 	shader.stop();
 }
 

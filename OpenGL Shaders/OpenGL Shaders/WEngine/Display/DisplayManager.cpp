@@ -13,8 +13,11 @@ int DisplayManager::createDisplay(int screenWidth, int screenHeight, char *title
 	//glfwWindowHint(GLFW_SAMPLES, 8); // 8x antialiasing
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3); // We want OpenGL 3.3
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // To make MacOS happy; should not be needed
+	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE); // To make MacOS happy; should not be needed
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_COMPAT_PROFILE); //We don't want the old OpenGL
+
+	glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+	//glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
 
 	// Open a window and create its OpenGL context
 	window = glfwCreateWindow(screenWidth, screenHeight, title, ((fullscreen) ? glfwGetPrimaryMonitor() : NULL), NULL);

@@ -30,8 +30,13 @@ uniform mat4 lightSpaceMatrix;
 
 uniform vec3 cameraPosition;
 
-const float density = 0.0005;
-const float gradient = 4.5;
+const float lowerLimit = 80.0;
+const float upperLimit = 190.0;
+
+// The larger this is, the denser the fog is
+const float density = 0.006;
+// The lower this is the larger the gradient is
+const float gradient = 3.5;
 
 void main(void){
 
@@ -53,9 +58,12 @@ void main(void){
 	}
 	toCameraVector = (inverse(viewMatrix) * vec4(0.0, 0.0, 0.0, 1.0)).xyz - worldPosition.xyz;
 
+	float factor = (worldPosition.y - lowerLimit) / (upperLimit - lowerLimit);
+	factor = clamp(factor, 0.0, 1.0);
+
 	float distance = length(positionRelativeToCam.xyz);
 	visibility = exp(-pow((distance * density), gradient));
-	visibility = clamp(visibility, 0.0, 1.0);
+	visibility = clamp(visibility, factor, 1.0);
 
 	viewVector = normalize(position - cameraPosition);
 }

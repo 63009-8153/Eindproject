@@ -166,4 +166,6 @@ void main(void){
 	if(usesReflectionCubeMap > 0.5) out_Color = mix(out_Color, reflecRefractColour, reflectionColourRatio);
 	//out_Color = reflecRefractColour;
 	//out_Color = vec4(reflectedVector, 1.0);
+
+	out_Color = mix(vec4(skyColour, 1.0), out_Color, visibility);
 }

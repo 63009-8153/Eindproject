@@ -8,6 +8,7 @@
 #include "ClientNetwork.h"
 
 #include "Player.h"
+#include "Enemy.h"
 
 extern void(*networkUpdateFunction)(void);
 extern void SendInitData();
@@ -37,10 +38,16 @@ public:
 	// Disconnect from the server.
 	void disconnect();
 
-	// Update the playerdata of own playerData
+	// Update the playerdata of own player
 	void setPlayerData(Player &player);
-	// Update the playerdata of own playerData
+
+	// Update the player with specified playerData
+	void getPlayerData(Player &player, int index);
+	// Update the player of own playerData
 	void getPlayerData(Player &player);
+
+	// Update the enemy with specified enemyData index
+	void getEnemyData(Enemy &enem, int index);
 
 	// Send playerData to the server.
 	// This function is only to be send during the game
@@ -66,6 +73,8 @@ public:
 
 	bool gameStarting,
 		 gameStarted;
+
+	bool networkConnected;
 
 	// The startTimer
 	float lobbyTimer;

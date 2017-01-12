@@ -2,9 +2,19 @@
 
 #include "Enemy.h"
 
+GLuint Enemy::animationTexture;
+GLuint Enemy::animationNTexture;
+
 //Constructor
 Enemy::Enemy()
 {
+	currentAnimationType = IDLE;
+	networkAnimType = IDLE;
+	currentAnimationFrame = 0;
+
+	animationExtraTime = 0;
+
+	active = false;
 }
 //Destructor
 Enemy::~Enemy()
@@ -23,6 +33,12 @@ void Enemy::init(glm::vec3 position, glm::vec3 rotation, glm::vec3 scale, float 
 
 	attackStrength = _attackStrength;
 	speed = glm::vec3(0.0f);
+
+	currentAnimationType = ENEM_WALK_FORWARD;
+	networkAnimType = ENEM_WALK_FORWARD;
+	currentAnimationFrame = 0;
+
+	animationExtraTime = 0;
 
 	active = false;
 }
@@ -45,8 +61,94 @@ void Enemy::setActive(glm::vec3 position)
 	setPosition(position);
 }
 
-//Update the enemy.
-void Enemy::update()
+gameobject *Enemy::getAnimModel(){
+	if (currentAnimationFrame >= enemyAnimationModels.size()) currentAnimationFrame = (enemyAnimationModels.size() - 1);
+
+	enemyAnimationModels[currentAnimationFrame].setPosition(glm::vec3(0.0));
+	enemyAnimationModels[currentAnimationFrame].setRotation(glm::radians(-glm::vec3(0.0f, getRotation().y + 180.0f, 0.0f)));
+	enemyAnimationModels[currentAnimationFrame].setScale(glm::vec3(0.04f));
+
+	return &enemyAnimationModels[currentAnimationFrame];
+}
+
+int Enemy::loadAnimations(char * animationFolder, int frames, double fps, bool loop)
 {
-	//TODO: enemy update
+	s_anim a;
+	a.startframe = enemyAnimationModels.size();
+	a.endframe = a.startframe + (frames - 1);
+	a.loop = loop;
+	a.fps = fps;
+
+	enemyAnimations.push_back(a);
+
+	for (unsigned int i = 0; i < frames; i++)
+	{
+		std::string prenumber = "";
+		if (i < 10) prenumber = "0";
+		std::string filepath = animationFolder + prenumber + std::to_string(i) + ".obj";
+		gameobject model = loader.loadObjFile(filepath.c_str(), false, false);
+		model.init();
+		model.addTexture(animationTexture);
+		model.setNormalMap(animationNTexture);
+		model.setAmbientLight(0.15f);
+
+		enemyAnimationModels.push_back(model);
+	}
+
+	return (enemyAnimations.size() - 1);
+}
+
+void Enemy::updateAnimation(int currentType)
+{
+	if (!active) return;
+	if (currentType < 0 || currentType > 5) currentType = currentAnimationType;
+
+	bool animationEnded = false;
+
+	// Get the amount of time each animationframe has to take
+	double animationFrameTime = (1.0 / enemyAnimations[currentAnimationType].fps);
+	// Calculate how many animaitionframes have past since the last update
+	int newFrames = (int)floor((deltaTime + animationExtraTime) / animationFrameTime);
+
+	// Amount of time since last animation frame minus the time of the amount of frames we do this update.
+	animationExtraTime = ((deltaTime + animationExtraTime) - (newFrames * animationFrameTime));
+
+	// If the currentAnimationFrame plus the amount of new frames is less than or equal to the last frame of the animation, add the amount of newFrames to the animation
+	if ((currentAnimationFrame + newFrames) < (enemyAnimations[currentAnimationType].endframe)) currentAnimationFrame += newFrames;
+	else if (enemyAnimations[currentAnimationType].loop) {
+		// If we want to loop and the amount of new frames is over the end, get the amount of frames past the end.
+		int overEndFrames = (currentAnimationFrame + newFrames);
+		// While the overEndFrames is over the last frame of the animation, subtract the amount of frames in the animation from the amount of frames we are over the end.
+		while (overEndFrames > (enemyAnimations[currentAnimationType].endframe)) {
+			overEndFrames -= (enemyAnimations[currentAnimationType].endframe - enemyAnimations[currentAnimationType].startframe) + 1;
+		}
+
+		// Set the new current animationframe to be the new frame
+		currentAnimationFrame = overEndFrames;
+
+		// Set the animation to be ended
+		animationEnded = true;
+	}
+	else {
+		// If the animation is at its end, and the animation does not loop, set the current frame to the last frame of the animation.
+		currentAnimationFrame = enemyAnimations[currentAnimationType].endframe;
+		// Set the animation to be ended
+		animationEnded = true;
+	}
+
+	// If the current animation is not the same as the requested animation and the current animation is done playing, set the new animation and start it.
+	if (currentType != currentAnimationType) {
+		currentAnimationType = currentType;
+		resetAnimation();
+	}
+}
+
+void Enemy::resetAnimation()
+{
+	currentAnimationFrame = enemyAnimations[currentAnimationType].startframe;
+}
+
+//Update the enemy.
+void Enemy::update(){
+	updateAnimation(networkAnimType);
 }
