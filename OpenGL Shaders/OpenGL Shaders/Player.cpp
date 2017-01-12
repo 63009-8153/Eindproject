@@ -54,7 +54,7 @@ gameobject *Player::getAnimModel()
 {
 	if (currentAnimationFrame >= animationModels.size()) currentAnimationFrame = (animationModels.size() - 1);
 
-	animationModels[currentAnimationFrame].setPosition(glm::vec3(0.0));
+	animationModels[currentAnimationFrame].setPosition(getPosition());
 	animationModels[currentAnimationFrame].setRotation(glm::radians(-glm::vec3(0.0f, getRotation().y + 180.0f, 0.0f)));
 	animationModels[currentAnimationFrame].setScale(glm::vec3(0.04f));
 

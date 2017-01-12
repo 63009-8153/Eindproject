@@ -8,7 +8,7 @@ struct playerData {
 	glm::vec3 velocity;
 	int playerID;
 	float health, maxHealth;
-	int shooting;
+	int currentWeapon, shooting;
 	char playerName[MAX_NAMESIZE];
 	unsigned int playerNameSize;
 	bool activePlayer;
@@ -22,6 +22,7 @@ struct playerData {
 		playerID = p.playerID;
 		health = p.health;
 		maxHealth = p.maxHealth;
+		currentWeapon = p.currentWeapon;
 		shooting = p.shooting;
 		animType = p.animType;
 
@@ -40,6 +41,7 @@ struct playerData {
 		playerID = p.playerID;
 		health = p.health;
 		maxHealth = p.maxHealth;
+		currentWeapon = p.currentWeapon;
 		shooting = p.shooting;
 		animType = p.animType;
 
@@ -50,6 +52,4 @@ struct playerData {
 
 		return *this;
 	}
-
-
 };

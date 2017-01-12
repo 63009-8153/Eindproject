@@ -81,6 +81,7 @@ void ClientGame::updateClient()
 						break;
 					case GAME_STARTED:
 						// Set the networkFunction to the game update function
+						printf("Game started!\n");
 						networkUpdateFunction = SendGameData;
 						gameStarted = true;
 						gameStarting = false;
@@ -172,7 +173,6 @@ void ClientGame::setPlayerData(Player & player)
 	if (!networkConnected) return;
 
 	myPlayerData.rotation = player.getRotation();
-	printf("Set: %f | %f | %f\n", myPlayerData.rotation.x, myPlayerData.rotation.y, myPlayerData.rotation.z);
 }
 
 // Update the player with specified playerData
@@ -251,7 +251,6 @@ void ClientGame::sendPlayerData()
 	packet.packet_type = GAME_PACKET;
 
 	packet.player = myPlayerData;
-	printf("Get: %f | %f | %f\n", myPlayerData.rotation.x, myPlayerData.rotation.y, myPlayerData.rotation.z);
 
 	// Add all set actionTypes to the packet
 	for (int i = 0; i < MAX_ACTIONS; i++) {

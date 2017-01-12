@@ -24,7 +24,7 @@ enum actionTypes {
 	JUMP			= 35,
 
 	// Weapon actions
-	SHOOT_ONCE		= 40,
+	SHOOT			= 40,
 
 	USE				= 50
 };
