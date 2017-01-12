@@ -34,10 +34,11 @@ public:
 	static void EnableCulling();
 	
 	std::map<GLuint, std::vector<gameobject>> gameobjects;
+
+	ShaderProgram shader;
 private:
 
 	Renderer renderer;
-	ShaderProgram shader;
 
 	bool wireframeRender;
 };

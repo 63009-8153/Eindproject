@@ -1,6 +1,11 @@
 #ifndef _GAMEOBJECT_
 #define _GAMEOBJECT_
 
+#include "../Renderer/ShaderProgram.h"
+#include "../Camera/camera.h"
+
+extern glm::vec3 clearColor;
+
 class gameobject
 {
 public:
@@ -71,8 +76,10 @@ public:
 	float getShineDamper();
 	float getReflectivity();
 
-	void setTiledAmount(float amount);
-	float getTiledAmount();
+	void setTiledAmount(glm::vec2 amount);
+	glm::vec2 getTiledAmount();
+
+	void Draw(ShaderProgram &shader, std::vector<Light*> lights, Camera *camera, glm::vec4 clipPlane);
 
 private:
 	int vaoID;
@@ -82,7 +89,7 @@ private:
 			  rotation,
 			  scale;
 
-	float tiledAmount;
+	glm::vec2 tiledAmount;
 
 	std::vector<GLuint> textureID;
 	GLuint normalMapID,

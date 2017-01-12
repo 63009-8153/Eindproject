@@ -41,7 +41,7 @@ public:
 
 	void loadLights(std::vector<Light*> lights);
 
-	void loadTileAmount(float tiles);
+	void loadTileAmount(glm::vec2 tiles);
 
 private:
 	int programID;

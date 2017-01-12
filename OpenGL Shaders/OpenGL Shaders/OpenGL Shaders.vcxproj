@@ -166,12 +166,20 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Character.cpp" />
     <ClCompile Include="ClientGame.cpp" />
     <ClCompile Include="ClientNetwork.cpp" />
     <ClCompile Include="Enemy.cpp" />
+    <ClCompile Include="FontType.cpp" />
+    <ClCompile Include="GUIText.cpp" />
+    <ClCompile Include="Line.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="MetaFile.cpp" />
     <ClCompile Include="Model.cpp" />
     <ClCompile Include="Player.cpp" />
+    <ClCompile Include="TextMeshCreator.cpp" />
+    <ClCompile Include="TextMeshData.cpp" />
+    <ClCompile Include="Tree.cpp" />
     <ClCompile Include="WEngine\Camera\camera.cpp" />
     <ClCompile Include="WEngine\Display\DisplayManager.cpp" />
     <ClCompile Include="WEngine\FrameBuffers\framebuffer.cpp" />
@@ -197,17 +205,24 @@
     <ClCompile Include="WEngine\Utils\loader.cpp" />
     <ClCompile Include="WEngine\Water\WaterMasterRenderer.cpp" />
     <ClCompile Include="WEngine\Water\WaterShaderProgram.cpp" />
+    <ClCompile Include="Word.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="actionTypes.h" />
+    <ClInclude Include="AnimationTypes.h" />
     <ClInclude Include="areaTypes.h" />
+    <ClInclude Include="Character.h" />
     <ClInclude Include="ClientGame.h" />
     <ClInclude Include="ClientNetwork.h" />
     <ClInclude Include="ClientPackage.h" />
     <ClInclude Include="ClientPacketLobby.h" />
     <ClInclude Include="Enemy.h" />
     <ClInclude Include="enemyData.h" />
+    <ClInclude Include="FontType.h" />
+    <ClInclude Include="GUIText.h" />
     <ClInclude Include="Header.h" />
+    <ClInclude Include="Line.h" />
+    <ClInclude Include="MetaFile.h" />
     <ClInclude Include="networkData.h" />
     <ClInclude Include="NetworkHeader.h" />
     <ClInclude Include="Model.h" />
@@ -216,6 +231,9 @@
     <ClInclude Include="packetTypes.h" />
     <ClInclude Include="Player.h" />
     <ClInclude Include="playerData.h" />
+    <ClInclude Include="TextMeshCreator.h" />
+    <ClInclude Include="TextMeshData.h" />
+    <ClInclude Include="Tree.h" />
     <ClInclude Include="WEngine\Camera\camera.h" />
     <ClInclude Include="WEngine\Display\DisplayManager.h" />
     <ClInclude Include="WEngine\FrameBuffers\framebuffer.h" />
@@ -244,6 +262,7 @@
     <ClInclude Include="WEngine\Utils\Maths.h" />
     <ClInclude Include="WEngine\Water\WaterMasterRenderer.h" />
     <ClInclude Include="WEngine\Water\WaterShaderProgram.h" />
+    <ClInclude Include="Word.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="WEngine\Shaders\AntiAliasing\AAVertex.vs" />
