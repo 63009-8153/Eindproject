@@ -13,6 +13,7 @@ public:
 	gameobject();
 	gameobject(gameobject *object);
 	gameobject(int ovaoID, int overtexCount);
+	gameobject(GLfloat positions[], int posCount, GLuint indices[], int indicesCount, GLfloat uvs[], int uvsSize, GLfloat normals[], int normalsSize, GLfloat tangents[], int tangentsSize);
 	~gameobject();
 
 	//Get Model stuff
@@ -81,9 +82,21 @@ public:
 
 	void Draw(ShaderProgram &shader, std::vector<Light*> lights, Camera *camera, glm::vec4 clipPlane);
 
+	bool needsObject = false;
+
+	GLfloat *vertices;
+	int vertexCount;
+	GLuint *indices;
+	int indicesCount;
+	GLfloat *uvs;
+	int uvsSize;
+	GLfloat *normals;
+	int normalsSize;
+	GLfloat *tangents;
+	int tangentsSize;
+
 private:
 	int vaoID;
-	int vertexCount;
 
 	glm::vec3 position, 
 			  rotation,

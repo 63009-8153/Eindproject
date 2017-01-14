@@ -70,6 +70,12 @@ gameobject Loader::loadToVAO(GLfloat positions[], int posCount,
 	return gameobject(vaoID, indicesCount);
 }
 
+gameobject Loader::loadToVAO(gameobject & object)
+{
+	object = loadToVAO(object.vertices, object.vertexCount, object.indices, object.indicesCount, object.uvs, object.uvsSize, object.normals, object.normalsSize, object.tangents, object.tangentsSize);
+	return object;
+}
+
 gameobject Loader::loadToVAO(GLfloat positions[], int posCount, int dimensions)
 {
 	int vaoID = createVAO();
@@ -83,7 +89,7 @@ gameobject Loader::loadToVAO(GLfloat positions[], int posCount, int dimensions)
 
 gameobject Loader::loadObjFile(const char * path, bool writeParsed, bool forceParse) {
 	//Clear the faces vector
-	faces.clear();
+	std::vector<face> faces;
 
 	std::vector< glm::vec3 > temp_vertices;
 	std::vector< glm::vec2 > temp_uvs;
@@ -290,6 +296,218 @@ gameobject Loader::loadObjFile(const char * path, bool writeParsed, bool forcePa
 					 textureArray,  (uvsSortedVertex.size() * 2),
 					 normalsArray,  (normalsSortedVertex.size() * 3),
 					 tangentsArray, (tangents.size() * 3));
+}
+
+gameobject Loader::loadObjFileData(const char * path, bool writeParsed, bool forceParse)
+{
+	//Clear the faces vector
+	std::vector<face> faces;
+
+	std::vector< glm::vec3 > temp_vertices;
+	std::vector< glm::vec2 > temp_uvs;
+	std::vector< glm::vec3 > temp_normals;
+
+	bool parsedFile = false;
+
+	//Open gile
+	FILE * file;
+	fopen_s(&file, path, "r");
+	if (file == NULL) {
+		printf("Impossible to open file: %s!\n", path);
+		system("pause");
+		exit(0);
+	}
+
+	//Infinate loop to itterate through lines
+	while (true) {
+		char lineHeader[128]; //Lineheader buffer
+
+							  // read the first word of the line
+		int res = fscanf_s(file, "%s", lineHeader, sizeof(lineHeader));
+		if (res == EOF)
+			break; // EOF = End Of File. Quit the loop.
+
+				   // else : parse lineHeader
+
+		if (strcmp(lineHeader, "v") == 0) { //vertices
+			glm::vec3 vertex;
+
+			fscanf_s(file, "%f %f %f\n", &vertex.x, &vertex.y, &vertex.z);
+			temp_vertices.push_back(vertex);
+		}
+		else if (strcmp(lineHeader, "vt") == 0) { //uvs
+			glm::vec2 uv;
+
+			fscanf_s(file, "%f %f\n", &uv.x, &uv.y);
+			temp_uvs.push_back(uv);
+		}
+		else if (strcmp(lineHeader, "vn") == 0) { //normals
+			glm::vec3 normal;
+
+			fscanf_s(file, "%f %f %f\n", &normal.x, &normal.y, &normal.z);
+			temp_normals.push_back(normal);
+		}
+		else if (strcmp(lineHeader, "f") == 0) { //faces
+			unsigned int vertexIndex[3],
+				uvIndex[3],
+				normalIndex[3];
+
+			int matches = fscanf_s(file, "%d/%d/%d %d/%d/%d %d/%d/%d\n", &vertexIndex[0], &uvIndex[0], &normalIndex[0], &vertexIndex[1], &uvIndex[1], &normalIndex[1], &vertexIndex[2], &uvIndex[2], &normalIndex[2]);
+			if (matches != 9) {
+				printf("File %s can't be read by our simple parser : ( Try exporting with other options\n", path);
+				return gameobject();
+			}
+
+			face currentFace;
+
+			currentFace.vertices.x = (float)((int)vertexIndex[0] - 1);
+			currentFace.vertices.y = (float)((int)vertexIndex[1] - 1);
+			currentFace.vertices.z = (float)((int)vertexIndex[2] - 1);
+
+			currentFace.normals.x = (float)((int)normalIndex[0] - 1);
+			currentFace.normals.y = (float)((int)normalIndex[1] - 1);
+			currentFace.normals.z = (float)((int)normalIndex[2] - 1);
+
+			currentFace.uvs.x = (float)((int)uvIndex[0] - 1);
+			currentFace.uvs.y = (float)((int)uvIndex[1] - 1);
+			currentFace.uvs.z = (float)((int)uvIndex[2] - 1);
+
+			faces.push_back(currentFace);
+		}
+	}
+
+	//Close file
+	fclose(file);
+
+	printf("Model loaded!\n");
+
+	//If there are more texture coords than vertices, we need to parse the obj file further so the texture aligns properly.
+	if (temp_uvs.size() > temp_vertices.size() || forceParse) {
+		printf("Starting parsing file: %s!\n", path);
+		int count = 0;
+		for (unsigned int i = (faces.size() - 1); i > 0; i--) {
+			printf("%d of: %d\n", faces.size(), ++count);
+			for (unsigned int j = 0; j < i; j++) {
+				if (i == j) continue;
+
+				for (unsigned int l = 0; l < 3; l++) {
+					for (unsigned int k = 0; k < 3; k++) {
+						if (faces[i].vertices[l] == faces[j].vertices[k] && faces[i].uvs[l] != faces[j].uvs[k]) {
+							//Get position of vertex in question
+							int vertexComparedVal = (int)faces[i].vertices[l];
+							glm::vec3 otherVertexValue = temp_vertices[vertexComparedVal];
+
+							//Create new vertex and get its id
+							int newVertexPosition = temp_vertices.size();
+							temp_vertices.push_back(otherVertexValue);
+
+							//Put the new vertex value in the right place in its face
+							switch (l) {
+							case 0:
+								faces[i].vertices.x = (float)newVertexPosition;
+								break;
+							case 1:
+								faces[i].vertices.y = (float)newVertexPosition;
+								break;
+							case 2:
+								faces[i].vertices.z = (float)newVertexPosition;
+								break;
+							}
+
+							//TODO: proper normals and texture coords 
+						}
+					}
+				}
+			}
+		}
+
+		printf("Finished parsing file!\n");
+
+		parsedFile = true;
+		//TODO: Make this parser as a standalone program to parse obj files before use.
+	}
+
+	if (parsedFile && writeParsed) {
+		printf("Starting writing parsed file!\n");
+
+		File::createObjFile(path,
+			&temp_vertices[0].x, (temp_vertices.size() * 3),
+			&temp_uvs[0].x, (temp_uvs.size() * 2),
+			&temp_normals[0].x, (temp_normals.size() * 3),
+			faces, faces.size());
+
+		printf("Finished writing parsed file!\n");
+	}
+
+	std::vector < GLuint > indices;
+	std::vector< glm::vec3 > normalsSortedVertex(faces.size() * 3);
+	std::vector< glm::vec2 > uvsSortedVertex(faces.size() * 3);
+
+	std::vector<glm::vec3> tangents(temp_vertices.size());
+	std::vector<bool> tangentSet(temp_vertices.size());
+	for (unsigned int i = 0; i < temp_vertices.size(); i++) tangentSet[i] = false;
+
+	//Vertex inices to indices vector
+	for (unsigned int i = 0; i < faces.size(); i++) {
+		face f = faces[i];
+		std::vector<glm::vec3> returnTangents;
+
+		computeTangentBasis(
+			temp_vertices[(int)f.vertices.x],
+			temp_vertices[(int)f.vertices.y],
+			temp_vertices[(int)f.vertices.z],
+			temp_uvs[(int)f.uvs.x],
+			temp_uvs[(int)f.uvs.y],
+			temp_uvs[(int)f.uvs.z],
+			returnTangents);
+
+		//normalize( max( cross(normalize(surfaceNormal), vec3(0.0, 0.0, 1.0)) , cross(normalize(surfaceNormal), vec3(0.0, 1.0, 0.0)) ) );
+		returnTangents.clear();
+		returnTangents.push_back(glm::normalize(glm::max(glm::cross(glm::normalize(temp_normals[(int)f.normals.x]), glm::vec3(0.0f, 0.0f, 1.0f)), glm::cross(glm::normalize(temp_normals[(int)f.normals.x]), glm::vec3(0.0f, 1.0f, 0.0f)))));
+		returnTangents.push_back(glm::normalize(glm::max(glm::cross(glm::normalize(temp_normals[(int)f.normals.y]), glm::vec3(0.0f, 0.0f, 1.0f)), glm::cross(glm::normalize(temp_normals[(int)f.normals.y]), glm::vec3(0.0f, 1.0f, 0.0f)))));
+		returnTangents.push_back(glm::normalize(glm::max(glm::cross(glm::normalize(temp_normals[(int)f.normals.z]), glm::vec3(0.0f, 0.0f, 1.0f)), glm::cross(glm::normalize(temp_normals[(int)f.normals.z]), glm::vec3(0.0f, 1.0f, 0.0f)))));
+
+		processVertexTangent((int)f.vertices.x, returnTangents[0], tangents, tangentSet);
+		processVertexTangent((int)f.vertices.y, returnTangents[1], tangents, tangentSet);
+		processVertexTangent((int)f.vertices.z, returnTangents[2], tangents, tangentSet);
+
+		for (unsigned int j = 0; j < 3; j++) {
+
+			unsigned int currentVertexPointer = (int)f.vertices[j];
+			unsigned int uvPointer = (int)f.uvs[j];
+			unsigned int normalPointer = (int)f.normals[j];
+
+			indices.push_back(currentVertexPointer);
+
+			//Make sure there are as many uvs and normals as there are vertices.
+			uvsSortedVertex.at(currentVertexPointer) = temp_uvs[uvPointer];
+			normalsSortedVertex.at(currentVertexPointer) = temp_normals[normalPointer];
+		}
+	}
+
+	/*fopen_s(&file, "res/tangents.txt", "w");
+	for (unsigned int i = 0; i < tangents.size(); i++)
+	{
+	if(i > 25 && i < 35) printf("%d : %f \t%f \t%f\n", i, tangents[i].x, tangents[i].y, tangents[i].z);
+	fprintf_s(file, "%d \t%f \t%f \t%f\n", i, tangents[i].x, tangents[i].y, tangents[i].z);
+	}
+	fclose(file);*/
+
+	//Make vectors into float arrays
+	float *textureArray = &uvsSortedVertex[0].x;
+	float *normalsArray = &normalsSortedVertex[0].x;
+
+	float *verticesArray = &temp_vertices[0].x;
+	GLuint *indicesArray = &indices[0];
+
+	float *tangentsArray = &tangents[0].x;
+
+	//Return a gameobject with loaded data.
+	return gameobject(verticesArray, (temp_vertices.size() * 3),
+		indicesArray, (indices.size()),
+		textureArray, (uvsSortedVertex.size() * 2),
+		normalsArray, (normalsSortedVertex.size() * 3),
+		tangentsArray, (tangents.size() * 3));
 }
 
 //Load a BMP texture and return its texture id
