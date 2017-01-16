@@ -1232,27 +1232,92 @@ void LoadGraphics_ForrestMap()
 }
 
 // Load all models
+std::vector<gameobject> animobjs[9];
+std::thread tanim[9];
 
+void anim1() {
+	playerAnimations[0] = Player::loadAnimations("res/PlayerAnimations/Idle/", animobjs[0], 0, 32, 15, true);
+}
+void anim2() {
+	playerAnimations[1] = Player::loadAnimations("res/PlayerAnimations/Walk_Forward/", animobjs[1], 32, 31, 62, true);
+}
+void anim3() {
+	playerAnimations[2] = Player::loadAnimations("res/PlayerAnimations/Walk_Backward/", animobjs[2], 63, 31, 62, true);
+}
+void anim4() {
+	playerAnimations[3] = Player::loadAnimations("res/PlayerAnimations/Walk_Left/", animobjs[3], 94, 31, 62, true);
+}
+void anim5() {
+	playerAnimations[4] = Player::loadAnimations("res/PlayerAnimations/Walk_Right/", animobjs[4], 125, 31, 62, true);
+}
+void anim6() {
+	playerAnimations[5] = Player::loadAnimations("res/PlayerAnimations/Run_Forward/", animobjs[5], 156, 16, 62, true);
+}
+
+void anim7() {
+	enemyAnimations[0] = Enemy::loadAnimations("res/EnemyAnimations/Walk_Forward/", animobjs[6], 0, 38, 62, true);
+}
+void anim8() {
+	enemyAnimations[1] = Enemy::loadAnimations("res/EnemyAnimations/Attack/", animobjs[7], 38, 40, 62, true);
+}
+void anim9() {
+	enemyAnimations[2] = Enemy::loadAnimations("res/EnemyAnimations/Dying/", animobjs[8], 78, 45, 62, true);
+}
 void loadAnimations()
 {
-	Player::loadAnimations("res/PlayerAnimations/Idle/", 32, 15, true);
-	Player::loadAnimations("res/PlayerAnimations/Walk_Forward/", 31, 62, true);
-	Player::loadAnimations("res/PlayerAnimations/Walk_Backward/", 31, 62, true);
-	Player::loadAnimations("res/PlayerAnimations/Walk_Left/", 31, 62, true);
-	Player::loadAnimations("res/PlayerAnimations/Walk_Right/", 31, 62, true);
-	Player::loadAnimations("res/PlayerAnimations/Run_Forward/", 16, 62, true);
+	playerAnimations.resize(6);
+	enemyAnimations.resize(3);
 
-	Enemy::loadAnimations("res/EnemyAnimations/Walk_Forward/", 38, 62, true);
-	Enemy::loadAnimations("res/EnemyAnimations/Attack/", 40, 62, true);
-	Enemy::loadAnimations("res/EnemyAnimations/Dying/", 45, 62, true);
+	tanim[0] = std::thread(anim1);
+	tanim[1] = std::thread(anim2);
+	tanim[2] = std::thread(anim3);
+	tanim[3] = std::thread(anim4);
+	tanim[4] = std::thread(anim5);
+	tanim[5] = std::thread(anim6);
+
+	tanim[6] = std::thread(anim7);
+	tanim[7] = std::thread(anim8);
+	tanim[8] = std::thread(anim9);
+}
+void endLoadAnimations() {
+	tanim[0].join();
+	tanim[1].join();
+	tanim[2].join();
+	tanim[3].join();
+	tanim[4].join();
+	tanim[5].join();
+
+	tanim[6].join();
+	tanim[7].join();
+	tanim[8].join();
+
+	animationModels.insert(animationModels.end(), animobjs[0].begin(), animobjs[0].end());
+	animationModels.insert(animationModels.end(), animobjs[1].begin(), animobjs[1].end());
+	animationModels.insert(animationModels.end(), animobjs[2].begin(), animobjs[2].end());
+	animationModels.insert(animationModels.end(), animobjs[3].begin(), animobjs[3].end());
+	animationModels.insert(animationModels.end(), animobjs[4].begin(), animobjs[4].end());
+	animationModels.insert(animationModels.end(), animobjs[5].begin(), animobjs[5].end());
+
+	enemyAnimationModels.insert(enemyAnimationModels.end(), animobjs[6].begin(), animobjs[6].end());
+	enemyAnimationModels.insert(enemyAnimationModels.end(), animobjs[7].begin(), animobjs[7].end());
+	enemyAnimationModels.insert(enemyAnimationModels.end(), animobjs[8].begin(), animobjs[8].end());
+
+	Player::createAnimationModels();
+	Enemy::createAnimationModels();
 }
 void loadModels()
 {
+	// Start loading all animations
+	loadAnimations();
+
 	// Load all the models for the safe area.
 	loadModels_SafeArea();
 
 	// Load all the models for the forrest map.
 	LoadModels_ForrestMap();
+
+	// If loading the animations is not done yet, wait for it here and then create vao's for all objects
+	endLoadAnimations();
 }
 // Load Safe Area Models
 void loadModels_SafeArea()
