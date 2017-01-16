@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Header.h"
+#include "../../Header.h"
 
 class FontType;
 #include "FontType.h"
@@ -36,7 +36,7 @@ class GUIText
 		* @param centered
 		*            - whether the text should be centered or not.
 		*/
-		GUIText(std::string text, float fontSize, FontType &font, glm::vec2 position, float maxLineLength, bool centered);
+		GUIText(std::string text, float fontSize, FontType *font, glm::vec2 position, float maxLineLength, bool centered);
 
 		/**
 		* Remove the text from the screen.
@@ -83,7 +83,7 @@ class GUIText
 		* @return the ID of the text's VAO, which contains all the vertex data for
 		*         the quads on which the text will be rendered.
 		*/
-		int getMesh();
+		GLuint getMesh();
 
 		/**
 		* Set the VAO and vertex count for this text.
@@ -94,7 +94,7 @@ class GUIText
 		* @param verticesCount
 		*            - the total number of vertices in all of the quads.
 		*/
-		void setMeshInfo(int vao, int verticesCount);
+		void setMeshInfo(GLuint vao, int verticesCount);
 
 		/**
 		* @return The total number of vertices of all the text's quads.
@@ -133,8 +133,9 @@ class GUIText
 		std::string textString;
 		float fontSize;
 
-		int textMeshVao;
+		GLuint textMeshVao;
 		int vertexCount;
+
 		glm::vec3 colour = glm::vec3(0.0f);
 
 		glm::vec2 position;

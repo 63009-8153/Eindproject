@@ -9,6 +9,7 @@ class Loader
 public:
 	~Loader();
 
+	GLuint loadToVAO(GLfloat positions[], int posCount, GLfloat uvs[], int uvsSize);
 	gameobject loadToVAO(GLfloat positions[], int posCount, GLuint indices[], int indicesCount, GLfloat uvs[], int uvsSize, GLfloat normals[], int normalsSize);
 	gameobject loadToVAO(GLfloat positions[], int posCount, GLuint indices[], int indicesCount, GLfloat uvs[], int uvsSize, GLfloat normals[], int normalsSize, GLfloat tangents[], int tangentsSize);
 	gameobject loadToVAO(gameobject &object);

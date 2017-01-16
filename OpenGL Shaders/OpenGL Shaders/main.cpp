@@ -1,14 +1,16 @@
 #include "ClientGame.h"
-
-#include "WEngine/Usage.h"
-
 #include "areaTypes.h"
+
+// Graphics and sound Engine
+#include "WEngine/Usage.h"
+#include "SAL/CoreSystem.h"
 
 #include "Enemy.h"
 #include "Model.h"
 #include "Player.h"
 
 #include "Tree.h"
+
 
 #define WAVE_SPEED 0.03
 
@@ -30,10 +32,13 @@ ClientGame client;
 double	clientLoopDeltaTime		 = 0,
 		clientLoopLastRenderTime = 0;
 
+void (*networkUpdateFunction)(void) = nullptr;
+
 // ============  GAME PROGRAM VARIABLES ============
 
 GLFWwindow* window;
-void (*networkUpdateFunction)(void) = nullptr;
+
+SimpleAudioLib::AudioEntity* sound;
 
 float mouseSensitivity = 1.0f;
 
@@ -254,6 +259,15 @@ void loadTreeModels();
 
 
 int main() {
+
+	// Initialise the audioSystem
+	SimpleAudioLib::CoreSystem& audioSystem = SimpleAudioLib::CoreSystem::getInstance();
+	audioSystem.initWithDefaultDevice();
+
+	/* This is code to load a sound file and then play it */
+	sound = audioSystem.createAudioEntityFromFile("res/Sounds/tada.wav");
+	// Play sound
+	//sound->play(true);
 
 	player.active = true;
 
@@ -699,6 +713,12 @@ int main() {
 
 	//Terminate glfw
 	glfwTerminate();
+
+	// Clean up audio
+	delete sound;
+	sound = NULL;
+
+	SimpleAudioLib::CoreSystem::release();
 }
 
 
@@ -1253,6 +1273,8 @@ void loadModels()
 
 	// Load all the models for the forrest map.
 	LoadModels_ForrestMap();
+
+	loadAnimations();
 }
 // Load Safe Area Models
 void loadModels_SafeArea()

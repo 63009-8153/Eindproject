@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Header.h"
+#include "../../Header.h"
 
 class TextMeshData
 {
@@ -15,6 +15,7 @@ class TextMeshData
 		float* getTextureCoords();
 
 		int getVertexCount();
+		int getTextureCount();
 
 	private:
 

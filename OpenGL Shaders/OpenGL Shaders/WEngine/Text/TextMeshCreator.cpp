@@ -12,13 +12,21 @@ TextMeshCreator::TextMeshCreator(char * filepath) {
 	metaData = MetaFile(filepath);
 }
 
-std::vector<Line> TextMeshCreator::createStructure(GUIText &text) {
-	std::string charString = text.getTextString();
+TextMeshData TextMeshCreator::createTextMesh(GUIText &text) {
+	std::vector<Line> lines = createStructure(&text);
+
+	TextMeshData data = createQuadVertices(text, lines);
+
+	return data;
+}
+
+std::vector<Line> TextMeshCreator::createStructure(GUIText *text) {
+	std::string charString = text->getTextString();
 
 	std::vector<Line> lines;
 
-	Line currentLine = Line(metaData.getSpaceWidth(), text.getFontSize(), text.getMaxLineSize());
-	Word currentWord = Word(text.getFontSize());
+	Line currentLine = Line(metaData.getSpaceWidth(), text->getFontSize(), text->getMaxLineSize());
+	Word currentWord = Word(text->getFontSize());
 
 	// Loop through all characters
 	for (int i = 0; i < charString.size(); i++) {
@@ -29,10 +37,10 @@ std::vector<Line> TextMeshCreator::createStructure(GUIText &text) {
 			bool added = currentLine.attemptToAddWord(currentWord);
 			if (!added) {
 				lines.push_back(currentLine);
-				currentLine = Line(metaData.getSpaceWidth(), text.getFontSize(), text.getMaxLineSize());
+				currentLine = Line(metaData.getSpaceWidth(), text->getFontSize(), text->getMaxLineSize());
 				currentLine.attemptToAddWord(currentWord);
 			}
-			currentWord = Word(text.getFontSize());
+			currentWord = Word(text->getFontSize());
 
 			continue;
 		}
@@ -41,18 +49,18 @@ std::vector<Line> TextMeshCreator::createStructure(GUIText &text) {
 		currentWord.addCharacter(character);
 	}
 
-	completeStructure(lines, currentLine, currentWord, text);
+	completeStructure(lines, currentLine, &currentWord, text);
 
 	return lines;
 }
 
-void TextMeshCreator::completeStructure(std::vector<Line> &lines, Line &currentLine, Word &currentWord, GUIText & text) {
-	bool added = currentLine.attemptToAddWord(currentWord);
+void TextMeshCreator::completeStructure(std::vector<Line> &lines, Line &currentLine, Word *currentWord, GUIText *text) {
+	bool added = currentLine.attemptToAddWord(*currentWord);
 
 	if (!added) {
 		lines.push_back(currentLine);
-		currentLine = Line(metaData.getSpaceWidth(), text.getFontSize(), text.getMaxLineSize());
-		currentLine.attemptToAddWord(currentWord);
+		currentLine = Line(metaData.getSpaceWidth(), text->getFontSize(), text->getMaxLineSize());
+		currentLine.attemptToAddWord(*currentWord);
 	}
 
 	lines.push_back(currentLine);
@@ -72,7 +80,7 @@ TextMeshData TextMeshCreator::createQuadVertices(GUIText &text, std::vector<Line
 
 		for (Word word : line.getWords()) {
 			for (Character letter : word.getCharacters()) {
-				addVerticesForCharacter(curserX, curserY, letter, text.getFontSize(), vertices);
+				addVerticesForCharacter(curserX, curserY, &letter, text.getFontSize(), vertices);
 				addTexCoords(textureCoords, letter.getxTextureCoord(), letter.getyTextureCoord(),
 					letter.getXMaxTextureCoord(), letter.getYMaxTextureCoord());
 				curserX += letter.getxAdvance() * text.getFontSize();
@@ -87,12 +95,12 @@ TextMeshData TextMeshCreator::createQuadVertices(GUIText &text, std::vector<Line
 	return TextMeshData(listToArray(vertices), vertices.size(), listToArray(textureCoords), textureCoords.size());
 }
 
-void TextMeshCreator::addVerticesForCharacter(double curserX, double curserY, Character &character, double fontSize, std::vector<float> &vertices) {
+void TextMeshCreator::addVerticesForCharacter(double curserX, double curserY, Character *character, double fontSize, std::vector<float> &vertices) {
 	
-	double x = curserX + (character.getxOffset() * fontSize);
-	double y = curserY + (character.getyOffset() * fontSize);
-	double maxX = x + (character.getSizeX() * fontSize);
-	double maxY = y + (character.getSizeY() * fontSize);
+	double x = curserX + (character->getxOffset() * fontSize);
+	double y = curserY + (character->getyOffset() * fontSize);
+	double maxX = x + (character->getSizeX() * fontSize);
+	double maxY = y + (character->getSizeY() * fontSize);
 	double properX = (2 * x) - 1;
 	double properY = (-2 * y) + 1;
 	double properMaxX = (2 * maxX) - 1;
@@ -115,7 +123,6 @@ void TextMeshCreator::addVertices(std::vector<float> &vertices, double x, double
 	vertices.push_back((float)x);
 	vertices.push_back((float)y);
 }
-
 void TextMeshCreator::addTexCoords(std::vector<float> &texCoords, double x, double y, double maxX, double maxY) {
 	texCoords.push_back((float)x);
 	texCoords.push_back((float)y);
@@ -139,12 +146,4 @@ float* TextMeshCreator::listToArray(std::vector<float> &listOfFloats) {
 	}
 
 	return arr;
-}
-
-TextMeshData TextMeshCreator::createTextMesh(GUIText &text) {
-	std::vector<Line> lines = createStructure(text);
-
-	TextMeshData data = createQuadVertices(text, lines);
-
-	return data;
 }

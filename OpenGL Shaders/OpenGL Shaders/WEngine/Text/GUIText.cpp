@@ -33,13 +33,14 @@ GUIText::~GUIText()
 * @param centered
 *            - whether the text should be centered or not.
 */
-GUIText::GUIText(std::string text, float _fontSize, FontType &_font, glm::vec2 _position, float maxLineLength, bool centered) {
+GUIText::GUIText(std::string text, float _fontSize, FontType *_font, glm::vec2 _position, float maxLineLength, bool centered) {
 	textString = text;
 	fontSize = _fontSize;
-	font = new FontType(_font);
+	font = _font;
 	position = _position;
 	lineMaxSize = maxLineLength;
 	centerText = centered;
+
 	// load text
 }
 
@@ -100,7 +101,7 @@ glm::vec2 GUIText::getPosition() {
 * @return the ID of the text's VAO, which contains all the vertex data for
 *         the quads on which the text will be rendered.
 */
-int GUIText::getMesh() {
+GLuint GUIText::getMesh() {
 	return textMeshVao;
 }
 
@@ -113,7 +114,7 @@ int GUIText::getMesh() {
 * @param verticesCount
 *            - the total number of vertices in all of the quads.
 */
-void GUIText::setMeshInfo(int vao, int verticesCount) {
+void GUIText::setMeshInfo(GLuint vao, int verticesCount) {
 	textMeshVao = vao;
 	vertexCount = verticesCount;
 }
