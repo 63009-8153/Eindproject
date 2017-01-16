@@ -504,10 +504,10 @@ gameobject Loader::loadObjFileData(const char * path, bool writeParsed, bool for
 
 	//Return a gameobject with loaded data.
 	return gameobject(verticesArray, (temp_vertices.size() * 3),
-		indicesArray, (indices.size()),
-		textureArray, (uvsSortedVertex.size() * 2),
-		normalsArray, (normalsSortedVertex.size() * 3),
-		tangentsArray, (tangents.size() * 3));
+					indicesArray, (indices.size()),
+					textureArray, (uvsSortedVertex.size() * 2),
+					normalsArray, (normalsSortedVertex.size() * 3),
+					tangentsArray, (tangents.size() * 3));
 }
 
 //Load a BMP texture and return its texture id
