@@ -271,8 +271,6 @@ int main() {
 	// Play sound
 	//sound->play(true);
 
-	player.active = true;
-
 	// ============  NETWORKING LOGIC =================
 
 	// Initialise, set the client and connect to the server.
@@ -354,6 +352,7 @@ int main() {
 	gameState = 1;
 
 	player.init(glm::vec3(0), glm::vec3(0), glm::vec3(0), 1);
+	//player.active = true;
 
 	// Hide the cursor
 	DisplayManager::gameCursor();
@@ -412,30 +411,6 @@ int main() {
 				// Add SandBag model to renderList.
 				for (i = 0; i < 2; i++) normalModelRenderer.addToRenderList(SA_M_SandBag[i].getModel());
 			}
-		case SAFE_AREA:
-			
-			// Add Floor model to renderList
-			modelRenderer.addToRenderList(SA_M_Floor.getModel());
-			// Add Building models to renderList
-			for(i = 0; i < (1 * 5); i++) modelRenderer.addToRenderList(SA_M_Building[i].getModel());
-			// Add Barrel models to renderList
-			for (i = 0; i < 6; i++) modelRenderer.addToRenderList(SA_M_Barrels[i].getModel());
-			// Add Crate2 model to renderList
-			modelRenderer.addToRenderList(SA_M_Crate2.getModel());
-
-			// add Walter_pk_48
-			normalModelRenderer.addToRenderList(player.gun.gun_model.getModel());
-
-			// Add AmmoBox models to renderList
-			for (i = 0; i < (3 * 7); i++) normalModelRenderer.addToRenderList(SA_M_AmmoBoxes[i].getModel());
-			// Add Barrier models to renderList
-			for (i = 0; i < 4; i++) normalModelRenderer.addToRenderList(SA_M_Barriers[i].getModel());
-			// Add Crate models to renderList
-			for (i = 0; i < 6; i++) normalModelRenderer.addToRenderList(SA_M_Crate[i].getModel());
-			// Add Crate models to renderList
-			for (i = 0; i < 2; i++) normalModelRenderer.addToRenderList(SA_M_Pallets[i].getModel());
-			// Add SandBag model to renderList.
-			for (i = 0; i < 2; i++) normalModelRenderer.addToRenderList(SA_M_SandBag[i].getModel());
 
 			break;
 
@@ -585,7 +560,7 @@ int main() {
 			normalModelRenderer.render(lights, &camera, glm::vec4(0, -1, 0, 100000));
 
 			// Render own player animation
-			player.getAnimModel()->Draw(modelRenderer.shader, lights, &camera, glm::vec4(0, -1, 0, 100000));
+			//player.getAnimModel()->Draw(modelRenderer.shader, lights, &camera, glm::vec4(0, -1, 0, 100000));
 
 			// Render all other player's animations
 			for (int i = 0; i < MAX_LOBBYSIZE; i++) {
@@ -593,6 +568,8 @@ int main() {
 					otherPlayers[i].getAnimModel()->Draw(modelRenderer.shader, lights, &camera, glm::vec4(0, -1, 0, 100000));
 				}
 			}
+
+			//enemies[0].getAnimModel()->Draw(normalModelRenderer.shader, lights, &camera, glm::vec4(0, -1, 0, 100000));
 
 			// Render all enemy animations
 			for (int i = 0; i < MAX_ENEMIES; i++) {

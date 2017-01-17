@@ -42,7 +42,7 @@ void Player::init(glm::vec3 position, glm::vec3 rotation, glm::vec3 scale, float
 	animationExtraTime = 0;
 
 	active = false;
-	gun.Init(position, rotation);
+	//gun.Init(position, rotation);
 }
 
 //Set the amount of damage the player does.
@@ -174,6 +174,6 @@ void Player::update()
 
 	// Set the player rotation from mouse input
 	setRotation(rot);
-	gun.Update(getPosition(), getRotation());
+	//gun.Update(getPosition(), getRotation());
 	//TODO: player update
 }
