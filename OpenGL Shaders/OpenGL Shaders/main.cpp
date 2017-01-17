@@ -1313,9 +1313,6 @@ void loadModels()
 	// Load all the models for the safe area.
 	loadModels_SafeArea();
 
-	// Load all animations
-	loadAnimations();
-
 	// Load all the models for the forrest map.
 	LoadModels_ForrestMap();
 
