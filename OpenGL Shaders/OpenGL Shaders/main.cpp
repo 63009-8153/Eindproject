@@ -1,14 +1,16 @@
 #include "ClientGame.h"
-
-#include "WEngine/Usage.h"
-
 #include "areaTypes.h"
+
+// Graphics and sound Engine
+#include "WEngine/Usage.h"
+#include "SAL/CoreSystem.h"
 
 #include "Enemy.h"
 #include "Model.h"
 #include "Player.h"
 
 #include "Tree.h"
+
 
 #define WAVE_SPEED 0.03
 
@@ -30,10 +32,13 @@ ClientGame client;
 double	clientLoopDeltaTime		 = 0,
 		clientLoopLastRenderTime = 0;
 
+void (*networkUpdateFunction)(void) = nullptr;
+
 // ============  GAME PROGRAM VARIABLES ============
 
 GLFWwindow* window;
-void (*networkUpdateFunction)(void) = nullptr;
+
+SimpleAudioLib::AudioEntity* sound;
 
 float mouseSensitivity = 1.0f;
 
@@ -255,6 +260,15 @@ void loadTreeModels();
 
 int main() {
 
+	// Initialise the audioSystem
+	SimpleAudioLib::CoreSystem& audioSystem = SimpleAudioLib::CoreSystem::getInstance();
+	audioSystem.initWithDefaultDevice();
+
+	/* This is code to load a sound file and then play it */
+	sound = audioSystem.createAudioEntityFromFile("res/Sounds/tada.wav");
+	// Play sound
+	//sound->play(true);
+
 	player.active = true;
 
 	// ============  NETWORKING LOGIC =================
@@ -293,7 +307,7 @@ int main() {
 	// ===  Framebuffers  ===
 
 	//Initialise framebuffer for cubemap texture waterReflection
-	waterReflection.initialseFrameBuffer(1280);
+	//waterReflection.initialseFrameBuffer(1280);
 
 	// Load and initialise all framebuffers
 	loadAllFrameBuffers();
@@ -543,6 +557,7 @@ int main() {
 
 			// Render own player animation
 			player.getAnimModel()->Draw(modelRenderer.shader, lights, &camera, glm::vec4(0, -1, 0, 100000));
+
 			// Render all other player's animations
 			for (int i = 0; i < MAX_LOBBYSIZE; i++) {
 				if (otherPlayers[i].active) {
@@ -699,6 +714,12 @@ int main() {
 
 	//Terminate glfw
 	glfwTerminate();
+
+	// Clean up audio
+	delete sound;
+	sound = NULL;
+
+	SimpleAudioLib::CoreSystem::release();
 }
 
 
@@ -755,6 +776,9 @@ void handleGameInput()
 
 	// Handle input of using
 	if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS) client.addActionType(USE);
+
+	// Handle input of reloading
+	if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) client.addActionType(RELOAD);
 }
 // Update time stuff
 void updateTime()
@@ -917,6 +941,7 @@ void loadAllFrameBuffers()
 		antiAliasedRenderer.shader.loadInverseFilterTextureSize(glm::vec3((1.0f / SCREEN_WIDTH), (1.0f / SCREEN_HEIGHT), 0.0f));
 		antiAliasedRenderer.shader.loadFXAAParameters((8.0f), (1.0f / 128.0f), (1.0f / 8.0f));
 	}
+
 	Contrast.load("WEngine/Shaders/PostProcessing/ContrastEffect.vs", "WEngine/Shaders/PostProcessing/ContrastEffect.fs", glm::vec2(SCREEN_WIDTH, SCREEN_HEIGHT));
 	VBlur.load("WEngine/Shaders/PostProcessing/VerticalGaussionBlur.vs", "WEngine/Shaders/PostProcessing/GaussionBlur.fs", glm::vec2(SCREEN_WIDTH / 5, SCREEN_HEIGHT / 5));
 	HBlur.load("WEngine/Shaders/PostProcessing/HorizontalGaussionBlur.vs", "WEngine/Shaders/PostProcessing/GaussionBlur.fs", glm::vec2(SCREEN_WIDTH / 5, SCREEN_HEIGHT / 5));
@@ -1318,6 +1343,7 @@ void loadModels()
 
 	// If loading the animations is not done yet, wait for it here and then create vao's for all objects
 	endLoadAnimations();
+
 }
 // Load Safe Area Models
 void loadModels_SafeArea()

@@ -103,7 +103,7 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>C:\libs\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>opengl32.lib;glew32.lib;glew32s.lib;glfw3.lib;glfw3dll.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;glew32.lib;glew32s.lib;glfw3.lib;glfw3dll.lib;OpenAL32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -166,19 +166,15 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Character.cpp" />
     <ClCompile Include="ClientGame.cpp" />
     <ClCompile Include="ClientNetwork.cpp" />
     <ClCompile Include="Enemy.cpp" />
-    <ClCompile Include="FontType.cpp" />
-    <ClCompile Include="GUIText.cpp" />
-    <ClCompile Include="Line.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="MetaFile.cpp" />
     <ClCompile Include="Model.cpp" />
     <ClCompile Include="Player.cpp" />
-    <ClCompile Include="TextMeshCreator.cpp" />
-    <ClCompile Include="TextMeshData.cpp" />
+    <ClCompile Include="SAL\AudioEntity.cpp" />
+    <ClCompile Include="SAL\BaseMessageException.cpp" />
+    <ClCompile Include="SAL\CoreSystem.cpp" />
     <ClCompile Include="Tree.cpp" />
     <ClCompile Include="WEngine\Camera\camera.cpp" />
     <ClCompile Include="WEngine\Display\DisplayManager.cpp" />
@@ -201,28 +197,31 @@
     <ClCompile Include="WEngine\Texture\Material.cpp" />
     <ClCompile Include="WEngine\Texture\texture2D.cpp" />
     <ClCompile Include="WEngine\Texture\textureCubemap.cpp" />
+    <ClCompile Include="WEngine\Text\Character.cpp" />
+    <ClCompile Include="WEngine\Text\FontType.cpp" />
+    <ClCompile Include="WEngine\Text\GUIText.cpp" />
+    <ClCompile Include="WEngine\Text\Line.cpp" />
+    <ClCompile Include="WEngine\Text\MetaFile.cpp" />
+    <ClCompile Include="WEngine\Text\TextMaster.cpp" />
+    <ClCompile Include="WEngine\Text\TextMeshCreator.cpp" />
+    <ClCompile Include="WEngine\Text\TextMeshData.cpp" />
+    <ClCompile Include="WEngine\Text\Word.cpp" />
     <ClCompile Include="WEngine\Utils\File.cpp" />
     <ClCompile Include="WEngine\Utils\loader.cpp" />
     <ClCompile Include="WEngine\Water\WaterMasterRenderer.cpp" />
     <ClCompile Include="WEngine\Water\WaterShaderProgram.cpp" />
-    <ClCompile Include="Word.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="actionTypes.h" />
     <ClInclude Include="AnimationTypes.h" />
     <ClInclude Include="areaTypes.h" />
-    <ClInclude Include="Character.h" />
     <ClInclude Include="ClientGame.h" />
     <ClInclude Include="ClientNetwork.h" />
     <ClInclude Include="ClientPackage.h" />
     <ClInclude Include="ClientPacketLobby.h" />
     <ClInclude Include="Enemy.h" />
     <ClInclude Include="enemyData.h" />
-    <ClInclude Include="FontType.h" />
-    <ClInclude Include="GUIText.h" />
     <ClInclude Include="Header.h" />
-    <ClInclude Include="Line.h" />
-    <ClInclude Include="MetaFile.h" />
     <ClInclude Include="networkData.h" />
     <ClInclude Include="NetworkHeader.h" />
     <ClInclude Include="Model.h" />
@@ -231,8 +230,13 @@
     <ClInclude Include="packetTypes.h" />
     <ClInclude Include="Player.h" />
     <ClInclude Include="playerData.h" />
-    <ClInclude Include="TextMeshCreator.h" />
-    <ClInclude Include="TextMeshData.h" />
+    <ClInclude Include="SAL\AudioEntity.h" />
+    <ClInclude Include="SAL\BaseMessageException.h" />
+    <ClInclude Include="SAL\CoreSystem.h" />
+    <ClInclude Include="SAL\CorruptedFileException.h" />
+    <ClInclude Include="SAL\InvalidPathException.h" />
+    <ClInclude Include="SAL\NoContextException.h" />
+    <ClInclude Include="SAL\NoDeviceException.h" />
     <ClInclude Include="Tree.h" />
     <ClInclude Include="WEngine\Camera\camera.h" />
     <ClInclude Include="WEngine\Display\DisplayManager.h" />
@@ -256,13 +260,21 @@
     <ClInclude Include="WEngine\Texture\Material.h" />
     <ClInclude Include="WEngine\Texture\texture2D.h" />
     <ClInclude Include="WEngine\Texture\textureCubemap.h" />
+    <ClInclude Include="WEngine\Text\Character.h" />
+    <ClInclude Include="WEngine\Text\FontType.h" />
+    <ClInclude Include="WEngine\Text\GUIText.h" />
+    <ClInclude Include="WEngine\Text\Line.h" />
+    <ClInclude Include="WEngine\Text\MetaFile.h" />
+    <ClInclude Include="WEngine\Text\TextMaster.h" />
+    <ClInclude Include="WEngine\Text\TextMeshCreator.h" />
+    <ClInclude Include="WEngine\Text\TextMeshData.h" />
+    <ClInclude Include="WEngine\Text\Word.h" />
     <ClInclude Include="WEngine\Usage.h" />
     <ClInclude Include="WEngine\Utils\File.h" />
     <ClInclude Include="WEngine\Utils\loader.h" />
     <ClInclude Include="WEngine\Utils\Maths.h" />
     <ClInclude Include="WEngine\Water\WaterMasterRenderer.h" />
     <ClInclude Include="WEngine\Water\WaterShaderProgram.h" />
-    <ClInclude Include="Word.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="WEngine\Shaders\AntiAliasing\AAVertex.vs" />

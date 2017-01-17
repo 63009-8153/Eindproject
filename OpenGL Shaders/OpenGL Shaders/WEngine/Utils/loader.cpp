@@ -31,6 +31,18 @@ void Loader::cleanUp()
 	}
 }
 
+GLuint Loader::loadToVAO(GLfloat positions[], int posCount, GLfloat uvs[], int uvsSize)
+{
+	GLuint vaoID = createVAO();
+
+	storeDataInAttributeList(0, 2, positions, posCount); //Store positions in VAO position 0
+	storeDataInAttributeList(1, 2, uvs, uvsSize); //Store uv coords in VAO position 1
+
+	unbindVAO();
+
+	return vaoID;
+}
+
 //Load position, indices and uvs in a VAO and return its gameobject
 gameobject Loader::loadToVAO(GLfloat positions[], int posCount, 
 							 GLuint indices[], int indicesCount, 
