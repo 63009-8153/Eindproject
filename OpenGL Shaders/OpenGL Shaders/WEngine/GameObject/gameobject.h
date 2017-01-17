@@ -1,6 +1,11 @@
 #ifndef _GAMEOBJECT_
 #define _GAMEOBJECT_
 
+#include "../Renderer/ShaderProgram.h"
+#include "../Camera/camera.h"
+
+extern glm::vec3 clearColor;
+
 class gameobject
 {
 public:
@@ -73,6 +78,8 @@ public:
 
 	void setTiledAmount(glm::vec2 amount);
 	glm::vec2 getTiledAmount();
+
+	void Draw(ShaderProgram &shader, std::vector<Light*> lights, Camera *camera, glm::vec4 clipPlane);
 
 private:
 	int vaoID;

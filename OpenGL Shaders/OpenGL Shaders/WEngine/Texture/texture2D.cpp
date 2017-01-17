@@ -27,6 +27,11 @@ void texture2D::loadImage(const char * filename, bool bmpAlign)
 	loader.loadTextureInData(filename, bmpAlign, data, width, height, filesize, imageType);
 }
 
+void texture2D::loadImage(const char * filename)
+{
+	textureid = loader.loadTexture(filename, false);
+}
+
 glm::vec4 texture2D::getPixelValue(int x, int y)
 {
 	if (x < 0 || x >= width || y < 0 || y >= height) return glm::vec4(0.0);
@@ -37,4 +42,41 @@ glm::vec4 texture2D::getPixelValue(int x, int y)
 	glm::vec4 pixelColours = glm::vec4(data[datapos + 2], data[datapos + 1], data[datapos], data[datapos + 4]);
 
 	return pixelColours;
+}
+
+void texture2D::setPosition(glm::vec2 pos)
+{
+	// Convert 0 -> 2 to -1 -> 1
+	position = (pos -= 1.0f);
+}
+
+glm::vec2 texture2D::getPosition()
+{
+	return position;
+}
+
+void texture2D::setRotation(float rot)
+{
+	// Convert degrees to radians
+	rotation = glm::radians(rot);
+}
+
+float texture2D::getRotationRad()
+{
+	return rotation;
+}
+float texture2D::getRotationDeg()
+{
+	return glm::degrees(rotation);
+}
+
+
+void texture2D::setScale(glm::vec2 scal)
+{
+	scale = scal;
+}
+
+glm::vec2 texture2D::getScale()
+{
+	return scale;
 }

@@ -8,19 +8,27 @@ struct enemyData {
 	glm::vec3 velocity;
 
 	float health, maxHealth;
-	
+
 	unsigned int modelType;
 
-	enemyData& operator =(const enemyData& p)
+	int animType;
+
+	bool active = false;
+
+	enemyData& operator =(const enemyData& e)
 	{
-		position = p.position;
-		rotation = p.rotation;
-		scale = p.scale;
+		position = e.position;
+		rotation = e.rotation;
+		scale = e.scale;
 
-		health = p.health;
-		maxHealth = p.maxHealth;
+		health = e.health;
+		maxHealth = e.maxHealth;
 
-		modelType = p.modelType;
+		modelType = e.modelType;
+
+		animType = e.animType;
+
+		active = e.active;
 
 		return *this;
 	}

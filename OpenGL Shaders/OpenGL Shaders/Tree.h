@@ -17,7 +17,7 @@ public:
 
 	void initialseNewTrees();
 
-	int getTreeCount();
+	unsigned int getTreeCount();
 	gameobject* getTreeAt(int iteration);
 
 private:
