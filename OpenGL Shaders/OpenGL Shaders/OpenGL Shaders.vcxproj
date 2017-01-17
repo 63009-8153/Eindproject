@@ -173,6 +173,7 @@
     <ClCompile Include="FontType.cpp" />
     <ClCompile Include="GUIText.cpp" />
     <ClCompile Include="Line.cpp" />
+    <ClCompile Include="Gun.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MetaFile.cpp" />
     <ClCompile Include="Model.cpp" />
@@ -220,6 +221,7 @@
     <ClInclude Include="enemyData.h" />
     <ClInclude Include="FontType.h" />
     <ClInclude Include="GUIText.h" />
+    <ClInclude Include="Gun.h" />
     <ClInclude Include="Header.h" />
     <ClInclude Include="Line.h" />
     <ClInclude Include="MetaFile.h" />
