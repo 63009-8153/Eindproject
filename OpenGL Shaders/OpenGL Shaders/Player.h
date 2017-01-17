@@ -1,6 +1,7 @@
 #ifndef _PLAYER_
 #define _PLAYER_
 
+#include "Header.h"
 #include "Model.h"
 #include "AnimationTypes.h"
 
@@ -11,6 +12,7 @@ extern double deltaTime;
 
 extern glm::vec2 handleMouseInput(bool trapMouseInWindow);
 extern float mouseSensitivity;
+#include "Gun.h"
 
 class Player : public Model
 {
@@ -37,6 +39,10 @@ class Player : public Model
 		float health, maxHealth;
 		glm::vec3 speed;
 		float attackStrength;
+	Gun gun;
+
+	void init(glm::vec3 position, glm::vec3 rotation, glm::vec3 scale, float _maxHealth);
+	void update();
 
 		int networkAnimType;
 

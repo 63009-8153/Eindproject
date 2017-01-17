@@ -114,6 +114,7 @@ GLuint	FM_T_RAIL[2];
 GLuint	FM_T_TOWNHOUSE;
 GLuint	FM_T_WELL,
 		FM_TN_WELL;
+GLuint  T_GUN_WALTER;
 
 Tree  trees;
 Terrain FM_M_FLATTERRAIN;
@@ -135,6 +136,7 @@ Model FM_M_STATUE;
 Model FM_M_RAIL[2];
 Model FM_M_TOWNHOUSE[2];
 Model FM_M_WELL;
+Model GUN_WALTER;
 
 std::vector<gameobject> animationModels;
 std::vector<s_anim> playerAnimations;
@@ -351,6 +353,8 @@ int main() {
 	//Initialise gameState
 	gameState = 1;
 
+	player.init(glm::vec3(0), glm::vec3(0), glm::vec3(0), 1);
+
 	// Hide the cursor
 	DisplayManager::gameCursor();
 //TODO: glfwCreateCursor can set a picture of the cursor
@@ -408,6 +412,31 @@ int main() {
 				// Add SandBag model to renderList.
 				for (i = 0; i < 2; i++) normalModelRenderer.addToRenderList(SA_M_SandBag[i].getModel());
 			}
+		case SAFE_AREA:
+			
+			// Add Floor model to renderList
+			modelRenderer.addToRenderList(SA_M_Floor.getModel());
+			// Add Building models to renderList
+			for(i = 0; i < (1 * 5); i++) modelRenderer.addToRenderList(SA_M_Building[i].getModel());
+			// Add Barrel models to renderList
+			for (i = 0; i < 6; i++) modelRenderer.addToRenderList(SA_M_Barrels[i].getModel());
+			// Add Crate2 model to renderList
+			modelRenderer.addToRenderList(SA_M_Crate2.getModel());
+
+			// add Walter_pk_48
+			normalModelRenderer.addToRenderList(player.gun.gun_model.getModel());
+
+			// Add AmmoBox models to renderList
+			for (i = 0; i < (3 * 7); i++) normalModelRenderer.addToRenderList(SA_M_AmmoBoxes[i].getModel());
+			// Add Barrier models to renderList
+			for (i = 0; i < 4; i++) normalModelRenderer.addToRenderList(SA_M_Barriers[i].getModel());
+			// Add Crate models to renderList
+			for (i = 0; i < 6; i++) normalModelRenderer.addToRenderList(SA_M_Crate[i].getModel());
+			// Add Crate models to renderList
+			for (i = 0; i < 2; i++) normalModelRenderer.addToRenderList(SA_M_Pallets[i].getModel());
+			// Add SandBag model to renderList.
+			for (i = 0; i < 2; i++) normalModelRenderer.addToRenderList(SA_M_SandBag[i].getModel());
+
 			break;
 
 			case FORREST_AREA:
@@ -666,6 +695,8 @@ int main() {
 
 		// Set the rotation of the player for the next update
 		client.setPlayerData(player);
+
+		player.update();
 		
 		// Set the camera rotation to the players rotation and convert it to radians
 		camera.rotation = glm::radians(player.getRotation());
@@ -1343,6 +1374,10 @@ void loadModels()
 
 	// If loading the animations is not done yet, wait for it here and then create vao's for all objects
 	endLoadAnimations();
+
+	T_GUN_WALTER = loader.loadTexture("res/Models/objects/walter_pk_48/black.bmp", false);
+	loadModel(GUN_WALTER, "res/Models/objects/walter_pk_48/walter.obj", glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1.0f), T_GUN_WALTER, 100.0f, 0.1f, 0.4f);
+	//loadModel(GUN_WALTER, "res/Safe_Area/Weapon_Box/Weapon_Box.obj", glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1.0f), T_GUN_WALTER, 100.0f, 0.1f, 0.4f);
 
 }
 // Load Safe Area Models
