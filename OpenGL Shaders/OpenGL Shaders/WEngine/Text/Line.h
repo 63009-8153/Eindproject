@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Header.h"
+#include "../../Header.h"
 
 class Word;
 #include "Word.h"

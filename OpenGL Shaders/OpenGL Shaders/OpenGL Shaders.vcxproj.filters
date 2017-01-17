@@ -43,6 +43,15 @@
     <Filter Include="Network\Source Files">
       <UniqueIdentifier>{d2728fbc-a9b2-47c8-94ab-dac1d99abd20}</UniqueIdentifier>
     </Filter>
+    <Filter Include="SAL">
+      <UniqueIdentifier>{5be59c84-e7a2-4b91-aba5-9d315f2a8e9b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SAL\Header Files">
+      <UniqueIdentifier>{e996ec4a-92e4-42de-85a7-d71ccddac945}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SAL\Source Files">
+      <UniqueIdentifier>{ed372588-d4dd-4d36-890f-3616fd2b5821}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -141,31 +150,41 @@
     <ClCompile Include="Tree.cpp">
       <Filter>Game\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Character.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="WEngine\Text\Character.cpp">
+      <Filter>WEngine\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="FontType.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="WEngine\Text\FontType.cpp">
+      <Filter>WEngine\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="GUIText.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="WEngine\Text\GUIText.cpp">
+      <Filter>WEngine\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Line.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="WEngine\Text\Line.cpp">
+      <Filter>WEngine\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="MetaFile.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="WEngine\Text\MetaFile.cpp">
+      <Filter>WEngine\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="TextMeshCreator.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="WEngine\Text\TextMeshCreator.cpp">
+      <Filter>WEngine\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="TextMeshData.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="WEngine\Text\TextMeshData.cpp">
+      <Filter>WEngine\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Word.cpp">
-      <Filter>Source Files</Filter>
-    <ClCompile Include="Gun.cpp">
-      <Filter>Game\Source Files</Filter>
+    <ClCompile Include="WEngine\Text\Word.cpp">
+      <Filter>WEngine\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SAL\AudioEntity.cpp">
+      <Filter>SAL\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SAL\BaseMessageException.cpp">
+      <Filter>SAL\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SAL\CoreSystem.cpp">
+      <Filter>SAL\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="WEngine\Text\TextMaster.cpp">
+      <Filter>WEngine\Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -310,31 +329,53 @@
     <ClInclude Include="AnimationTypes.h">
       <Filter>Network\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Character.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="WEngine\Text\Character.h">
+      <Filter>WEngine\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="FontType.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="WEngine\Text\FontType.h">
+      <Filter>WEngine\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GUIText.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="WEngine\Text\GUIText.h">
+      <Filter>WEngine\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Line.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="WEngine\Text\Line.h">
+      <Filter>WEngine\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="MetaFile.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="WEngine\Text\MetaFile.h">
+      <Filter>WEngine\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="TextMeshCreator.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="WEngine\Text\TextMeshCreator.h">
+      <Filter>WEngine\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="TextMeshData.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="WEngine\Text\TextMeshData.h">
+      <Filter>WEngine\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Word.h">
-      <Filter>Header Files</Filter>
-    <ClInclude Include="Gun.h">
-      <Filter>Game\Header Files</Filter>
+    <ClInclude Include="WEngine\Text\Word.h">
+      <Filter>WEngine\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SAL\AudioEntity.h">
+      <Filter>SAL\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SAL\BaseMessageException.h">
+      <Filter>SAL\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SAL\CoreSystem.h">
+      <Filter>SAL\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SAL\CorruptedFileException.h">
+      <Filter>SAL\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SAL\InvalidPathException.h">
+      <Filter>SAL\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SAL\NoContextException.h">
+      <Filter>SAL\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SAL\NoDeviceException.h">
+      <Filter>SAL\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="WEngine\Text\TextMaster.h">
+      <Filter>WEngine\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

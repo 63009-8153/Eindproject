@@ -32,7 +32,6 @@ ClientGame::~ClientGame()
 {
 }
 
-
 // Update the client with server data.
 void ClientGame::updateClient()
 {
@@ -53,99 +52,96 @@ void ClientGame::updateClient()
 		memcpy(&packetType, &(network_data[i]), sizeof(packetTypes));
 
 		switch (packetType) {
-
-		// LobbyPacket is received when in the lobby
-		case LOBBY_PACKET:
-		{
-			ClientReceivePacketLobby packet;
-			packet.deserialize(&(network_data[i]));
-			i += sizeof(ClientReceivePacketLobby);
-
-			// Save all clients
-			for (unsigned int l = 0; l < MAX_LOBBYSIZE; l++)
+			// LobbyPacket is received when in the lobby
+			case LOBBY_PACKET:
 			{
-				allClients[l] = packet.players[l];
-			}
+				ClientReceivePacketLobby packet;
+				packet.deserialize(&(network_data[i]));
+				i += sizeof(ClientReceivePacketLobby);
+
+				// Save all clients
+				for (unsigned int l = 0; l < MAX_LOBBYSIZE; l++){
+					allClients[l] = packet.players[l];
+				}
 			
-			// Check the action types
-			for (unsigned int t = 0; t < MAX_ACTIONS; t++)
-			{
-				switch (packet.action_types[t])
+				// Check the action types
+				for (unsigned int t = 0; t < MAX_ACTIONS; t++)
 				{
-					// If the server has received our initialisation packet, stop sending it.
-					case GAME_RECEIVED_INIT:
-						networkUpdateFunction = SendLobbyData;
-						break;
-					case GAME_START:
-						gameStarting = true;
-						break;
-					case GAME_STARTED:
-						// Set the networkFunction to the game update function
-						networkUpdateFunction = SendGameData;
-						gameStarted = true;
-						gameStarting = false;
-						break;
+					switch (packet.action_types[t])
+					{
+						// If the server has received our initialisation packet, stop sending it.
+						case GAME_RECEIVED_INIT:
+							networkUpdateFunction = SendLobbyData;
+							break;
+						case GAME_START:
+							gameStarting = true;
+							break;
+						case GAME_STARTED:
+							// Set the networkFunction to the game update function
+							printf("Game started!\n");
+							networkUpdateFunction = SendGameData;
+							gameStarted = true;
+							gameStarting = false;
+							break;
+					}
+				}
+
+				lobbyTimer = packet.startTimer;
+			}
+				break;
+			// GamePacket is received when playing the game
+			case GAME_PACKET:
+			{
+				ClientReceivePacket packet;
+				packet.deserialize(&(network_data[i]));
+				i += sizeof(ClientReceivePacket);
+
+				// Set the lobbysize
+				actualLobbySize = std::min(packet.lobbySize, (unsigned int)MAX_LOBBYSIZE);
+			
+				// Get all playerData
+				for (unsigned int k = 0; k < actualLobbySize; k++)
+				{
+					allClients[k] = packet.players[k];
+
+					if (myClientID == packet.players[k].playerID){
+						myPlayerData == packet.players[k];
+					}
+				}
+				// Get all enemies
+				for (unsigned int l = 0; l < MAX_ENEMIES; l++){
+					allEnemies[l] = packet.enemies[l];
 				}
 			}
-
-			lobbyTimer = packet.startTimer;
-		}
-			break;
-		// GamePacket is received when playing the game
-		case GAME_PACKET:
-		{
-			ClientReceivePacket packet;
-			packet.deserialize(&(network_data[i]));
-			i += sizeof(ClientReceivePacket);
-
-			// Set the lobbysize
-			actualLobbySize = std::min(packet.lobbySize, (unsigned int)MAX_LOBBYSIZE);
-			
-			// Get all playerData
-			for (unsigned int k = 0; k < actualLobbySize; k++)
+				break;
+			// InitialisationPacket is received when we first connect to the server
+			case INITALISATION_PACKET:
 			{
-				allClients[k] = packet.players[k];
+				ClientReceivePacketLobby packet;
+				packet.deserialize(&(network_data[i]));
+				i += sizeof(ClientReceivePacketLobby);
 
-				if (myClientID == packet.players[k].playerID)
-				{
-					myPlayerData == packet.players[k];
-				}
+				// We got accepted by the server and received our clientID
+				myClientID = (unsigned int)packet.players[0].playerID;
+
+				printf("INFO:  -- Client accepted by server! We got clientID: %d\n", packet.players[0].playerID);
 			}
-			// Get all enemies
-			for (unsigned int l = 0; l < MAX_ENEMIES; l++) 
+				break;
+			// HeartbeatPacket is received when the server wants to check if we are still an active client
+			case HEARTBEAT_PACKET:
 			{
-				allEnemies[l] = packet.enemies[l];
+				i += sizeof(ClientReceivePacketLobby);
+
+				// We received a heartbeat packet from the server, instantly send one back
+				printf("INFO:  -- Sending Heartbeat response!\n");
+				sendHeartbeatPacket();
 			}
-		}
-			break;
-		// InitialisationPacket is received when we first connect to the server
-		case INITALISATION_PACKET:
-		{
-			ClientReceivePacketLobby packet;
-			packet.deserialize(&(network_data[i]));
-			i += sizeof(ClientReceivePacketLobby);
+				break;
 
-			// We got accepted by the server and received our clientID
-			myClientID = (unsigned int)packet.players[0].playerID;
-
-			printf("INFO:  -- Client accepted by server! We got clientID: %d\n", packet.players[0].playerID);
-		}
-			break;
-		// HeartbeatPacket is received when the server wants to check if we are still an active client
-		case HEARTBEAT_PACKET:
-		{
-			i += sizeof(ClientReceivePacketLobby);
-
-			// We received a heartbeat packet from the server, instantly send one back
-			printf("INFO:  -- Sending Heartbeat response!\n");
-			sendHeartbeatPacket();
-		}
-			break;
-
-		default:
-			printf("ERROR: -- Packet received with Unknown packetType %u!!\n", packetType);
-			return;
-			break;
+			default:
+				printf("ERROR: -- Packet received with Unknown packetType %u!!\n", packetType);
+				return;
+				break;
 		}
 	}
 }
@@ -172,7 +168,6 @@ void ClientGame::setPlayerData(Player & player)
 	if (!networkConnected) return;
 
 	myPlayerData.rotation = player.getRotation();
-	printf("Set: %f | %f | %f\n", myPlayerData.rotation.x, myPlayerData.rotation.y, myPlayerData.rotation.z);
 }
 
 // Update the player with specified playerData
@@ -235,7 +230,14 @@ void ClientGame::getEnemyData(Enemy &enem, int index)
 {
 	if (!networkConnected) return;
 
+	enem.active = allEnemies[index].active;
 
+	enem.setPosition(allEnemies[index].position);
+	enem.setRotation(allEnemies[index].rotation);
+	enem.health = allEnemies[index].health;
+	enem.maxHealth = allEnemies[index].maxHealth;
+
+	enem.networkAnimType = allEnemies[index].animType;
 }
 
 // Send my playerData to the server.
@@ -251,7 +253,6 @@ void ClientGame::sendPlayerData()
 	packet.packet_type = GAME_PACKET;
 
 	packet.player = myPlayerData;
-	printf("Get: %f | %f | %f\n", myPlayerData.rotation.x, myPlayerData.rotation.y, myPlayerData.rotation.z);
 
 	// Add all set actionTypes to the packet
 	for (int i = 0; i < MAX_ACTIONS; i++) {

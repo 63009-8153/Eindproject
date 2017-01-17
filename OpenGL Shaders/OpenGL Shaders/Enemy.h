@@ -25,7 +25,8 @@ class Enemy : public Model
 
 		gameobject *getAnimModel();
 
-		static int loadAnimations(char *animationFolder, int frames, double fps, bool loop);
+		static s_anim loadAnimations(char * animationFolder, std::vector<gameobject> &gameobjects, int startframe, int frames, double fps, bool loop);
+		static void createAnimationModels();
 		static GLuint animationTexture;
 		static GLuint animationNTexture;
 

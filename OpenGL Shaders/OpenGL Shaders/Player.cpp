@@ -55,37 +55,48 @@ gameobject *Player::getAnimModel()
 {
 	if (currentAnimationFrame >= animationModels.size()) currentAnimationFrame = (animationModels.size() - 1);
 
-	animationModels[currentAnimationFrame].setPosition(glm::vec3(0.0));
+	animationModels[currentAnimationFrame].setPosition(getPosition());
 	animationModels[currentAnimationFrame].setRotation(glm::radians(-glm::vec3(0.0f, getRotation().y + 180.0f, 0.0f)));
 	animationModels[currentAnimationFrame].setScale(glm::vec3(0.04f));
 
 	return &animationModels[currentAnimationFrame];
 }
 
-int Player::loadAnimations(char * animationFolder, int frames, double fps, bool loop)
+s_anim Player::loadAnimations(char * animationFolder, std::vector<gameobject> &gameobjects, int startframe, int frames, double fps, bool loop)
 {
 	s_anim a;
-	a.startframe = animationModels.size();
+	a.startframe = startframe;
 	a.endframe	 = a.startframe + (frames - 1);
 	a.loop  = loop;
 	a.fps = fps;
-
-	playerAnimations.push_back(a);
 
 	for (unsigned int i = 0; i < frames; i++)
 	{
 		std::string prenumber = "";
 		if (i < 10) prenumber = "0";
 		std::string filepath = animationFolder + prenumber + std::to_string(i) + ".obj";
-		gameobject model = loader.loadObjFile(filepath.c_str(), false, false);
+		gameobject model = loader.loadObjFileData(filepath.c_str(), false, false);
+
+		gameobjects.push_back(model);
+	}
+
+	return a;
+}
+
+void Player::createAnimationModels()
+{
+	for (unsigned int i = 0; i < animationModels.size(); i++) {
+		gameobject model = loader.loadToVAO(animationModels[i].vertices, animationModels[i].vertexCount,
+											animationModels[i].indices, animationModels[i].indicesCount,
+											animationModels[i].uvs, animationModels[i].uvsSize,
+											animationModels[i].normals, animationModels[i].normalsSize,
+											animationModels[i].tangents, animationModels[i].tangentsSize);
 		model.init();
 		model.addTexture(animationTexture);
 		model.setAmbientLight(0.15f);
 
-		animationModels.push_back(model);
+		animationModels.at(i) = model;
 	}
-
-	return (playerAnimations.size() - 1);
 }
 
 void Player::updateAnimation(int currentType)

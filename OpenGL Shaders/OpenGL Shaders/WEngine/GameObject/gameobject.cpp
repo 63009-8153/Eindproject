@@ -44,6 +44,29 @@ gameobject::gameobject(int _vaoID, int _vertexCount)
 	tiledAmount = glm::vec2(1.0f);
 }
 
+gameobject::gameobject(GLfloat _positions[], int _posCount, GLuint _indices[], int _indicesCount, GLfloat _uvs[], int _uvsSize, GLfloat _normals[], int _normalsSize, GLfloat _tangents[], int _tangentsSize)
+{
+	vertices = new GLfloat[_posCount];
+	indices = new GLuint[_indicesCount];
+	uvs = new GLfloat[_uvsSize];
+	normals = new GLfloat[_normalsSize];
+	tangents = new GLfloat[_tangentsSize];
+
+	memcpy(vertices, _positions, _posCount * sizeof(GLfloat));
+	memcpy(indices, _indices, _indicesCount * sizeof(GLuint));
+	memcpy(uvs, _uvs, _uvsSize * sizeof(GLfloat));
+	memcpy(normals, _normals, _normalsSize * sizeof(GLfloat));
+	memcpy(tangents, _tangents, _tangentsSize * sizeof(GLfloat));
+
+	vertexCount = _posCount;
+	indicesCount = _indicesCount;
+	uvsSize = _uvsSize;
+	normalsSize = _normalsSize;
+	tangentsSize = _tangentsSize;
+
+	needsObject = true;
+}
+
 //Gameobject destructor
 gameobject::~gameobject()
 {
@@ -124,11 +147,13 @@ void gameobject::setTextureAtlasTexture(GLuint textID, int nrRows, int textIndex
 
 float gameobject::getTextureXOffset()
 {
+	if (numberOfRows <= 0) numberOfRows = 1;
 	int column = textureIndex % numberOfRows;
 	return (float)column / (float)numberOfRows;
 }
 float gameobject::getTextureYOffset()
 {
+	if (numberOfRows <= 0) numberOfRows = 1;
 	int row = textureIndex % numberOfRows;
 	return (float)row / (float)numberOfRows;
 }
@@ -158,6 +183,9 @@ void gameobject::init(glm::vec3 pos, glm::vec3 rot, glm::vec3 scal)
 	cullFaces = true;
 
 	ambientLight = 0.1f;
+
+	numberOfRows = 1;
+	textureIndex = 0;
 }
 void gameobject::init()
 {
@@ -168,6 +196,9 @@ void gameobject::init()
 	cullFaces = true;
 
 	ambientLight = 0.1f;
+
+	numberOfRows = 1;
+	textureIndex = 0;
 }
 
 //Move the object

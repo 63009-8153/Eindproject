@@ -71,7 +71,7 @@ gameobject *Enemy::getAnimModel(){
 	return &enemyAnimationModels[currentAnimationFrame];
 }
 
-int Enemy::loadAnimations(char * animationFolder, int frames, double fps, bool loop)
+s_anim Enemy::loadAnimations(char * animationFolder, std::vector<gameobject> &gameobjects, int startframe, int frames, double fps, bool loop)
 {
 	s_anim a;
 	a.startframe = enemyAnimationModels.size();
@@ -79,23 +79,35 @@ int Enemy::loadAnimations(char * animationFolder, int frames, double fps, bool l
 	a.loop = loop;
 	a.fps = fps;
 
-	enemyAnimations.push_back(a);
-
 	for (unsigned int i = 0; i < frames; i++)
 	{
 		std::string prenumber = "";
 		if (i < 10) prenumber = "0";
 		std::string filepath = animationFolder + prenumber + std::to_string(i) + ".obj";
-		gameobject model = loader.loadObjFile(filepath.c_str(), false, false);
-		model.init();
+
+		gameobject model = loader.loadObjFileData(filepath.c_str(), false, false);
+
+		gameobjects.push_back(model);
+	}
+
+	return a;
+}
+
+void Enemy::createAnimationModels()
+{
+	for (unsigned int i = 0; i < enemyAnimationModels.size(); i++) {
+		gameobject model = gameobject(&loader.loadToVAO(enemyAnimationModels[i].vertices, enemyAnimationModels[i].vertexCount, 
+											enemyAnimationModels[i].indices, enemyAnimationModels[i].indicesCount, 
+											enemyAnimationModels[i].uvs, enemyAnimationModels[i].uvsSize, 
+											enemyAnimationModels[i].normals, enemyAnimationModels[i].normalsSize, 
+											enemyAnimationModels[i].tangents, enemyAnimationModels[i].tangentsSize));
+		model.init(); 
 		model.addTexture(animationTexture);
 		model.setNormalMap(animationNTexture);
 		model.setAmbientLight(0.15f);
 
-		enemyAnimationModels.push_back(model);
+		enemyAnimationModels.at(i) = model;
 	}
-
-	return (enemyAnimations.size() - 1);
 }
 
 void Enemy::updateAnimation(int currentType)

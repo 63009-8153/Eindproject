@@ -34,13 +34,13 @@ class TextMeshCreator
 	private:
 		MetaFile metaData;
 
-		std::vector<Line> createStructure(GUIText &text);
+		std::vector<Line> createStructure(GUIText *text);
 
-		void completeStructure(std::vector<Line> &lines, Line &currentLine, Word &currentWord, GUIText &text);
+		void completeStructure(std::vector<Line> &lines, Line &currentLine, Word *currentWord, GUIText *text);
 
 		TextMeshData createQuadVertices(GUIText &text, std::vector<Line> &lines);
 
-		void addVerticesForCharacter(double curserX, double curserY, Character &character, double fontSize, std::vector<float> &vertices);
+		void addVerticesForCharacter(double curserX, double curserY, Character *character, double fontSize, std::vector<float> &vertices);
 
 		static void addVertices(std::vector<float> &vertices, double x, double y, double maxX, double maxY);
 
