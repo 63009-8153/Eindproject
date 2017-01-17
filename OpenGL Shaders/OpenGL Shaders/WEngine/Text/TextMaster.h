@@ -6,7 +6,7 @@
 #include "FontType.h"
 #include "GUIText.h"
 
-#include "FontRenderer.h"
+//#include "FontRenderer.h"
 
 class TextMaster
 {
@@ -20,8 +20,8 @@ public:
 	static void cleanUp();
 
 private:
-	static Loader *loader;
+	//static Loader *loader;
 	static std::map<FontType, std::vector<GUIText>> texts;
-	static FontRenderer renderer;
+	//static FontRenderer renderer;
 };
 
