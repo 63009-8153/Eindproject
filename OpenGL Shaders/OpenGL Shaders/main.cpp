@@ -373,28 +373,6 @@ int main() {
 		
 		switch (currentArea)
 		{
-			case SAFE_AREA:
-			{
-				// Add Floor model to renderList
-				modelRenderer.addToRenderList(SA_M_Floor.getModel());
-				// Add Building models to renderList
-				for (i = 0; i < (1 * 5); i++) modelRenderer.addToRenderList(SA_M_Building[i].getModel());
-				// Add Barrel models to renderList
-				for (i = 0; i < 6; i++) modelRenderer.addToRenderList(SA_M_Barrels[i].getModel());
-				// Add Crate2 model to renderList
-				modelRenderer.addToRenderList(SA_M_Crate2.getModel());
-
-				// Add AmmoBox models to renderList
-				for (i = 0; i < (3 * 7); i++) normalModelRenderer.addToRenderList(SA_M_AmmoBoxes[i].getModel());
-				// Add Barrier models to renderList
-				for (i = 0; i < 4; i++) normalModelRenderer.addToRenderList(SA_M_Barriers[i].getModel());
-				// Add Crate models to renderList
-				for (i = 0; i < 6; i++) normalModelRenderer.addToRenderList(SA_M_Crate[i].getModel());
-				// Add Crate models to renderList
-				for (i = 0; i < 2; i++) normalModelRenderer.addToRenderList(SA_M_Pallets[i].getModel());
-				// Add SandBag model to renderList.
-				for (i = 0; i < 2; i++) normalModelRenderer.addToRenderList(SA_M_SandBag[i].getModel());
-			}
 		case SAFE_AREA:
 			
 			// Add Floor model to renderList
