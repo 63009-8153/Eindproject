@@ -13,7 +13,7 @@ TextMaster::~TextMaster()
 
 void TextMaster::init(Loader * theLoader)
 {
-//	renderer = FontRenderer();
+	//renderer = FontRenderer();
 	//loader = theLoader;
 }
 

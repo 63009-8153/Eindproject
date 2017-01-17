@@ -169,6 +169,10 @@
     <ClCompile Include="ClientGame.cpp" />
     <ClCompile Include="ClientNetwork.cpp" />
     <ClCompile Include="Enemy.cpp" />
+    <ClCompile Include="FontType.cpp" />
+    <ClCompile Include="GUIText.cpp" />
+    <ClCompile Include="Line.cpp" />
+    <ClCompile Include="Gun.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Model.cpp" />
     <ClCompile Include="Player.cpp" />
@@ -221,6 +225,8 @@
     <ClInclude Include="ClientPacketLobby.h" />
     <ClInclude Include="Enemy.h" />
     <ClInclude Include="enemyData.h" />
+    <ClInclude Include="GUIText.h" />
+    <ClInclude Include="Gun.h" />
     <ClInclude Include="Header.h" />
     <ClInclude Include="networkData.h" />
     <ClInclude Include="NetworkHeader.h" />

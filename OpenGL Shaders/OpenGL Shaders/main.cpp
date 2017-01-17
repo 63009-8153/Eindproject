@@ -114,6 +114,7 @@ GLuint	FM_T_RAIL[2];
 GLuint	FM_T_TOWNHOUSE;
 GLuint	FM_T_WELL,
 		FM_TN_WELL;
+GLuint  T_GUN_WALTER;
 
 Tree  trees;
 Terrain FM_M_FLATTERRAIN;
@@ -135,6 +136,7 @@ Model FM_M_STATUE;
 Model FM_M_RAIL[2];
 Model FM_M_TOWNHOUSE[2];
 Model FM_M_WELL;
+Model GUN_WALTER;
 
 std::vector<gameobject> animationModels;
 std::vector<s_anim> playerAnimations;
@@ -307,7 +309,7 @@ int main() {
 	// ===  Framebuffers  ===
 
 	//Initialise framebuffer for cubemap texture waterReflection
-	waterReflection.initialseFrameBuffer(1280);
+	//waterReflection.initialseFrameBuffer(1280);
 
 	// Load and initialise all framebuffers
 	loadAllFrameBuffers();
@@ -338,6 +340,8 @@ int main() {
 
 	//Initialise gameState
 	gameState = 1;
+
+	player.init(glm::vec3(0), glm::vec3(0), glm::vec3(0), 1);
 
 	// Hide the cursor
 	DisplayManager::gameCursor();
@@ -396,6 +400,31 @@ int main() {
 				// Add SandBag model to renderList.
 				for (i = 0; i < 2; i++) normalModelRenderer.addToRenderList(SA_M_SandBag[i].getModel());
 			}
+		case SAFE_AREA:
+			
+			// Add Floor model to renderList
+			modelRenderer.addToRenderList(SA_M_Floor.getModel());
+			// Add Building models to renderList
+			for(i = 0; i < (1 * 5); i++) modelRenderer.addToRenderList(SA_M_Building[i].getModel());
+			// Add Barrel models to renderList
+			for (i = 0; i < 6; i++) modelRenderer.addToRenderList(SA_M_Barrels[i].getModel());
+			// Add Crate2 model to renderList
+			modelRenderer.addToRenderList(SA_M_Crate2.getModel());
+
+			// add Walter_pk_48
+			normalModelRenderer.addToRenderList(player.gun.gun_model.getModel());
+
+			// Add AmmoBox models to renderList
+			for (i = 0; i < (3 * 7); i++) normalModelRenderer.addToRenderList(SA_M_AmmoBoxes[i].getModel());
+			// Add Barrier models to renderList
+			for (i = 0; i < 4; i++) normalModelRenderer.addToRenderList(SA_M_Barriers[i].getModel());
+			// Add Crate models to renderList
+			for (i = 0; i < 6; i++) normalModelRenderer.addToRenderList(SA_M_Crate[i].getModel());
+			// Add Crate models to renderList
+			for (i = 0; i < 2; i++) normalModelRenderer.addToRenderList(SA_M_Pallets[i].getModel());
+			// Add SandBag model to renderList.
+			for (i = 0; i < 2; i++) normalModelRenderer.addToRenderList(SA_M_SandBag[i].getModel());
+
 			break;
 
 			case FORREST_AREA:
@@ -552,6 +581,7 @@ int main() {
 
 			// Render own player animation
 			player.getAnimModel()->Draw(modelRenderer.shader, lights, &camera, glm::vec4(0, -1, 0, 100000));
+
 			// Render all other player's animations
 			for (int i = 0; i < MAX_LOBBYSIZE; i++) {
 				if (otherPlayers[i].active) {
@@ -662,6 +692,8 @@ int main() {
 
 		// Set the rotation of the player for the next update
 		client.setPlayerData(player);
+
+		player.update();
 		
 		// Set the camera rotation to the players rotation and convert it to radians
 		camera.rotation = glm::radians(player.getRotation());
@@ -771,6 +803,9 @@ void handleGameInput()
 
 	// Handle input of using
 	if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS) client.addActionType(USE);
+
+	// Handle input of reloading
+	if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) client.addActionType(RELOAD);
 }
 // Update time stuff
 void updateTime()
@@ -935,6 +970,7 @@ void loadAllFrameBuffers()
 		antiAliasedRenderer.shader.loadInverseFilterTextureSize(glm::vec3((1.0f / SCREEN_WIDTH), (1.0f / SCREEN_HEIGHT), 0.0f));
 		antiAliasedRenderer.shader.loadFXAAParameters((8.0f), (1.0f / 128.0f), (1.0f / 8.0f));
 	}
+
 	Contrast.load("WEngine/Shaders/PostProcessing/ContrastEffect.vs", "WEngine/Shaders/PostProcessing/ContrastEffect.fs", glm::vec2(SCREEN_WIDTH, SCREEN_HEIGHT));
 	VBlur.load("WEngine/Shaders/PostProcessing/VerticalGaussionBlur.vs", "WEngine/Shaders/PostProcessing/GaussionBlur.fs", glm::vec2(SCREEN_WIDTH / 5, SCREEN_HEIGHT / 5));
 	HBlur.load("WEngine/Shaders/PostProcessing/HorizontalGaussionBlur.vs", "WEngine/Shaders/PostProcessing/GaussionBlur.fs", glm::vec2(SCREEN_WIDTH / 5, SCREEN_HEIGHT / 5));
@@ -1336,6 +1372,10 @@ void loadModels()
 
 	// If loading the animations is not done yet, wait for it here and then create vao's for all objects
 	endLoadAnimations();
+
+	T_GUN_WALTER = loader.loadTexture("res/Models/objects/walter_pk_48/black.bmp", false);
+	loadModel(GUN_WALTER, "res/Models/objects/walter_pk_48/walter.obj", glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1.0f), T_GUN_WALTER, 100.0f, 0.1f, 0.4f);
+	//loadModel(GUN_WALTER, "res/Safe_Area/Weapon_Box/Weapon_Box.obj", glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1.0f), T_GUN_WALTER, 100.0f, 0.1f, 0.4f);
 
 }
 // Load Safe Area Models
