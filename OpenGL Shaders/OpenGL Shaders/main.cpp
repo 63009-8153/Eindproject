@@ -1,14 +1,16 @@
 #include "ClientGame.h"
-
-#include "WEngine/Usage.h"
-
 #include "areaTypes.h"
+
+// Graphics and sound Engine
+#include "WEngine/Usage.h"
+#include "SAL/CoreSystem.h"
 
 #include "Enemy.h"
 #include "Model.h"
 #include "Player.h"
 
 #include "Tree.h"
+
 
 #define WAVE_SPEED 0.03
 
@@ -30,10 +32,13 @@ ClientGame client;
 double	clientLoopDeltaTime		 = 0,
 		clientLoopLastRenderTime = 0;
 
+void (*networkUpdateFunction)(void) = nullptr;
+
 // ============  GAME PROGRAM VARIABLES ============
 
 GLFWwindow* window;
-void (*networkUpdateFunction)(void) = nullptr;
+
+SimpleAudioLib::AudioEntity* sound;
 
 float mouseSensitivity = 1.0f;
 
@@ -256,6 +261,18 @@ void loadTreeModels();
 
 
 int main() {
+
+	// Initialise the audioSystem
+	SimpleAudioLib::CoreSystem& audioSystem = SimpleAudioLib::CoreSystem::getInstance();
+	audioSystem.initWithDefaultDevice();
+
+	/* This is code to load a sound file and then play it */
+	sound = audioSystem.createAudioEntityFromFile("res/Sounds/tada.wav");
+	// Play sound
+	//sound->play(true);
+
+	player.active = true;
+
 	// ============  NETWORKING LOGIC =================
 
 	// Initialise, set the client and connect to the server.
@@ -292,7 +309,7 @@ int main() {
 	// ===  Framebuffers  ===
 
 	//Initialise framebuffer for cubemap texture waterReflection
-	waterReflection.initialseFrameBuffer(1280);
+	//waterReflection.initialseFrameBuffer(1280);
 
 	// Load and initialise all framebuffers
 	loadAllFrameBuffers();
@@ -547,6 +564,7 @@ int main() {
 
 			// Render own player animation
 			player.getAnimModel()->Draw(modelRenderer.shader, lights, &camera, glm::vec4(0, -1, 0, 100000));
+
 			// Render all other player's animations
 			for (int i = 0; i < MAX_LOBBYSIZE; i++) {
 				if (otherPlayers[i].active) {
@@ -705,6 +723,12 @@ int main() {
 
 	//Terminate glfw
 	glfwTerminate();
+
+	// Clean up audio
+	delete sound;
+	sound = NULL;
+
+	SimpleAudioLib::CoreSystem::release();
 }
 
 
@@ -755,12 +779,15 @@ void handleGameInput()
 	if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) client.addActionType(MOVE_RUN);
 	
 	// Handle input of shooting
-	if (glfwGetKey(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) client.addActionType(SHOOT_ONCE);
+	if (glfwGetKey(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) client.addActionType(SHOOT);
 	
 	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) client.addActionType(JUMP);
 
 	// Handle input of using
 	if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS) client.addActionType(USE);
+
+	// Handle input of reloading
+	if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) client.addActionType(RELOAD);
 }
 // Update time stuff
 void updateTime()
@@ -923,6 +950,7 @@ void loadAllFrameBuffers()
 		antiAliasedRenderer.shader.loadInverseFilterTextureSize(glm::vec3((1.0f / SCREEN_WIDTH), (1.0f / SCREEN_HEIGHT), 0.0f));
 		antiAliasedRenderer.shader.loadFXAAParameters((8.0f), (1.0f / 128.0f), (1.0f / 8.0f));
 	}
+
 	Contrast.load("WEngine/Shaders/PostProcessing/ContrastEffect.vs", "WEngine/Shaders/PostProcessing/ContrastEffect.fs", glm::vec2(SCREEN_WIDTH, SCREEN_HEIGHT));
 	VBlur.load("WEngine/Shaders/PostProcessing/VerticalGaussionBlur.vs", "WEngine/Shaders/PostProcessing/GaussionBlur.fs", glm::vec2(SCREEN_WIDTH / 5, SCREEN_HEIGHT / 5));
 	HBlur.load("WEngine/Shaders/PostProcessing/HorizontalGaussionBlur.vs", "WEngine/Shaders/PostProcessing/GaussionBlur.fs", glm::vec2(SCREEN_WIDTH / 5, SCREEN_HEIGHT / 5));
@@ -1238,9 +1266,84 @@ void LoadGraphics_ForrestMap()
 }
 
 // Load all models
+std::vector<gameobject> animobjs[9];
+std::thread tanim[9];
 
+void anim1() {
+	playerAnimations[0] = Player::loadAnimations("res/PlayerAnimations/Idle/", animobjs[0], 0, 32, 15, true);
+}
+void anim2() {
+	playerAnimations[1] = Player::loadAnimations("res/PlayerAnimations/Walk_Forward/", animobjs[1], 32, 31, 62, true);
+}
+void anim3() {
+	playerAnimations[2] = Player::loadAnimations("res/PlayerAnimations/Walk_Backward/", animobjs[2], 63, 31, 62, true);
+}
+void anim4() {
+	playerAnimations[3] = Player::loadAnimations("res/PlayerAnimations/Walk_Left/", animobjs[3], 94, 31, 62, true);
+}
+void anim5() {
+	playerAnimations[4] = Player::loadAnimations("res/PlayerAnimations/Walk_Right/", animobjs[4], 125, 31, 62, true);
+}
+void anim6() {
+	playerAnimations[5] = Player::loadAnimations("res/PlayerAnimations/Run_Forward/", animobjs[5], 156, 16, 62, true);
+}
+
+void anim7() {
+	enemyAnimations[0] = Enemy::loadAnimations("res/EnemyAnimations/Walk_Forward/", animobjs[6], 0, 38, 62, true);
+}
+void anim8() {
+	enemyAnimations[1] = Enemy::loadAnimations("res/EnemyAnimations/Attack/", animobjs[7], 38, 40, 62, true);
+}
+void anim9() {
+	enemyAnimations[2] = Enemy::loadAnimations("res/EnemyAnimations/Dying/", animobjs[8], 78, 45, 62, true);
+}
+void loadAnimations()
+{
+	playerAnimations.resize(6);
+	enemyAnimations.resize(3);
+
+	tanim[0] = std::thread(anim1);
+	tanim[1] = std::thread(anim2);
+	tanim[2] = std::thread(anim3);
+	tanim[3] = std::thread(anim4);
+	tanim[4] = std::thread(anim5);
+	tanim[5] = std::thread(anim6);
+
+	tanim[6] = std::thread(anim7);
+	tanim[7] = std::thread(anim8);
+	tanim[8] = std::thread(anim9);
+}
+void endLoadAnimations() {
+	tanim[0].join();
+	tanim[1].join();
+	tanim[2].join();
+	tanim[3].join();
+	tanim[4].join();
+	tanim[5].join();
+
+	tanim[6].join();
+	tanim[7].join();
+	tanim[8].join();
+
+	animationModels.insert(animationModels.end(), animobjs[0].begin(), animobjs[0].end());
+	animationModels.insert(animationModels.end(), animobjs[1].begin(), animobjs[1].end());
+	animationModels.insert(animationModels.end(), animobjs[2].begin(), animobjs[2].end());
+	animationModels.insert(animationModels.end(), animobjs[3].begin(), animobjs[3].end());
+	animationModels.insert(animationModels.end(), animobjs[4].begin(), animobjs[4].end());
+	animationModels.insert(animationModels.end(), animobjs[5].begin(), animobjs[5].end());
+
+	enemyAnimationModels.insert(enemyAnimationModels.end(), animobjs[6].begin(), animobjs[6].end());
+	enemyAnimationModels.insert(enemyAnimationModels.end(), animobjs[7].begin(), animobjs[7].end());
+	enemyAnimationModels.insert(enemyAnimationModels.end(), animobjs[8].begin(), animobjs[8].end());
+
+	Player::createAnimationModels();
+	Enemy::createAnimationModels();
+}
 void loadModels()
 {
+	// Start loading all animations
+	loadAnimations();
+
 	// Load all the models for the safe area.
 	loadModels_SafeArea();
 
@@ -1262,6 +1365,8 @@ void loadModels()
 	loadModel(GUN_WALTER, "res/Models/objects/walter_pk_48/walter.obj", glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1.0f), T_GUN_WALTER, 100.0f, 0.1f, 0.4f);
 	//loadModel(GUN_WALTER, "res/Safe_Area/Weapon_Box/Weapon_Box.obj", glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1.0f), T_GUN_WALTER, 100.0f, 0.1f, 0.4f);
 
+	// If loading the animations is not done yet, wait for it here and then create vao's for all objects
+	endLoadAnimations();
 
 }
 // Load Safe Area Models

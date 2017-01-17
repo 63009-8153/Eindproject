@@ -27,3 +27,7 @@ float* TextMeshData::getTextureCoords() {
 int TextMeshData::getVertexCount() {
 	return vertexCount / 2;
 }
+
+int TextMeshData::getTextureCount() {
+	return textureCount / 2;
+}

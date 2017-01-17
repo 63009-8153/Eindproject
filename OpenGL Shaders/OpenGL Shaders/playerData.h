@@ -52,6 +52,4 @@ struct playerData {
 
 		return *this;
 	}
-
-
 };

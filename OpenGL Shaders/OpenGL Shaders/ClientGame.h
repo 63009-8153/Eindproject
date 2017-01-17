@@ -16,11 +16,11 @@ extern void SendLobbyData();
 extern void SendGameData();
 
 // My Client
-extern volatile playerData myPlayerData;
+extern playerData myPlayerData;
 // All clients
-extern volatile playerData allClients[MAX_LOBBYSIZE];
+extern playerData allClients[MAX_LOBBYSIZE];
 // All enemies
-extern volatile enemyData  allEnemies[MAX_ENEMIES];
+extern enemyData allEnemies[MAX_ENEMIES];
 
 class ClientGame
 {
