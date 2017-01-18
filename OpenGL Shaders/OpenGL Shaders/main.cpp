@@ -514,6 +514,8 @@ int main() {
 			break;
 		}
 
+		modelRenderer.addToRenderList(player.gun.gun_model.getModel());
+
 		//Add water to the renderer list
 		//waterRenderer.addToRenderList(&water);
 		
@@ -642,8 +644,7 @@ int main() {
 		// Poll all events
 		glfwPollEvents();
 
-		// Update own player
-		player.update();
+
 
 		// Update own animation
 		player.updateAnimation(player.networkAnimType);

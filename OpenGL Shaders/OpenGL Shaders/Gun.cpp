@@ -27,6 +27,6 @@ float calculated_rotation(float rot)
 
 void Gun::Update(glm::vec3 position, glm::vec3 rotation)
 {
-	gun_model.setPosition(glm::vec3(position.x, position.y+3, position.z));
+	gun_model.setPosition(glm::vec3(position.x, position.y+5, position.z));
 	gun_model.setRotation(glm::radians(glm::vec3(rotation.z, -rotation.y-90.0f, calculated_rotation(rotation.x))));
 }
