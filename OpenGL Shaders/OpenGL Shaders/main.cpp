@@ -1346,6 +1346,21 @@ void loadModels()
 	// Load all the models for the forrest map.
 	LoadModels_ForrestMap();
 
+	Player::loadAnimations("res/PlayerAnimations/Idle/", 32, 15, true);
+	Player::loadAnimations("res/PlayerAnimations/Walk_Forward/", 31, 62, true);
+	Player::loadAnimations("res/PlayerAnimations/Walk_Backward/", 31, 62, true);
+	Player::loadAnimations("res/PlayerAnimations/Walk_Left/", 31, 62, true);
+	Player::loadAnimations("res/PlayerAnimations/Walk_Right/", 31, 62, true);
+	Player::loadAnimations("res/PlayerAnimations/Run_Forward/", 16, 62, true);
+	
+	Enemy::loadAnimations("res/EnemyAnimations/Walk_Forward/", 38, 62, true);
+	Enemy::loadAnimations("res/EnemyAnimations/Attack/", 40, 62, true);
+	Enemy::loadAnimations("res/EnemyAnimations/Dying/", 45, 62, true);
+
+	T_GUN_WALTER = loader.loadTexture("res/Models/objects/walter_pk_48/black.bmp", false);
+	loadModel(GUN_WALTER, "res/Models/objects/walter_pk_48/walter.obj", glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1.0f), T_GUN_WALTER, 100.0f, 0.1f, 0.4f);
+	//loadModel(GUN_WALTER, "res/Safe_Area/Weapon_Box/Weapon_Box.obj", glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1.0f), T_GUN_WALTER, 100.0f, 0.1f, 0.4f);
+
 	// If loading the animations is not done yet, wait for it here and then create vao's for all objects
 	endLoadAnimations();
 
