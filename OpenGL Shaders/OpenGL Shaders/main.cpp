@@ -1,5 +1,4 @@
 #include "ClientGame.h"
-#include "areaTypes.h"
 
 // Graphics and sound Engine
 #include "WEngine/Usage.h"
@@ -18,6 +17,7 @@
 #define SSAA 2
 #define FXAA 3
 
+#define OPTIMIZE_SAFEAREA_DIST 50.0f
 #define SMALL_OPTIMIZE_DIST 200.0f
 #define OPTIMIZE_DIST 300.0f
 #define LARGE_OPTIMIZE_DIST 1000.0f
@@ -169,8 +169,6 @@ int gameState = 0;
 
 float Max_Fps = 61.5f;
 bool limit_fps = false;
-
-areaType currentArea = FORREST_AREA;
 
 /* The Anti-Aliasing type used in the program.
    Can be one of the following:
@@ -375,143 +373,136 @@ int main() {
 		/* ========= Add models to list for rendering ============== */
 
 		unsigned int i = 0;
-		
-		switch (currentArea)
-		{
-			case SAFE_AREA:
-			{
-				// Add Floor model to renderList
-				modelRenderer.addToRenderList(SA_M_Floor.getModel());
-				// Add Building models to renderList
-				for (i = 0; i < (1 * 5); i++) modelRenderer.addToRenderList(SA_M_Building[i].getModel());
-				// Add Barrel models to renderList
-				for (i = 0; i < 6; i++) modelRenderer.addToRenderList(SA_M_Barrels[i].getModel());
-				// Add Crate2 model to renderList
-				modelRenderer.addToRenderList(SA_M_Crate2.getModel());
 
-				// Add AmmoBox models to renderList
-				for (i = 0; i < (3 * 7); i++) normalModelRenderer.addToRenderList(SA_M_AmmoBoxes[i].getModel());
-				// Add Barrier models to renderList
-				for (i = 0; i < 4; i++) normalModelRenderer.addToRenderList(SA_M_Barriers[i].getModel());
-				// Add Crate models to renderList
-				for (i = 0; i < 6; i++) normalModelRenderer.addToRenderList(SA_M_Crate[i].getModel());
-				// Add Crate models to renderList
-				for (i = 0; i < 2; i++) normalModelRenderer.addToRenderList(SA_M_Pallets[i].getModel());
-				// Add SandBag model to renderList.
-				for (i = 0; i < 2; i++) normalModelRenderer.addToRenderList(SA_M_SandBag[i].getModel());
-			}
+		if (glm::distance(glm::vec3(1300.0f, 0.0f, 0.0f), camera.position) < OPTIMIZE_SAFEAREA_DIST){
 
-			break;
+			// Add Floor model to renderList
+			modelRenderer.addToRenderList(SA_M_Floor.getModel());
+			// Add Building models to renderList
+			for (i = 0; i < (1 * 5); i++) modelRenderer.addToRenderList(SA_M_Building[i].getModel());
+			// Add Barrel models to renderList
+			for (i = 0; i < 6; i++) modelRenderer.addToRenderList(SA_M_Barrels[i].getModel());
+			// Add Crate2 model to renderList
+			modelRenderer.addToRenderList(SA_M_Crate2.getModel());
 
-			case FORREST_AREA:
-			{
-				// Add the flat terrain to the terrain renderer
-				terrainRenderer.addToRenderList(FM_M_FLATTERRAIN.getModel());
-				// Add the background terrain to the renderList
-				normalModelRenderer.addToRenderList(FM_M_TERRAIN.getModel());
+			// Add AmmoBox models to renderList
+			for (i = 0; i < (3 * 7); i++) normalModelRenderer.addToRenderList(SA_M_AmmoBoxes[i].getModel());
+			// Add Barrier models to renderList
+			for (i = 0; i < 4; i++) normalModelRenderer.addToRenderList(SA_M_Barriers[i].getModel());
+			// Add Crate models to renderList
+			for (i = 0; i < 6; i++) normalModelRenderer.addToRenderList(SA_M_Crate[i].getModel());
+			// Add Crate models to renderList
+			for (i = 0; i < 2; i++) normalModelRenderer.addToRenderList(SA_M_Pallets[i].getModel());
+			// Add SandBag model to renderList.
+			for (i = 0; i < 2; i++) normalModelRenderer.addToRenderList(SA_M_SandBag[i].getModel());
 
-				// == RENDER LIST == 
+		}
+		else {
+			// Add the flat terrain to the terrain renderer
+			terrainRenderer.addToRenderList(FM_M_FLATTERRAIN.getModel());
+			// Add the background terrain to the renderList
+			normalModelRenderer.addToRenderList(FM_M_TERRAIN.getModel());
 
-				// Add all trees that are within the optimization distance to the renderList
-				for (i = 0; i < trees.getTreeCount(); i++) {
-					if (glm::distance(trees.getTreeAt(i)->getPosition(), camera.position) < OPTIMIZE_DIST) {
-						modelRenderer.addToRenderList(trees.getTreeAt(i));
-					}
-				}
-				// Add all army trucks that are within the optimization distance to the renderList
-				for (i = 0; i < 6; i++) {
-					if (glm::distance(FM_M_ARMY_TRUCK[5 * i].getModel()->getPosition(), camera.position) < OPTIMIZE_DIST) {
-						for (unsigned int j = 0; j < 5; j++) modelRenderer.addToRenderList(FM_M_ARMY_TRUCK[(5 * i) + j].getModel());
-					}
-				}
-				// Add all roadlights that are within the optimization distance to the renderList
-				for (i = 0; i < 24; i++) {
-					if (glm::distance(FM_M_ROADLIGHT[3 * i].getModel()->getPosition(), camera.position) < OPTIMIZE_DIST) {
-						for (unsigned int j = 0; j < 3; j++) modelRenderer.addToRenderList(FM_M_ROADLIGHT[(3 * i) + j].getModel());
-					}
-				}
-				// Add all Military bunkers that are within the optimization distance to the renderList
-				for (i = 0; i < 3; i++) {
-					if (glm::distance(FM_M_MILITARY_BUNKER[3 * i].getModel()->getPosition(), camera.position) < LARGE_OPTIMIZE_DIST) {
-						for (unsigned int j = 0; j < 3; j++) modelRenderer.addToRenderList(FM_M_MILITARY_BUNKER[(3 * i) + j].getModel());
-					}
-				}
-				// Add all traffic cones that are within the optimization distance to the renderList
-				for (i = 0; i < 14; i++) {
-					if (glm::distance(FM_M_TRAFFICCONE[i].getModel()->getPosition(), camera.position) < SMALL_OPTIMIZE_DIST) {
-						modelRenderer.addToRenderList(FM_M_TRAFFICCONE[i].getModel());
-					}
-				}
-				// Add rails that are within the optimization distance to the renderList
-				if (glm::distance(FM_M_RAIL[0].getModel()->getPosition(), camera.position) < LARGE_OPTIMIZE_DIST) {
-					modelRenderer.addToRenderList(FM_M_RAIL[0].getModel());
-					modelRenderer.addToRenderList(FM_M_RAIL[1].getModel());
-				}
-				// Add all town houses that are within the optimization distance to the renderList
-				for (i = 0; i < 2; i++) {
-					if (glm::distance(FM_M_TOWNHOUSE[i].getModel()->getPosition(), camera.position) < LARGE_OPTIMIZE_DIST) {
-						modelRenderer.addToRenderList(FM_M_TOWNHOUSE[i].getModel());
-					}
-				}
+			// == RENDER LIST == 
 
-				// == NORMAL RENDER LIST ==
-
-				// Add all ambulances that are within the optimization distance to the renderList
-				for (i = 0; i < 2; i++) {
-					if (glm::distance(FM_M_AMBULANCE[5 * i].getModel()->getPosition(), camera.position) < OPTIMIZE_DIST) {
-						for (unsigned int j = 0; j < 5; j++) normalModelRenderer.addToRenderList(FM_M_AMBULANCE[(5 * i) + j].getModel());
-					}
-				}
-				// Add the command tent that is within the optimization distance to the renderList
-				if (glm::distance(FM_M_COMMAND_TENT.getModel()->getPosition(), camera.position) < LARGE_OPTIMIZE_DIST) {
-					normalModelRenderer.addToRenderList(FM_M_COMMAND_TENT.getModel());
-				}
-				// Add all army tents that are within the optimization distance to the renderList
-				for (i = 0; i < 6; i++) {
-					if (glm::distance(FM_M_ARMY_TENT[3 * i].getModel()->getPosition(), camera.position) < OPTIMIZE_DIST) {
-						for (unsigned int j = 0; j < 3; j++) normalModelRenderer.addToRenderList(FM_M_ARMY_TENT[(3 * i) + j].getModel());
-					}
-				}
-				// Add all barriers that are within the optimization distance to the renderList
-				for (i = 0; i < 25; i++) {
-					if (glm::distance(FM_M_BARRIER[i].getModel()->getPosition(), camera.position) < SMALL_OPTIMIZE_DIST) {
-						normalModelRenderer.addToRenderList(FM_M_BARRIER[i].getModel());
-					}
-				}
-				// Add all containers that are within the optimization distance to the renderList
-				for (i = 0; i < 12; i++) {
-					if (glm::distance(FM_M_CONTAINER[i].getModel()->getPosition(), camera.position) < OPTIMIZE_DIST) {
-						normalModelRenderer.addToRenderList(FM_M_CONTAINER[i].getModel());
-					}
-				}
-				// Add broken fence 1 that is within the optimization distance to the renderList
-				if (glm::distance(FM_M_BROKEN_FENCE1[0].getModel()->getPosition(), camera.position) < OPTIMIZE_DIST) {
-					for (i = 0; i < 3; i++) normalModelRenderer.addToRenderList(FM_M_BROKEN_FENCE1[i].getModel());
-				}
-				// Add broken fence 2 that is within the optimization distance to the renderList
-				if (glm::distance(FM_M_BROKEN_FENCE2[0].getModel()->getPosition(), camera.position) < OPTIMIZE_DIST) {
-					for (i = 0; i < 3; i++) normalModelRenderer.addToRenderList(FM_M_BROKEN_FENCE2[i].getModel());
-				}
-				// Add all fences that are within the optimization distance to the renderList
-				for (i = 0; i < 164; i++) {
-					if (glm::distance(FM_M_FENCE[3 * i].getModel()->getPosition(), camera.position) < OPTIMIZE_DIST) {
-						for (unsigned int j = 0; j < 3; j++) normalModelRenderer.addToRenderList(FM_M_FENCE[(3 * i) + j].getModel());
-					}
-				}
-				// Add all fences that are within the optimization distance to the renderList
-				for (i = 0; i < 3; i++) {
-					normalModelRenderer.addToRenderList(FM_M_ROAD[i].getModel());
-				}
-				// Add the statue that is within the optimization distance to the renderList
-				if (glm::distance(FM_M_STATUE.getModel()->getPosition(), camera.position) < SMALL_OPTIMIZE_DIST) {
-					normalModelRenderer.addToRenderList(FM_M_STATUE.getModel());
-				}
-				// Add the well that is within the optimization distance to the renderList
-				if (glm::distance(FM_M_WELL.getModel()->getPosition(), camera.position) < OPTIMIZE_DIST) {
-					normalModelRenderer.addToRenderList(FM_M_WELL.getModel());
+			// Add all trees that are within the optimization distance to the renderList
+			for (i = 0; i < trees.getTreeCount(); i++) {
+				if (glm::distance(trees.getTreeAt(i)->getPosition(), camera.position) < OPTIMIZE_DIST) {
+					modelRenderer.addToRenderList(trees.getTreeAt(i));
 				}
 			}
-			break;
+			// Add all army trucks that are within the optimization distance to the renderList
+			for (i = 0; i < 6; i++) {
+				if (glm::distance(FM_M_ARMY_TRUCK[5 * i].getModel()->getPosition(), camera.position) < OPTIMIZE_DIST) {
+					for (unsigned int j = 0; j < 5; j++) modelRenderer.addToRenderList(FM_M_ARMY_TRUCK[(5 * i) + j].getModel());
+				}
+			}
+			// Add all roadlights that are within the optimization distance to the renderList
+			for (i = 0; i < 24; i++) {
+				if (glm::distance(FM_M_ROADLIGHT[3 * i].getModel()->getPosition(), camera.position) < OPTIMIZE_DIST) {
+					for (unsigned int j = 0; j < 3; j++) modelRenderer.addToRenderList(FM_M_ROADLIGHT[(3 * i) + j].getModel());
+				}
+			}
+			// Add all Military bunkers that are within the optimization distance to the renderList
+			for (i = 0; i < 3; i++) {
+				if (glm::distance(FM_M_MILITARY_BUNKER[3 * i].getModel()->getPosition(), camera.position) < LARGE_OPTIMIZE_DIST) {
+					for (unsigned int j = 0; j < 3; j++) modelRenderer.addToRenderList(FM_M_MILITARY_BUNKER[(3 * i) + j].getModel());
+				}
+			}
+			// Add all traffic cones that are within the optimization distance to the renderList
+			for (i = 0; i < 14; i++) {
+				if (glm::distance(FM_M_TRAFFICCONE[i].getModel()->getPosition(), camera.position) < SMALL_OPTIMIZE_DIST) {
+					modelRenderer.addToRenderList(FM_M_TRAFFICCONE[i].getModel());
+				}
+			}
+			// Add rails that are within the optimization distance to the renderList
+			if (glm::distance(FM_M_RAIL[0].getModel()->getPosition(), camera.position) < LARGE_OPTIMIZE_DIST) {
+				modelRenderer.addToRenderList(FM_M_RAIL[0].getModel());
+				modelRenderer.addToRenderList(FM_M_RAIL[1].getModel());
+			}
+			// Add all town houses that are within the optimization distance to the renderList
+			for (i = 0; i < 2; i++) {
+				if (glm::distance(FM_M_TOWNHOUSE[i].getModel()->getPosition(), camera.position) < LARGE_OPTIMIZE_DIST) {
+					modelRenderer.addToRenderList(FM_M_TOWNHOUSE[i].getModel());
+				}
+			}
+
+			// == NORMAL RENDER LIST ==
+
+			// Add all ambulances that are within the optimization distance to the renderList
+			for (i = 0; i < 2; i++) {
+				if (glm::distance(FM_M_AMBULANCE[5 * i].getModel()->getPosition(), camera.position) < OPTIMIZE_DIST) {
+					for (unsigned int j = 0; j < 5; j++) normalModelRenderer.addToRenderList(FM_M_AMBULANCE[(5 * i) + j].getModel());
+				}
+			}
+			// Add the command tent that is within the optimization distance to the renderList
+			if (glm::distance(FM_M_COMMAND_TENT.getModel()->getPosition(), camera.position) < LARGE_OPTIMIZE_DIST) {
+				normalModelRenderer.addToRenderList(FM_M_COMMAND_TENT.getModel());
+			}
+			// Add all army tents that are within the optimization distance to the renderList
+			for (i = 0; i < 6; i++) {
+				if (glm::distance(FM_M_ARMY_TENT[3 * i].getModel()->getPosition(), camera.position) < OPTIMIZE_DIST) {
+					for (unsigned int j = 0; j < 3; j++) normalModelRenderer.addToRenderList(FM_M_ARMY_TENT[(3 * i) + j].getModel());
+				}
+			}
+			// Add all barriers that are within the optimization distance to the renderList
+			for (i = 0; i < 25; i++) {
+				if (glm::distance(FM_M_BARRIER[i].getModel()->getPosition(), camera.position) < SMALL_OPTIMIZE_DIST) {
+					normalModelRenderer.addToRenderList(FM_M_BARRIER[i].getModel());
+				}
+			}
+			// Add all containers that are within the optimization distance to the renderList
+			for (i = 0; i < 12; i++) {
+				if (glm::distance(FM_M_CONTAINER[i].getModel()->getPosition(), camera.position) < OPTIMIZE_DIST) {
+					normalModelRenderer.addToRenderList(FM_M_CONTAINER[i].getModel());
+				}
+			}
+			// Add broken fence 1 that is within the optimization distance to the renderList
+			if (glm::distance(FM_M_BROKEN_FENCE1[0].getModel()->getPosition(), camera.position) < OPTIMIZE_DIST) {
+				for (i = 0; i < 3; i++) normalModelRenderer.addToRenderList(FM_M_BROKEN_FENCE1[i].getModel());
+			}
+			// Add broken fence 2 that is within the optimization distance to the renderList
+			if (glm::distance(FM_M_BROKEN_FENCE2[0].getModel()->getPosition(), camera.position) < OPTIMIZE_DIST) {
+				for (i = 0; i < 3; i++) normalModelRenderer.addToRenderList(FM_M_BROKEN_FENCE2[i].getModel());
+			}
+			// Add all fences that are within the optimization distance to the renderList
+			for (i = 0; i < 164; i++) {
+				if (glm::distance(FM_M_FENCE[3 * i].getModel()->getPosition(), camera.position) < OPTIMIZE_DIST) {
+					for (unsigned int j = 0; j < 3; j++) normalModelRenderer.addToRenderList(FM_M_FENCE[(3 * i) + j].getModel());
+				}
+			}
+			// Add all fences that are within the optimization distance to the renderList
+			for (i = 0; i < 3; i++) {
+				normalModelRenderer.addToRenderList(FM_M_ROAD[i].getModel());
+			}
+			// Add the statue that is within the optimization distance to the renderList
+			if (glm::distance(FM_M_STATUE.getModel()->getPosition(), camera.position) < SMALL_OPTIMIZE_DIST) {
+				normalModelRenderer.addToRenderList(FM_M_STATUE.getModel());
+			}
+			// Add the well that is within the optimization distance to the renderList
+			if (glm::distance(FM_M_WELL.getModel()->getPosition(), camera.position) < OPTIMIZE_DIST) {
+				normalModelRenderer.addToRenderList(FM_M_WELL.getModel());
+			}
 		}
 
 		//Add water to the renderer list
@@ -685,10 +676,6 @@ int main() {
 
 		//if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) camera.position.y += 1.0f; // left
 		//else if (glfwGetKey(window, GLFW_KEY_LEFT_ALT) == GLFW_PRESS) camera.position.y -= 1.0f; //right
-		
-		if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS) currentArea = SAFE_AREA;
-		else if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS) currentArea = FORREST_AREA;
-
 
 		//Set title to hold fps info
 		std::string fpsStr = std::string(PROGRAM_NAME) + " FPS: " + std::to_string(fps) + " deltaTime: " + std::to_string(deltaTime * 100) /*+ " Mouse: x: " + std::to_string(rot.x) + " y: " + std::to_string(rot.y)*/;

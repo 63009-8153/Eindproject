@@ -296,9 +296,6 @@
     <ClInclude Include="networkingErrors.h">
       <Filter>Network\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="areaTypes.h">
-      <Filter>Network\Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Tree.h">
       <Filter>Game\Header Files</Filter>
     </ClInclude>

@@ -206,7 +206,6 @@
   <ItemGroup>
     <ClInclude Include="actionTypes.h" />
     <ClInclude Include="AnimationTypes.h" />
-    <ClInclude Include="areaTypes.h" />
     <ClInclude Include="ClientGame.h" />
     <ClInclude Include="ClientNetwork.h" />
     <ClInclude Include="ClientPackage.h" />
