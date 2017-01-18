@@ -9,6 +9,7 @@ struct playerData {
 	int playerID;
 	float health, maxHealth;
 	int currentWeapon, shooting;
+	int currentArea;
 	char playerName[MAX_NAMESIZE];
 	unsigned int playerNameSize;
 	bool activePlayer;
@@ -23,6 +24,7 @@ struct playerData {
 		health = p.health;
 		maxHealth = p.maxHealth;
 		currentWeapon = p.currentWeapon;
+		currentArea = p.currentArea;
 		shooting = p.shooting;
 		animType = p.animType;
 
@@ -42,6 +44,7 @@ struct playerData {
 		health = p.health;
 		maxHealth = p.maxHealth;
 		currentWeapon = p.currentWeapon;
+		currentArea = p.currentArea;
 		shooting = p.shooting;
 		animType = p.animType;
 

@@ -400,30 +400,6 @@ int main() {
 				// Add SandBag model to renderList.
 				for (i = 0; i < 2; i++) normalModelRenderer.addToRenderList(SA_M_SandBag[i].getModel());
 			}
-		case SAFE_AREA:
-			
-			// Add Floor model to renderList
-			modelRenderer.addToRenderList(SA_M_Floor.getModel());
-			// Add Building models to renderList
-			for(i = 0; i < (1 * 5); i++) modelRenderer.addToRenderList(SA_M_Building[i].getModel());
-			// Add Barrel models to renderList
-			for (i = 0; i < 6; i++) modelRenderer.addToRenderList(SA_M_Barrels[i].getModel());
-			// Add Crate2 model to renderList
-			modelRenderer.addToRenderList(SA_M_Crate2.getModel());
-
-			// add Walter_pk_48
-			normalModelRenderer.addToRenderList(player.gun.gun_model.getModel());
-
-			// Add AmmoBox models to renderList
-			for (i = 0; i < (3 * 7); i++) normalModelRenderer.addToRenderList(SA_M_AmmoBoxes[i].getModel());
-			// Add Barrier models to renderList
-			for (i = 0; i < 4; i++) normalModelRenderer.addToRenderList(SA_M_Barriers[i].getModel());
-			// Add Crate models to renderList
-			for (i = 0; i < 6; i++) normalModelRenderer.addToRenderList(SA_M_Crate[i].getModel());
-			// Add Crate models to renderList
-			for (i = 0; i < 2; i++) normalModelRenderer.addToRenderList(SA_M_Pallets[i].getModel());
-			// Add SandBag model to renderList.
-			for (i = 0; i < 2; i++) normalModelRenderer.addToRenderList(SA_M_SandBag[i].getModel());
 
 			break;
 
@@ -552,14 +528,14 @@ int main() {
 
 		// If we can use the useable object at the position we want to draw text that shows the user can use the object by pressing a button
 		// Check if we want and can use one of the positions that make the player go to the safe area
-		if (player.canUse(glm::vec3(-274.385f, 0.0f, -252.353f), USE_DISTANCE) || player.canUse(glm::vec3(-367.861f, 3.0f, -252.333f), USE_DISTANCE) || player.canUse(glm::vec3(-259.726f, 3.0f, -341.333f), USE_DISTANCE) || player.canUse(glm::vec3(-370.124f, 3.0f, -341.33f), USE_DISTANCE)) {
+		if (player.canUse(glm::vec3(-272.385f, 0.0f, -254.353f), USE_DISTANCE) || player.canUse(glm::vec3(-365.861f, 3.0f, -254.333f), USE_DISTANCE) || player.canUse(glm::vec3(-257.726f, 3.0f, -343.333f), USE_DISTANCE) || player.canUse(glm::vec3(-368.124f, 3.0f, -343.33f), USE_DISTANCE)) {
 			// Teleport to the position in the safe area
-			//GuiElements.push_back(gotoSafeArea);
+			GuiElements.push_back(gotoSafeArea);
 		}
 		// Check if we want and can use the position that makes the player go back to the main map from the safe area
 		else if (player.canUse(glm::vec3(1303.24, 0.0, 14.652), USE_DISTANCE)) {
 			// Teleport to the position in the main map
-			//GuiElements.push_back(gotoMainMap);
+			GuiElements.push_back(gotoMainMap);
 		}
 
 		glFinish();
@@ -580,7 +556,7 @@ int main() {
 			normalModelRenderer.render(lights, &camera, glm::vec4(0, -1, 0, 100000));
 
 			// Render own player animation
-			player.getAnimModel()->Draw(modelRenderer.shader, lights, &camera, glm::vec4(0, -1, 0, 100000));
+			//player.getAnimModel()->Draw(modelRenderer.shader, lights, &camera, glm::vec4(0, -1, 0, 100000));
 
 			// Render all other player's animations
 			for (int i = 0; i < MAX_LOBBYSIZE; i++) {
@@ -698,17 +674,17 @@ int main() {
 		// Set the camera rotation to the players rotation and convert it to radians
 		camera.rotation = glm::radians(player.getRotation());
 		// Set the camera position
-		//camera.position = player.getPosition();
+		camera.position = player.getPosition();
 		camera.position.y = 6.0f;
 
-		if (glfwGetKey(window, GLFW_KEY_KP_8) == GLFW_PRESS) camera.position.x += 2.0f; // up
-		else if (glfwGetKey(window, GLFW_KEY_KP_2) == GLFW_PRESS) camera.position.x -= 2.0f; //down
+		//if (glfwGetKey(window, GLFW_KEY_KP_8) == GLFW_PRESS) camera.position.x += 2.0f; // up
+		//else if (glfwGetKey(window, GLFW_KEY_KP_2) == GLFW_PRESS) camera.position.x -= 2.0f; //down
 
-		if (glfwGetKey(window, GLFW_KEY_KP_4) == GLFW_PRESS) camera.position.z += 2.0f; // left
-		else if (glfwGetKey(window, GLFW_KEY_KP_6) == GLFW_PRESS) camera.position.z -= 2.0f; //right
+		//if (glfwGetKey(window, GLFW_KEY_KP_4) == GLFW_PRESS) camera.position.z += 2.0f; // left
+		//else if (glfwGetKey(window, GLFW_KEY_KP_6) == GLFW_PRESS) camera.position.z -= 2.0f; //right
 
-		if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) camera.position.y += 1.0f; // left
-		else if (glfwGetKey(window, GLFW_KEY_LEFT_ALT) == GLFW_PRESS) camera.position.y -= 1.0f; //right
+		//if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) camera.position.y += 1.0f; // left
+		//else if (glfwGetKey(window, GLFW_KEY_LEFT_ALT) == GLFW_PRESS) camera.position.y -= 1.0f; //right
 		
 		if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS) currentArea = SAFE_AREA;
 		else if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS) currentArea = FORREST_AREA;
@@ -802,7 +778,7 @@ void handleGameInput()
 	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) client.addActionType(JUMP);
 
 	// Handle input of using
-	if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS) client.addActionType(USE);
+	if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) client.addActionType(USE);
 
 	// Handle input of reloading
 	if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) client.addActionType(RELOAD);
@@ -839,15 +815,15 @@ void loadAndInitialiseWater()
 // Load and initialise all GUI elements
 void loadAndInitialiseGUI()
 {
-	//// Load gotoSafeArea
-	//gotoSafeArea.loadImage("res/GUI/gotoSafeArea.bmp", true, false);
-	//gotoSafeArea.setScale(glm::vec2(0.5f));
-	//gotoSafeArea.setPosition(glm::vec2(0.5f, 1.5f));
+	// Load gotoSafeArea
+	gotoSafeArea.loadImage("res/GUI/gotoSafeArea.bmp", true, false);
+	gotoSafeArea.setScale(glm::vec2(0.5f));
+	gotoSafeArea.setPosition(glm::vec2(1.0f, 0.5f));
 
-	//// Load gotoMainMap
-	//gotoMainMap.loadImage("res/GUI/gotoMainMap.bmp", true, false);
-	//gotoMainMap.setScale(glm::vec2(0.5f));
-	//gotoMainMap.setPosition(glm::vec2(0.5f, 1.5f));
+	// Load gotoMainMap
+	gotoMainMap.loadImage("res/GUI/gotoMainMap.bmp", true, false);
+	gotoMainMap.setScale(glm::vec2(0.5f));
+	gotoMainMap.setPosition(glm::vec2(1.0f, 0.5f));
 }
 
 // Render water textures
@@ -1827,21 +1803,21 @@ void LoadModels_ForrestMap()
 			reflect = 0.1f,
 			ambient = 0.2f;
 
-		multiPos = glm::vec3(-313.2f, 12.943f, -341.934f);
+		multiPos = glm::vec3(-315.2f, 12.943f, -345.934f);
 		multiRot = glm::vec3(0.0f, glm::radians(-90.0f), 0.0f);
 		loadModel(FM_M_MILITARY_BUNKER[0], "res/Forrest_Area/Military_Bunker/Bunker_roof.obj", multiPos, multiRot, glm::vec3(1.0f), FM_T_MILITARY_BUNKER[0], 60.0f, 0.25f, ambient);
-		loadModel(FM_M_MILITARY_BUNKER[1], "res/Forrest_Area/Military_Bunker/Bunker_Side1.obj", multiPos, multiRot, glm::vec3(1.0f), FM_T_MILITARY_BUNKER[1], shine, reflect, ambient);
-		loadModel(FM_M_MILITARY_BUNKER[2], "res/Forrest_Area/Military_Bunker/Bunker_Side2.obj", multiPos, multiRot, glm::vec3(1.0f), FM_T_MILITARY_BUNKER[2], shine, reflect, ambient);
+		loadModel(FM_M_MILITARY_BUNKER[1], "res/Forrest_Area/Military_Bunker/Bunker_Side2.obj", multiPos, multiRot, glm::vec3(1.0f), FM_T_MILITARY_BUNKER[1], shine, reflect, ambient);
+		loadModel(FM_M_MILITARY_BUNKER[2], "res/Forrest_Area/Military_Bunker/Bunker_Side1.obj", multiPos, multiRot, glm::vec3(1.0f), FM_T_MILITARY_BUNKER[2], shine, reflect, ambient);
 
-		multiPos = glm::vec3(-274.797f, 12.943f, -199.188f);
+		multiPos = glm::vec3(-276.797f, 12.943f, -202.188f);
 		multiRot = glm::vec3(0.0f);
 		loadModel(FM_M_MILITARY_BUNKER[3], FM_M_MILITARY_BUNKER[0], multiPos, multiRot, glm::vec3(1.0f), FM_T_MILITARY_BUNKER[0], 60.0f, 0.25f, ambient);
 		loadModel(FM_M_MILITARY_BUNKER[4], FM_M_MILITARY_BUNKER[1], multiPos, multiRot, glm::vec3(1.0f), FM_T_MILITARY_BUNKER[1], shine, reflect, ambient);
 		loadModel(FM_M_MILITARY_BUNKER[5], FM_M_MILITARY_BUNKER[2], multiPos, multiRot, glm::vec3(1.0f), FM_T_MILITARY_BUNKER[2], shine, reflect, ambient);
 
-		multiPos = glm::vec3(-368.587f, 12.943f, -199.188f);
+		multiPos = glm::vec3(-370.587f, 12.943f, -202.188f);
 		multiRot = glm::vec3(0.0f);
-		loadModel(FM_M_MILITARY_BUNKER[6], FM_M_MILITARY_BUNKER[0], multiPos, multiRot, glm::vec3(1.0f), FM_T_MILITARY_BUNKER[0], 60.0f, 0.25f, 0.1f);
+		loadModel(FM_M_MILITARY_BUNKER[6], FM_M_MILITARY_BUNKER[0], multiPos, multiRot, glm::vec3(1.0f), FM_T_MILITARY_BUNKER[0], 60.0f, 0.25f, ambient);
 		loadModel(FM_M_MILITARY_BUNKER[7], FM_M_MILITARY_BUNKER[1], multiPos, multiRot, glm::vec3(1.0f), FM_T_MILITARY_BUNKER[1], shine, reflect, ambient);
 		loadModel(FM_M_MILITARY_BUNKER[8], FM_M_MILITARY_BUNKER[2], multiPos, multiRot, glm::vec3(1.0f), FM_T_MILITARY_BUNKER[2], shine, reflect, ambient);
 	}
@@ -1928,7 +1904,7 @@ void LoadModels_ForrestMap()
 
 		loadModel(FM_M_TERRAIN, "res/Forrest_Area/Terrain/Mountains/Mountains.obj", glm::vec3(0.0f, -32.0f, 0.0f), glm::vec3(0.0f), glm::vec3(1.0f), FM_T_TERRAIN, FM_TN_TERRAIN, shine, reflect, ambient);
 
-		FM_M_FLATTERRAIN.create(&loader.loadObjFile("res/Forrest_Area/Terrain/Ground/GroundPlane.obj", false, false), glm::vec3(-4.85f, 0.0f, 1.009f), glm::vec3(0.0f), FM_T_FLATTERRAIN[0], FM_T_FLATTERRAIN[1], FM_T_FLATTERRAIN[2], FM_T_FLATTERRAIN[3], FM_T_FLATTERRAIN[4]);
+		FM_M_FLATTERRAIN.create(&loader.loadObjFile("res/Forrest_Area/Terrain/Ground/GroundPlane.obj", false, false), glm::vec3(0.0f, 0.0f, 2.0f), glm::vec3(0.0f), FM_T_FLATTERRAIN[0], FM_T_FLATTERRAIN[1], FM_T_FLATTERRAIN[2], FM_T_FLATTERRAIN[3], FM_T_FLATTERRAIN[4]);
 	}
 
 	// == TOWN_HOUSE ==
