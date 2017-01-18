@@ -66,7 +66,7 @@ gameobject *Enemy::getAnimModel(){
 
 	enemyAnimationModels[currentAnimationFrame].setPosition(getPosition());
 	enemyAnimationModels[currentAnimationFrame].setRotation(glm::radians(-glm::vec3(0.0f, getRotation().y + 180.0f, 0.0f)));
-	enemyAnimationModels[currentAnimationFrame].setScale(glm::vec3(0.2f));
+	enemyAnimationModels[currentAnimationFrame].setScale(glm::vec3(0.02f));
 
 	return &enemyAnimationModels[currentAnimationFrame];
 }
@@ -150,8 +150,10 @@ void Enemy::updateAnimation(int currentType)
 
 	// If the current animation is not the same as the requested animation and the current animation is done playing, set the new animation and start it.
 	if (currentType != currentAnimationType) {
-		currentAnimationType = currentType;
-		resetAnimation();
+		if ((currentAnimationType == ENEM_ATTACK && animationEnded) || currentAnimationType != ENEM_ATTACK) {
+			currentAnimationType = currentType;
+			resetAnimation();
+		}
 	}
 }
 
