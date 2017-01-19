@@ -15,7 +15,7 @@ enum actionTypes {
 	GAME_RECEIVED_INIT = 23,
 	GAME_INITIALISATION = 24,
 
-	// Player actions
+	// Player actions                      
 	MOVE_FORWARD	= 30,
 	MOVE_BACKWARD	= 31,
 	MOVE_LEFT		= 32,
@@ -26,6 +26,7 @@ enum actionTypes {
 	// Weapon actions
 	SHOOT			= 40,
 	RELOAD			= 41,
+	SWITCH			= 42,
 
 	USE				= 50
 };

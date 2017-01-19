@@ -150,30 +150,6 @@
     <ClCompile Include="Tree.cpp">
       <Filter>Game\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="WEngine\Text\Character.cpp">
-      <Filter>WEngine\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="WEngine\Text\FontType.cpp">
-      <Filter>WEngine\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="WEngine\Text\GUIText.cpp">
-      <Filter>WEngine\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="WEngine\Text\Line.cpp">
-      <Filter>WEngine\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="WEngine\Text\MetaFile.cpp">
-      <Filter>WEngine\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="WEngine\Text\TextMeshCreator.cpp">
-      <Filter>WEngine\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="WEngine\Text\TextMeshData.cpp">
-      <Filter>WEngine\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="WEngine\Text\Word.cpp">
-      <Filter>WEngine\Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="SAL\AudioEntity.cpp">
       <Filter>SAL\Source Files</Filter>
     </ClCompile>
@@ -183,8 +159,8 @@
     <ClCompile Include="SAL\CoreSystem.cpp">
       <Filter>SAL\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="WEngine\Text\TextMaster.cpp">
-      <Filter>WEngine\Source Files</Filter>
+    <ClCompile Include="Gun.cpp">
+      <Filter>Game\Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -320,38 +296,11 @@
     <ClInclude Include="networkingErrors.h">
       <Filter>Network\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="areaTypes.h">
-      <Filter>Network\Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Tree.h">
       <Filter>Game\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="AnimationTypes.h">
       <Filter>Network\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="WEngine\Text\Character.h">
-      <Filter>WEngine\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="WEngine\Text\FontType.h">
-      <Filter>WEngine\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="WEngine\Text\GUIText.h">
-      <Filter>WEngine\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="WEngine\Text\Line.h">
-      <Filter>WEngine\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="WEngine\Text\MetaFile.h">
-      <Filter>WEngine\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="WEngine\Text\TextMeshCreator.h">
-      <Filter>WEngine\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="WEngine\Text\TextMeshData.h">
-      <Filter>WEngine\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="WEngine\Text\Word.h">
-      <Filter>WEngine\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="SAL\AudioEntity.h">
       <Filter>SAL\Header Files</Filter>
@@ -374,8 +323,8 @@
     <ClInclude Include="SAL\NoDeviceException.h">
       <Filter>SAL\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="WEngine\Text\TextMaster.h">
-      <Filter>WEngine\Header Files</Filter>
+    <ClInclude Include="Gun.h">
+      <Filter>Game\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
