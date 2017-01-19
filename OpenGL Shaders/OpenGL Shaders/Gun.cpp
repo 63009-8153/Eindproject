@@ -28,7 +28,7 @@ float calculated_rotation(float rot)
 
 void Gun::Update(glm::vec3 position, glm::vec3 rotation)
 {
-	glm::vec3 rot = glm::radians(rotation);
+	glm::vec3 rot = glm::vec3(rotation.z, -rotation.y - 90.0f, calculated_rotation(rotation.x));
 
 	//position.x += cos(rotation.y) * 1.1;
 	position.y = 5;
@@ -38,5 +38,5 @@ void Gun::Update(glm::vec3 position, glm::vec3 rotation)
 	// Calculate the position of the gun as a child of the camera position.
 
 	gun_model.setPosition(glm::vec3(position.x, position.y, position.z));
-	gun_model.setRotation(glm::radians(glm::vec3(rotation.z, -rotation.y - 90.0f, calculated_rotation(rotation.x))));
+	gun_model.setRotation(glm::radians(rot));
 }
