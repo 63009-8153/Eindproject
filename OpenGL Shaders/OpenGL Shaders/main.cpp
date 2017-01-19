@@ -271,12 +271,6 @@ int main() {
 
 	player.active = true;
 
-	// ============  NETWORKING LOGIC =================
-
-	// Initialise, set the client and connect to the server.
-	initialiseClient("127.0.0.1", "6881");
-
-
 	// ===============  GAME LOGIC ====================
 
 	// Initialise GLFW and throw error if it failed
@@ -332,6 +326,11 @@ int main() {
 	loadGraphics();
 	// Load all models and initialise
 	loadModels();
+
+	// ============  NETWORKING LOGIC =================
+
+	// Initialise, set the client and connect to the server.
+	initialiseClient("127.0.0.1", "6881");
 
 	// ===  LIGHTS  ===
 	initLights();
@@ -760,7 +759,7 @@ void handleGameInput()
 	if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) client.addActionType(MOVE_RUN);
 	
 	// Handle input of shooting
-	if (glfwGetKey(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) client.addActionType(SHOOT);
+	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) client.addActionType(SHOOT);
 	
 	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) client.addActionType(JUMP);
 

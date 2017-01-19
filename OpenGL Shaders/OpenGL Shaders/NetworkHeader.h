@@ -17,7 +17,7 @@
 
 #define MAX_NAMESIZE 32
 #define MAX_LOBBYSIZE 5
-#define MAX_ENEMIES 50
+#define MAX_ENEMIES 100
 #define MAX_ACTIONS 10
 
 #define MAX_PACKET_SIZE 1000000
