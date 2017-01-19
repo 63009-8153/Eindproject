@@ -57,6 +57,7 @@ void Tree::initialseNewTrees()
 
 		// Set the new rotation
 		trees[i].setRotation(rot);
+
 	}
 }
 

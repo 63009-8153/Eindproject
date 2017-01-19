@@ -36,7 +36,7 @@ void TextMaster::loadText(GUIText &text)
 
 void TextMaster::removeText(GUIText *text, int pos)
 {
-	///texts.find(*text->getFont())->second.erase(texts.find(*text->getFont())->second.begin() + pos);
+	//texts.find(*text->getFont())->second.erase(texts.find(*text->getFont())->second.begin() + pos);
 }
 
 void TextMaster::cleanUp()
