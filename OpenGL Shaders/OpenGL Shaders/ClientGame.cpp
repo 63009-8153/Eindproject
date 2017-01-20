@@ -14,7 +14,7 @@ ClientGame::ClientGame(char ipAddress[39], char port[5])
 	network = new ClientNetwork(ipAddress, port);
 	errors = network->getErrors();
 
-	for (int i = 0; i < errors.size(); i++) {
+	for (unsigned int i = 0; i < errors.size(); i++) {
 		switch (errors[i]) {
 			case ALL_CONNECTING_SOCKETS_ERROR:
 				networkConnected = false;
@@ -105,7 +105,11 @@ void ClientGame::updateClient()
 					allClients[k] = packet.players[k];
 
 					if (myClientID == packet.players[k].playerID){
+						bool sh = myPlayerData.shooting;
+
 						myPlayerData == packet.players[k];
+
+						if (sh) myPlayerData.shooting = true;
 					}
 				}
 				// Get all enemies
@@ -219,7 +223,6 @@ void ClientGame::getPlayerData(Player & player)
 			player.ammo = allClients[i].ammo;
 			player.points = allClients[i].points;
 			player.networkAnimType = allClients[i].animType;
-
 			return;
 		}
 	}
