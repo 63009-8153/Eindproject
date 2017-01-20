@@ -749,8 +749,10 @@ int main() {
 	glfwTerminate();
 
 	// Clean up audio
-	delete sound;
-	sound = NULL;
+	for (unsigned int i = 0; i < MAX_LOBBYSIZE; i++) {
+		delete waltershoot[i];
+		waltershoot[i] = NULL;
+	}
 
 	SimpleAudioLib::CoreSystem::release();
 }

@@ -44,11 +44,8 @@ public:
 
 	Gun gun;
 
-
-		bool shooting, wantsToShoot, canShoot;
-		double shootTimer;
-
-		int ammo;
+	bool shooting, wantsToShoot, canShoot;
+	double shootTimer;
 
 	int networkAnimType;
 
