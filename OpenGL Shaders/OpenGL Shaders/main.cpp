@@ -1276,7 +1276,7 @@ void anim7()
 	enemyAnimations[0] = Enemy::loadAnimations("res/EnemyAnimations/Walk_Forward/", animobjs[6], 0, 38, 45, true);
 }
 void anim8() {
-	enemyAnimations[1] = Enemy::loadAnimations("res/EnemyAnimations/Attack/", animobjs[7], 38, 40, 45, true);
+	enemyAnimations[1] = Enemy::loadAnimations("res/EnemyAnimations/Attack/", animobjs[7], 38, 40, 30, true);
 }
 void anim9() {
 	enemyAnimations[2] = Enemy::loadAnimations("res/EnemyAnimations/Dying/", animobjs[8], 78, 45, 22, false);
