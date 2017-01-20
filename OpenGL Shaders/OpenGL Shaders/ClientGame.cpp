@@ -195,7 +195,8 @@ void ClientGame::getPlayerData(Player & player, int index)
 		// Set the health
 		player.health = allClients[index].health;
 		player.maxHealth = allClients[index].maxHealth;
-
+		player.ammo = allClients[index].ammo;
+		player.points = allClients[index].points;
 		player.networkAnimType = allClients[index].animType;
 	}
 }
@@ -219,7 +220,8 @@ void ClientGame::getPlayerData(Player & player)
 
 			// Set the velocity
 			player.setVelocity(allClients[i].velocity);
-
+			player.ammo = allClients[i].ammo;
+			player.points = allClients[i].points;
 			player.networkAnimType = allClients[i].animType;
 			return;
 		}

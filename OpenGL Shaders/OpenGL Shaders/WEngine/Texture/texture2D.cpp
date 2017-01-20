@@ -32,6 +32,33 @@ void texture2D::loadImage(const char * filename)
 	textureid = loader.loadTexture(filename, false);
 }
 
+void texture2D::Draw(GuiShaderProgram & shader, gameobject &quad)
+{
+	shader.start();
+	glBindVertexArray(quad.getVaoID());
+	glEnableVertexAttribArray(0);
+
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glDisable(GL_DEPTH_TEST);
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, textureid);
+
+	glm::mat4 matrix = Maths::createTransformationMatrix(getPosition(), getRotationRad(), getScale());
+	shader.loadTransformationMatrix(matrix);
+
+	glDrawArrays(GL_TRIANGLE_STRIP, 0, quad.getVertexCount());
+
+
+	glEnable(GL_DEPTH_TEST);
+	glDisable(GL_BLEND);
+
+	glDisableVertexAttribArray(0);
+	glBindVertexArray(0);
+	shader.stop();
+}
+
 glm::vec4 texture2D::getPixelValue(int x, int y)
 {
 	if (x < 0 || x >= width || y < 0 || y >= height) return glm::vec4(0.0);
