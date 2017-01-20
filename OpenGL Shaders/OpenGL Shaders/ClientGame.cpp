@@ -216,8 +216,6 @@ void ClientGame::getPlayerData(Player & player)
 			// Set the velocity
 			player.setVelocity(allClients[i].velocity);
 
-
-			printf("Client %d anim %d\n", i, allClients[i].animType);
 			player.networkAnimType = allClients[i].animType;
 
 			return;

@@ -146,6 +146,7 @@ std::vector<s_anim> enemyAnimations;
 
 std::vector<texture2D> GuiElements;
 texture2D gotoSafeArea, gotoMainMap;
+texture2D crossHair;
 
 std::vector<Light*> lights;
 Light sun, light0, light1, light2;
@@ -527,6 +528,8 @@ int main() {
 			// Teleport to the position in the main map
 			GuiElements.push_back(gotoMainMap);
 		}
+		
+		GuiElements.push_back(crossHair);
 
 		glFinish();
 		frameStartTime = glfwGetTime();
@@ -662,22 +665,11 @@ int main() {
 		// Set the rotation of the player for the next update
 		client.setPlayerData(player);
 
-		player.update();
-
 		// Set the camera rotation to the players rotation and convert it to radians
 		camera.rotation = glm::radians(player.getRotation());
 		// Set the camera position
 		camera.position = player.getPosition();
 		camera.position.y = 6.0f;
-
-		//if (glfwGetKey(window, GLFW_KEY_KP_8) == GLFW_PRESS) camera.position.x += 2.0f; // up
-		//else if (glfwGetKey(window, GLFW_KEY_KP_2) == GLFW_PRESS) camera.position.x -= 2.0f; //down
-
-		//if (glfwGetKey(window, GLFW_KEY_KP_4) == GLFW_PRESS) camera.position.z += 2.0f; // left
-		//else if (glfwGetKey(window, GLFW_KEY_KP_6) == GLFW_PRESS) camera.position.z -= 2.0f; //right
-
-		//if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) camera.position.y += 1.0f; // left
-		//else if (glfwGetKey(window, GLFW_KEY_LEFT_ALT) == GLFW_PRESS) camera.position.y -= 1.0f; //right
 
 		//Set title to hold fps info
 		std::string fpsStr = std::string(PROGRAM_NAME) + " FPS: " + std::to_string(fps) + " deltaTime: " + std::to_string(deltaTime * 100) /*+ " Mouse: x: " + std::to_string(rot.x) + " y: " + std::to_string(rot.y)*/;
@@ -813,6 +805,11 @@ void loadAndInitialiseGUI()
 	gotoMainMap.loadImage("res/GUI/gotoMainMap.bmp", true, false);
 	gotoMainMap.setScale(glm::vec2(0.5f));
 	gotoMainMap.setPosition(glm::vec2(1.0f, 0.5f));
+
+	// Load the crosshair
+	crossHair.loadImage("res/GUI/Crosshair.bmp", true, false);
+	crossHair.setScale(glm::vec2(0.15f));
+	crossHair.setPosition(glm::vec2(1.0f));
 }
 
 // Render water textures
@@ -1273,14 +1270,15 @@ void anim6() {
 	playerAnimations[5] = Player::loadAnimations("res/PlayerAnimations/Run_Forward/", animobjs[5], 156, 16, 62, true);
 }
 
-void anim7() {
-	enemyAnimations[0] = Enemy::loadAnimations("res/EnemyAnimations/Walk_Forward/", animobjs[6], 0, 38, 25, true);
+void anim7()
+{
+	enemyAnimations[0] = Enemy::loadAnimations("res/EnemyAnimations/Walk_Forward/", animobjs[6], 0, 38, 45, true);
 }
 void anim8() {
-	enemyAnimations[1] = Enemy::loadAnimations("res/EnemyAnimations/Attack/", animobjs[7], 38, 40, 62, true);
+	enemyAnimations[1] = Enemy::loadAnimations("res/EnemyAnimations/Attack/", animobjs[7], 38, 40, 30, true);
 }
 void anim9() {
-	enemyAnimations[2] = Enemy::loadAnimations("res/EnemyAnimations/Dying/", animobjs[8], 78, 45, 62, true);
+	enemyAnimations[2] = Enemy::loadAnimations("res/EnemyAnimations/Dying/", animobjs[8], 78, 45, 22, false);
 }
 void loadAnimations()
 {
