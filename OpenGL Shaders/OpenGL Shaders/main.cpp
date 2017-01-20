@@ -502,6 +502,8 @@ int main() {
 			}
 		}
 
+		modelRenderer.addToRenderList(player.gun.gun_model.getModel());
+
 		//Add water to the renderer list
 		//waterRenderer.addToRenderList(&water);
 
@@ -553,12 +555,13 @@ int main() {
 			}
 		}
 
-		//enemies[0].getAnimModel()->Draw(normalModelRenderer.shader, lights, &camera, glm::vec4(0, -1, 0, 100000));
-
-		// Render all enemy animations
-		for (int i = 0; i < MAX_ENEMIES; i++) {
-			if (enemies[i].active) {
-				enemies[i].getAnimModel()->Draw(normalModelRenderer.shader, lights, &camera, glm::vec4(0, -1, 0, 100000));
+			// Render all enemy animations
+			for (int i = 0; i < MAX_ENEMIES; i++) {
+				if (enemies[i].active) {
+					if (glm::distance(enemies[i].getPosition(), camera.position) < OPTIMIZE_DIST) {
+						enemies[i].getAnimModel()->Draw(normalModelRenderer.shader, lights, &camera, glm::vec4(0, -1, 0, 100000));
+					}
+				}
 			}
 		}
 
@@ -759,8 +762,8 @@ void handleGameInput()
 	if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) client.addActionType(MOVE_RUN);
 
 	// Handle input of shooting
-	if (glfwGetKey(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) client.addActionType(SHOOT);
-
+	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) client.addActionType(SHOOT);
+	
 	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) client.addActionType(JUMP);
 
 	// Handle input of using
@@ -1335,9 +1338,8 @@ void loadModels()
 	// If loading the animations is not done yet, wait for it here and then create vao's for all objects
 	endLoadAnimations();
 
-	T_GUN_WALTER = loader.loadTexture("res/Models/objects/walter_pk_48/black.bmp", false);
-	loadModel(GUN_WALTER, "res/Models/objects/walter_pk_48/walter.obj", glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1.0f), T_GUN_WALTER, 100.0f, 0.1f, 0.4f);
-	//loadModel(GUN_WALTER, "res/Safe_Area/Weapon_Box/Weapon_Box.obj", glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1.0f), T_GUN_WALTER, 100.0f, 0.1f, 0.4f);
+	T_GUN_WALTER = loader.loadTexture("res/Gun/walter_pk_48/black.bmp", true);
+	loadModel(GUN_WALTER, "res/Gun/walter_pk_48/walter.obj", glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1.0f), T_GUN_WALTER, 100.0f, 0.1f, 0.4f);
 }
 // Load Safe Area Models
 void loadModels_SafeArea()

@@ -169,11 +169,11 @@ void Player::update()
 	if (rot.x < -90.0f) rot.x = -90.0f;
 	else if (rot.x > 90.0f) rot.x = 90.0f;
 	// Clamp y to -360 and 360 deg
-	if (rot.y > 360) rot.y -= 360.0f;
-	else if (rot.y < -360) rot.y += 360.0f;
+	if (rot.y > 180) rot.y -= 360.0f;
+	else if (rot.y < -180) rot.y += 360.0f;
 
 	// Set the player rotation from mouse input
 	setRotation(rot);
-	//gun.Update(getPosition(), getRotation());
-	//TODO: player update
+
+	gun.Update(getPosition(), getRotation());
 }
