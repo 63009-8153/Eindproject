@@ -145,7 +145,8 @@ std::vector<gameobject> enemyAnimationModels;
 std::vector<s_anim> enemyAnimations;
 
 std::vector<texture2D> GuiElements;
-texture2D gotoSafeArea, gotoMainMap;
+texture2D gotoSafeArea, gotoMainMap, buyAmmo, infoGui;
+texture2D numbers[10];
 texture2D crossHair;
 
 std::vector<Light*> lights;
@@ -280,8 +281,6 @@ int main() {
 
 	// ========  Initialise  ==========
 	last_render_time = glfwGetTime();
-
-
 
 	//TODO: StartScreen Loop here
 
@@ -528,8 +527,14 @@ int main() {
 			// Teleport to the position in the main map
 			GuiElements.push_back(gotoMainMap);
 		}
+		// Check if we want and can buy ammo
+		if (player.canUse(glm::vec3(1294.302f, 1, 2.409f), USE_DISTANCE) || player.canUse(glm::vec3(1296.043f, 1, 12.514f), USE_DISTANCE) || player.canUse(glm::vec3(1303.414f, 1, -13.289f), USE_DISTANCE)) {
+			//Show text for buying ammo
+			GuiElements.push_back(buyAmmo);
+		}
 		
 		GuiElements.push_back(crossHair);
+		GuiElements.push_back(infoGui);
 
 		glFinish();
 		frameStartTime = glfwGetTime();
@@ -558,15 +563,15 @@ int main() {
 			}
 		}
 
-			// Render all enemy animations
-			for (int i = 0; i < MAX_ENEMIES; i++) {
-				if (enemies[i].active) {
-					if (glm::distance(enemies[i].getPosition(), camera.position) < OPTIMIZE_DIST) {
-						enemies[i].getAnimModel()->Draw(normalModelRenderer.shader, lights, &camera, glm::vec4(0, -1, 0, 100000));
-					}
+		// Render all enemy animations
+		for (int i = 0; i < MAX_ENEMIES; i++) {
+			if (enemies[i].active) {
+				if (glm::distance(enemies[i].getPosition(), camera.position) < OPTIMIZE_DIST) {
+					enemies[i].getAnimModel()->Draw(normalModelRenderer.shader, lights, &camera, glm::vec4(0, -1, 0, 100000));
 				}
 			}
 		}
+		
 
 		sceneRenderer.unbindFrameBuffer();
 
@@ -613,6 +618,29 @@ int main() {
 		// Render GuiElements
 		guiRenderer.render(&GuiElements);
 
+		//Set health
+		std::string health = std::to_string((int)player.health);
+		for (int i = 0; i < health.size(); i++) {
+			const char temp = health[i];
+			numbers[atoi(&temp)].setPosition(glm::vec2(0.335f + i*0.07, 0.3f));
+			numbers[atoi(&temp)].Draw(guiRenderer.shader, guiRenderer.quad);
+		}
+
+		//Set points
+		std::string points = std::to_string(player.points);
+		for (int i = 0; i < points.size(); i++) {
+			const char temp = points[i];
+			numbers[atoi(&temp)].setPosition(glm::vec2(0.335f + i*0.07, 0.2f));
+			numbers[atoi(&temp)].Draw(guiRenderer.shader, guiRenderer.quad);
+		}
+
+		//Set ammo counter
+		std::string ammo = std::to_string(player.ammo);
+		for (int i = 0; i < ammo.size(); i++) {
+			const char temp = ammo[i];
+			numbers[atoi(&temp)].setPosition(glm::vec2(0.335f + i*0.07, 0.1f));
+			numbers[atoi(&temp)].Draw(guiRenderer.shader, guiRenderer.quad);
+		}
 
 		//Swap Buffers (Send image to the screen)
 		glfwSwapBuffers(window);
@@ -793,6 +821,7 @@ void loadAndInitialiseWater()
 	water.getWaterTile()->setAmbientLight(0.5f);
 	water.getWaterTile()->setShadowMap(shadowRenderer.getShadowDepthTexture());
 }
+
 // Load and initialise all GUI elements
 void loadAndInitialiseGUI()
 {
@@ -806,6 +835,23 @@ void loadAndInitialiseGUI()
 	gotoMainMap.setScale(glm::vec2(0.5f));
 	gotoMainMap.setPosition(glm::vec2(1.0f, 0.5f));
 
+	// Load buyAmmo
+	buyAmmo.loadImage("res/GUI/buyAmmo.bmp", true, false);
+	buyAmmo.setScale(glm::vec2(0.5f));
+	buyAmmo.setPosition(glm::vec2(1.0f, 0.5f));
+
+	// Load infoGUI
+	infoGui.loadImage("res/GUI/infoGui.bmp", true, false);
+	infoGui.setScale(glm::vec2(0.5f));
+	infoGui.setPosition(glm::vec2(-0.19f, 0.555f));
+
+	// Load numbers
+	for (int i = 0; i < 10; i++) {
+		std::string name = "res/GUI/number" + std::to_string(i) + ".bmp";
+		numbers[i].loadImage(name.c_str(), true, false);
+		numbers[i].setScale(glm::vec2(0.03f));
+	}
+	
 	// Load the crosshair
 	crossHair.loadImage("res/GUI/Crosshair.bmp", true, false);
 	crossHair.setScale(glm::vec2(0.15f));
@@ -1269,7 +1315,6 @@ void anim5() {
 void anim6() {
 	playerAnimations[5] = Player::loadAnimations("res/PlayerAnimations/Run_Forward/", animobjs[5], 156, 16, 62, true);
 }
-
 void anim7()
 {
 	enemyAnimations[0] = Enemy::loadAnimations("res/EnemyAnimations/Walk_Forward/", animobjs[6], 0, 38, 45, true);

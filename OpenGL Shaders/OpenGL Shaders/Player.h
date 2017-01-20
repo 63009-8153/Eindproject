@@ -40,7 +40,9 @@ public:
 	glm::vec3 speed;
 	float attackStrength;
 
-	//Gun gun;
+	int ammo, points;
+
+	Gun gun;
 
 	int networkAnimType;
 

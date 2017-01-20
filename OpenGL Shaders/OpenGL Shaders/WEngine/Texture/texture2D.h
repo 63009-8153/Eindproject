@@ -2,6 +2,7 @@
 #define _WE_TEXTURE_2D_
 
 #include "../Utils/loader.h"
+#include "../Renderer/GuiShaderProgram.h"
 
 extern Loader loader;
 
@@ -17,6 +18,8 @@ class texture2D
 		void loadImage(const char * filename, bool bmpAlign);
 		//Only load image and creating texture
 		void loadImage(const char * filename);
+
+		void Draw(GuiShaderProgram &shader, gameobject &quad);
 
 		glm::vec4 getPixelValue(int x, int y);
 
