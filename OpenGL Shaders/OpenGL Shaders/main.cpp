@@ -147,6 +147,7 @@ std::vector<gameobject> enemyAnimationModels;
 std::vector<s_anim> enemyAnimations;
 
 std::vector<texture2D> GuiElements;
+texture2D loadScreen_Background, loadScreen_LoaderIcon;
 texture2D gotoSafeArea, gotoMainMap;
 texture2D crossHair;
 
@@ -815,6 +816,33 @@ void loadAndInitialiseWater()
 	water.getWaterTile()->setReflectivity(1);
 	water.getWaterTile()->setAmbientLight(0.5f);
 	water.getWaterTile()->setShadowMap(shadowRenderer.getShadowDepthTexture());
+}
+
+// Load and intialise the loadscreen images
+void loadAndInitialiseLoadScreen() {
+	// Load and initialise the loadscreen background
+	loadScreen_Background.loadImage("res/GUI/loadingscreenBackground.bmp", true);
+	loadScreen_Background.setScale(glm::vec2(1.0f));
+	loadScreen_Background.setPosition(glm::vec2(0.0f));
+	
+	// Load and initialise the loadicon image
+	loadScreen_LoaderIcon.loadImage("res/GUI/loadicon.bmp", true);
+	loadScreen_LoaderIcon.setScale(glm::vec2(0.15f));
+	loadScreen_LoaderIcon.setPosition(glm::vec2(1.83f));
+	loadScreen_LoaderIcon.setRotation(0.0f);
+}
+void drawLoadScreen(float rotation) {
+	MasterRenderer::prepare();
+
+	// Draw the loading background at the back
+	loadScreen_Background.Draw(guiRenderer.shader, guiRenderer.quad);
+
+	// Set the loader icon rotation and draw this
+	loadScreen_LoaderIcon.setRotation(rotation);
+	loadScreen_LoaderIcon.Draw(guiRenderer.shader, guiRenderer.quad);
+
+	// Send the image to the screen.
+	glfwSwapBuffers(window);
 }
 // Load and initialise all GUI elements
 void loadAndInitialiseGUI()
