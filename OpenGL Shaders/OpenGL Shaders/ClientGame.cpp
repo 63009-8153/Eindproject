@@ -189,7 +189,7 @@ void ClientGame::getPlayerData(Player & player, int index)
 	if (player.active) {
 
 		// Set the position
-		player.setPosition(allClients[index].position);
+		player.setPosition(glm::vec3(allClients[index].position.x, 0.0f, allClients[index].position.z));
 		player.setRotation(allClients[index].rotation);
 
 		// Set the health
@@ -211,7 +211,7 @@ void ClientGame::getPlayerData(Player & player)
 		if (allClients[i].playerID == myClientID)
 		{
 			// Set the position
-			player.setPosition(allClients[i].position);
+			player.setPosition(glm::vec3(allClients[i].position.x, 0.0f, allClients[i].position.z));
 
 			// Set the health
 			player.health = allClients[i].health;

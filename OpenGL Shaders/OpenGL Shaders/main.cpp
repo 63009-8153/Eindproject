@@ -1,4 +1,5 @@
 #include "ClientGame.h"
+#include "areaTypes.h"
 
 // Graphics and sound Engine
 #include "WEngine/Usage.h"
@@ -17,7 +18,6 @@
 #define SSAA 2
 #define FXAA 3
 
-#define OPTIMIZE_SAFEAREA_DIST 50.0f
 #define SMALL_OPTIMIZE_DIST 200.0f
 #define OPTIMIZE_DIST 300.0f
 #define LARGE_OPTIMIZE_DIST 1000.0f
@@ -174,6 +174,8 @@ int gameState = 0;
 float Max_Fps = 61.5f;
 bool limit_fps = false;
 
+areaType currentArea = FORREST_AREA;
+
 /* The Anti-Aliasing type used in the program.
    Can be one of the following:
    * MSAA - MultiSampled Anti-Aliasing
@@ -314,7 +316,7 @@ int main() {
 	loadSkybox();
 
 	// ===  GUI  ===
-	loadAndInitialiseGUI();
+	//loadAndInitialiseGUI();
 	
 	// ===  INPUT  ===
 	//Set input mode
@@ -336,11 +338,24 @@ int main() {
 
 	// ===  LIGHTS  ===
 	initLights();
+	
+	// ===  WATER  ===
+	loadAndInitialiseWater();
+
+	//renderWaterCubeMap();
+
+	// ===  Add GUI elements to the rendering list  ===
+	//GuiElements.push_back(GuiCherry);
+
+	// Clear the GuiElements from the renderlist
+	//GuiElements.clear();
+
 
 	//Initialise gameState
 	gameState = 1;
 
 	player.init(glm::vec3(0), glm::vec3(0), glm::vec3(0), 1);
+	//player.active = true;
 
 	// Hide the cursor
 	DisplayManager::gameCursor();
@@ -369,136 +384,143 @@ int main() {
 		/* ========= Add models to list for rendering ============== */
 
 		unsigned int i = 0;
+		
+		switch (currentArea)
+		{
+			case SAFE_AREA:
+			{
+				// Add Floor model to renderList
+				modelRenderer.addToRenderList(SA_M_Floor.getModel());
+				// Add Building models to renderList
+				for (i = 0; i < (1 * 5); i++) modelRenderer.addToRenderList(SA_M_Building[i].getModel());
+				// Add Barrel models to renderList
+				for (i = 0; i < 6; i++) modelRenderer.addToRenderList(SA_M_Barrels[i].getModel());
+				// Add Crate2 model to renderList
+				modelRenderer.addToRenderList(SA_M_Crate2.getModel());
 
-		if (glm::distance(glm::vec3(1300.0f, 0.0f, 0.0f), camera.position) < OPTIMIZE_SAFEAREA_DIST){
-
-			// Add Floor model to renderList
-			modelRenderer.addToRenderList(SA_M_Floor.getModel());
-			// Add Building models to renderList
-			for (i = 0; i < (1 * 5); i++) modelRenderer.addToRenderList(SA_M_Building[i].getModel());
-			// Add Barrel models to renderList
-			for (i = 0; i < 6; i++) modelRenderer.addToRenderList(SA_M_Barrels[i].getModel());
-			// Add Crate2 model to renderList
-			modelRenderer.addToRenderList(SA_M_Crate2.getModel());
-
-			// Add AmmoBox models to renderList
-			for (i = 0; i < (3 * 7); i++) normalModelRenderer.addToRenderList(SA_M_AmmoBoxes[i].getModel());
-			// Add Barrier models to renderList
-			for (i = 0; i < 4; i++) normalModelRenderer.addToRenderList(SA_M_Barriers[i].getModel());
-			// Add Crate models to renderList
-			for (i = 0; i < 6; i++) normalModelRenderer.addToRenderList(SA_M_Crate[i].getModel());
-			// Add Crate models to renderList
-			for (i = 0; i < 2; i++) normalModelRenderer.addToRenderList(SA_M_Pallets[i].getModel());
-			// Add SandBag model to renderList.
-			for (i = 0; i < 2; i++) normalModelRenderer.addToRenderList(SA_M_SandBag[i].getModel());
-
-		}
-		else {
-			// Add the flat terrain to the terrain renderer
-			terrainRenderer.addToRenderList(FM_M_FLATTERRAIN.getModel());
-			// Add the background terrain to the renderList
-			normalModelRenderer.addToRenderList(FM_M_TERRAIN.getModel());
-
-			// == RENDER LIST == 
-
-			// Add all trees that are within the optimization distance to the renderList
-			for (i = 0; i < trees.getTreeCount(); i++) {
-				if (glm::distance(trees.getTreeAt(i)->getPosition(), camera.position) < OPTIMIZE_DIST) {
-					modelRenderer.addToRenderList(trees.getTreeAt(i));
-				}
-			}
-			// Add all army trucks that are within the optimization distance to the renderList
-			for (i = 0; i < 6; i++) {
-				if (glm::distance(FM_M_ARMY_TRUCK[5 * i].getModel()->getPosition(), camera.position) < OPTIMIZE_DIST) {
-					for (unsigned int j = 0; j < 5; j++) modelRenderer.addToRenderList(FM_M_ARMY_TRUCK[(5 * i) + j].getModel());
-				}
-			}
-			// Add all roadlights that are within the optimization distance to the renderList
-			for (i = 0; i < 24; i++) {
-				if (glm::distance(FM_M_ROADLIGHT[3 * i].getModel()->getPosition(), camera.position) < OPTIMIZE_DIST) {
-					for (unsigned int j = 0; j < 3; j++) modelRenderer.addToRenderList(FM_M_ROADLIGHT[(3 * i) + j].getModel());
-				}
-			}
-			// Add all Military bunkers that are within the optimization distance to the renderList
-			for (i = 0; i < 3; i++) {
-				if (glm::distance(FM_M_MILITARY_BUNKER[3 * i].getModel()->getPosition(), camera.position) < LARGE_OPTIMIZE_DIST) {
-					for (unsigned int j = 0; j < 3; j++) modelRenderer.addToRenderList(FM_M_MILITARY_BUNKER[(3 * i) + j].getModel());
-				}
-			}
-			// Add all traffic cones that are within the optimization distance to the renderList
-			for (i = 0; i < 14; i++) {
-				if (glm::distance(FM_M_TRAFFICCONE[i].getModel()->getPosition(), camera.position) < SMALL_OPTIMIZE_DIST) {
-					modelRenderer.addToRenderList(FM_M_TRAFFICCONE[i].getModel());
-				}
-			}
-			// Add rails that are within the optimization distance to the renderList
-			if (glm::distance(FM_M_RAIL[0].getModel()->getPosition(), camera.position) < LARGE_OPTIMIZE_DIST) {
-				modelRenderer.addToRenderList(FM_M_RAIL[0].getModel());
-				modelRenderer.addToRenderList(FM_M_RAIL[1].getModel());
-			}
-			// Add all town houses that are within the optimization distance to the renderList
-			for (i = 0; i < 2; i++) {
-				if (glm::distance(FM_M_TOWNHOUSE[i].getModel()->getPosition(), camera.position) < LARGE_OPTIMIZE_DIST) {
-					modelRenderer.addToRenderList(FM_M_TOWNHOUSE[i].getModel());
-				}
+				// Add AmmoBox models to renderList
+				for (i = 0; i < (3 * 7); i++) normalModelRenderer.addToRenderList(SA_M_AmmoBoxes[i].getModel());
+				// Add Barrier models to renderList
+				for (i = 0; i < 4; i++) normalModelRenderer.addToRenderList(SA_M_Barriers[i].getModel());
+				// Add Crate models to renderList
+				for (i = 0; i < 6; i++) normalModelRenderer.addToRenderList(SA_M_Crate[i].getModel());
+				// Add Crate models to renderList
+				for (i = 0; i < 2; i++) normalModelRenderer.addToRenderList(SA_M_Pallets[i].getModel());
+				// Add SandBag model to renderList.
+				for (i = 0; i < 2; i++) normalModelRenderer.addToRenderList(SA_M_SandBag[i].getModel());
 			}
 
-			// == NORMAL RENDER LIST ==
+			break;
 
-			// Add all ambulances that are within the optimization distance to the renderList
-			for (i = 0; i < 2; i++) {
-				if (glm::distance(FM_M_AMBULANCE[5 * i].getModel()->getPosition(), camera.position) < OPTIMIZE_DIST) {
-					for (unsigned int j = 0; j < 5; j++) normalModelRenderer.addToRenderList(FM_M_AMBULANCE[(5 * i) + j].getModel());
+			case FORREST_AREA:
+			{
+				// Add the flat terrain to the terrain renderer
+				terrainRenderer.addToRenderList(FM_M_FLATTERRAIN.getModel());
+				// Add the background terrain to the renderList
+				normalModelRenderer.addToRenderList(FM_M_TERRAIN.getModel());
+
+				// == RENDER LIST == 
+
+				// Add all trees that are within the optimization distance to the renderList
+				for (i = 0; i < trees.getTreeCount(); i++) {
+					if (glm::distance(trees.getTreeAt(i)->getPosition(), camera.position) < OPTIMIZE_DIST) {
+						modelRenderer.addToRenderList(trees.getTreeAt(i));
+					}
+				}
+				// Add all army trucks that are within the optimization distance to the renderList
+				for (i = 0; i < 6; i++) {
+					if (glm::distance(FM_M_ARMY_TRUCK[5 * i].getModel()->getPosition(), camera.position) < OPTIMIZE_DIST) {
+						for (unsigned int j = 0; j < 5; j++) modelRenderer.addToRenderList(FM_M_ARMY_TRUCK[(5 * i) + j].getModel());
+					}
+				}
+				// Add all roadlights that are within the optimization distance to the renderList
+				for (i = 0; i < 24; i++) {
+					if (glm::distance(FM_M_ROADLIGHT[3 * i].getModel()->getPosition(), camera.position) < OPTIMIZE_DIST) {
+						for (unsigned int j = 0; j < 3; j++) modelRenderer.addToRenderList(FM_M_ROADLIGHT[(3 * i) + j].getModel());
+					}
+				}
+				// Add all Military bunkers that are within the optimization distance to the renderList
+				for (i = 0; i < 3; i++) {
+					if (glm::distance(FM_M_MILITARY_BUNKER[3 * i].getModel()->getPosition(), camera.position) < LARGE_OPTIMIZE_DIST) {
+						for (unsigned int j = 0; j < 3; j++) modelRenderer.addToRenderList(FM_M_MILITARY_BUNKER[(3 * i) + j].getModel());
+					}
+				}
+				// Add all traffic cones that are within the optimization distance to the renderList
+				for (i = 0; i < 14; i++) {
+					if (glm::distance(FM_M_TRAFFICCONE[i].getModel()->getPosition(), camera.position) < SMALL_OPTIMIZE_DIST) {
+						modelRenderer.addToRenderList(FM_M_TRAFFICCONE[i].getModel());
+					}
+				}
+				// Add rails that are within the optimization distance to the renderList
+				if (glm::distance(FM_M_RAIL[0].getModel()->getPosition(), camera.position) < LARGE_OPTIMIZE_DIST) {
+					modelRenderer.addToRenderList(FM_M_RAIL[0].getModel());
+					modelRenderer.addToRenderList(FM_M_RAIL[1].getModel());
+				}
+				// Add all town houses that are within the optimization distance to the renderList
+				for (i = 0; i < 2; i++) {
+					if (glm::distance(FM_M_TOWNHOUSE[i].getModel()->getPosition(), camera.position) < LARGE_OPTIMIZE_DIST) {
+						modelRenderer.addToRenderList(FM_M_TOWNHOUSE[i].getModel());
+					}
+				}
+
+				// == NORMAL RENDER LIST ==
+
+				// Add all ambulances that are within the optimization distance to the renderList
+				for (i = 0; i < 2; i++) {
+					if (glm::distance(FM_M_AMBULANCE[5 * i].getModel()->getPosition(), camera.position) < OPTIMIZE_DIST) {
+						for (unsigned int j = 0; j < 5; j++) normalModelRenderer.addToRenderList(FM_M_AMBULANCE[(5 * i) + j].getModel());
+					}
+				}
+				// Add the command tent that is within the optimization distance to the renderList
+				if (glm::distance(FM_M_COMMAND_TENT.getModel()->getPosition(), camera.position) < LARGE_OPTIMIZE_DIST) {
+					normalModelRenderer.addToRenderList(FM_M_COMMAND_TENT.getModel());
+				}
+				// Add all army tents that are within the optimization distance to the renderList
+				for (i = 0; i < 6; i++) {
+					if (glm::distance(FM_M_ARMY_TENT[3 * i].getModel()->getPosition(), camera.position) < OPTIMIZE_DIST) {
+						for (unsigned int j = 0; j < 3; j++) normalModelRenderer.addToRenderList(FM_M_ARMY_TENT[(3 * i) + j].getModel());
+					}
+				}
+				// Add all barriers that are within the optimization distance to the renderList
+				for (i = 0; i < 25; i++) {
+					if (glm::distance(FM_M_BARRIER[i].getModel()->getPosition(), camera.position) < SMALL_OPTIMIZE_DIST) {
+						normalModelRenderer.addToRenderList(FM_M_BARRIER[i].getModel());
+					}
+				}
+				// Add all containers that are within the optimization distance to the renderList
+				for (i = 0; i < 12; i++) {
+					if (glm::distance(FM_M_CONTAINER[i].getModel()->getPosition(), camera.position) < OPTIMIZE_DIST) {
+						normalModelRenderer.addToRenderList(FM_M_CONTAINER[i].getModel());
+					}
+				}
+				// Add broken fence 1 that is within the optimization distance to the renderList
+				if (glm::distance(FM_M_BROKEN_FENCE1[0].getModel()->getPosition(), camera.position) < OPTIMIZE_DIST) {
+					for (i = 0; i < 3; i++) normalModelRenderer.addToRenderList(FM_M_BROKEN_FENCE1[i].getModel());
+				}
+				// Add broken fence 2 that is within the optimization distance to the renderList
+				if (glm::distance(FM_M_BROKEN_FENCE2[0].getModel()->getPosition(), camera.position) < OPTIMIZE_DIST) {
+					for (i = 0; i < 3; i++) normalModelRenderer.addToRenderList(FM_M_BROKEN_FENCE2[i].getModel());
+				}
+				// Add all fences that are within the optimization distance to the renderList
+				for (i = 0; i < 164; i++) {
+					if (glm::distance(FM_M_FENCE[3 * i].getModel()->getPosition(), camera.position) < OPTIMIZE_DIST) {
+						for (unsigned int j = 0; j < 3; j++) normalModelRenderer.addToRenderList(FM_M_FENCE[(3 * i) + j].getModel());
+					}
+				}
+				// Add all fences that are within the optimization distance to the renderList
+				for (i = 0; i < 3; i++) {
+					normalModelRenderer.addToRenderList(FM_M_ROAD[i].getModel());
+				}
+				// Add the statue that is within the optimization distance to the renderList
+				if (glm::distance(FM_M_STATUE.getModel()->getPosition(), camera.position) < SMALL_OPTIMIZE_DIST) {
+					normalModelRenderer.addToRenderList(FM_M_STATUE.getModel());
+				}
+				// Add the well that is within the optimization distance to the renderList
+				if (glm::distance(FM_M_WELL.getModel()->getPosition(), camera.position) < OPTIMIZE_DIST) {
+					normalModelRenderer.addToRenderList(FM_M_WELL.getModel());
 				}
 			}
-			// Add the command tent that is within the optimization distance to the renderList
-			if (glm::distance(FM_M_COMMAND_TENT.getModel()->getPosition(), camera.position) < LARGE_OPTIMIZE_DIST) {
-				normalModelRenderer.addToRenderList(FM_M_COMMAND_TENT.getModel());
-			}
-			// Add all army tents that are within the optimization distance to the renderList
-			for (i = 0; i < 6; i++) {
-				if (glm::distance(FM_M_ARMY_TENT[3 * i].getModel()->getPosition(), camera.position) < OPTIMIZE_DIST) {
-					for (unsigned int j = 0; j < 3; j++) normalModelRenderer.addToRenderList(FM_M_ARMY_TENT[(3 * i) + j].getModel());
-				}
-			}
-			// Add all barriers that are within the optimization distance to the renderList
-			for (i = 0; i < 25; i++) {
-				if (glm::distance(FM_M_BARRIER[i].getModel()->getPosition(), camera.position) < SMALL_OPTIMIZE_DIST) {
-					normalModelRenderer.addToRenderList(FM_M_BARRIER[i].getModel());
-				}
-			}
-			// Add all containers that are within the optimization distance to the renderList
-			for (i = 0; i < 12; i++) {
-				if (glm::distance(FM_M_CONTAINER[i].getModel()->getPosition(), camera.position) < OPTIMIZE_DIST) {
-					normalModelRenderer.addToRenderList(FM_M_CONTAINER[i].getModel());
-				}
-			}
-			// Add broken fence 1 that is within the optimization distance to the renderList
-			if (glm::distance(FM_M_BROKEN_FENCE1[0].getModel()->getPosition(), camera.position) < OPTIMIZE_DIST) {
-				for (i = 0; i < 3; i++) normalModelRenderer.addToRenderList(FM_M_BROKEN_FENCE1[i].getModel());
-			}
-			// Add broken fence 2 that is within the optimization distance to the renderList
-			if (glm::distance(FM_M_BROKEN_FENCE2[0].getModel()->getPosition(), camera.position) < OPTIMIZE_DIST) {
-				for (i = 0; i < 3; i++) normalModelRenderer.addToRenderList(FM_M_BROKEN_FENCE2[i].getModel());
-			}
-			// Add all fences that are within the optimization distance to the renderList
-			for (i = 0; i < 164; i++) {
-				if (glm::distance(FM_M_FENCE[3 * i].getModel()->getPosition(), camera.position) < OPTIMIZE_DIST) {
-					for (unsigned int j = 0; j < 3; j++) normalModelRenderer.addToRenderList(FM_M_FENCE[(3 * i) + j].getModel());
-				}
-			}
-			// Add all fences that are within the optimization distance to the renderList
-			for (i = 0; i < 3; i++) {
-				normalModelRenderer.addToRenderList(FM_M_ROAD[i].getModel());
-			}
-			// Add the statue that is within the optimization distance to the renderList
-			if (glm::distance(FM_M_STATUE.getModel()->getPosition(), camera.position) < SMALL_OPTIMIZE_DIST) {
-				normalModelRenderer.addToRenderList(FM_M_STATUE.getModel());
-			}
-			// Add the well that is within the optimization distance to the renderList
-			if (glm::distance(FM_M_WELL.getModel()->getPosition(), camera.position) < OPTIMIZE_DIST) {
-				normalModelRenderer.addToRenderList(FM_M_WELL.getModel());
-			}
+			break;
 		}
 
 		if(player.health > 0) modelRenderer.addToRenderList(player.gun.gun_model.getModel());
@@ -522,15 +544,8 @@ int main() {
 
 
 		// If we can use the useable object at the position we want to draw text that shows the user can use the object by pressing a button
-		// Check if we want and can use one of the positions that make the player go to the safe area
-		if (player.canUse(glm::vec3(-272.385f, 0.0f, -254.353f), USE_DISTANCE) || player.canUse(glm::vec3(-365.861f, 3.0f, -254.333f), USE_DISTANCE) || player.canUse(glm::vec3(-257.726f, 3.0f, -343.333f), USE_DISTANCE) || player.canUse(glm::vec3(-368.124f, 3.0f, -343.33f), USE_DISTANCE)) {
-			// Teleport to the position in the safe area
-			GuiElements.push_back(gotoSafeArea);
-		}
-		// Check if we want and can use the position that makes the player go back to the main map from the safe area
-		else if (player.canUse(glm::vec3(1303.24, 0.0, 14.652), USE_DISTANCE)) {
-			// Teleport to the position in the main map
-			GuiElements.push_back(gotoMainMap);
+		if (player.canUse(glm::vec3(0.0), USE_DISTANCE)) {
+
 		}
 		
 		if (player.health > 0) GuiElements.push_back(crossHair);
@@ -574,6 +589,8 @@ int main() {
 					}
 				}
 			}
+
+			//enemies[0].getAnimModel()->Draw(normalModelRenderer.shader, lights, &camera, glm::vec4(0, -1, 0, 100000));
 
 			// Render all enemy animations
 			for (int i = 0; i < MAX_ENEMIES; i++) {
@@ -629,7 +646,6 @@ int main() {
 		// Render GuiElements
 		guiRenderer.render(&GuiElements);
 		
-		
 		//Swap Buffers (Send image to the screen)
 		glfwSwapBuffers(window);
 	
@@ -640,7 +656,6 @@ int main() {
 		normalModelRenderer.clearRenderPass();
 		terrainRenderer.clearRenderPass();
 		waterRenderer.clearRenderPass();
-		GuiElements.clear();
 
 
 		//Update all time related variables.
@@ -686,7 +701,7 @@ int main() {
 		// Set the camera rotation to the players rotation and convert it to radians
 		camera.rotation = glm::radians(player.getRotation());
 		// Set the camera position
-		camera.position = player.getPosition();
+		//camera.position = player.getPosition();
 		camera.position.y = 6.0f;
 
 		//Set title to hold fps info
@@ -724,6 +739,7 @@ int main() {
 
 	SimpleAudioLib::CoreSystem::release();
 }
+
 
 
 // If trapMouseInWindow it returns the changed amount of pixels since last update
@@ -783,7 +799,7 @@ void handleGameInput()
 	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) client.addActionType(JUMP);
 
 	// Handle input of using
-	if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) client.addActionType(USE);
+	if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS) client.addActionType(USE);
 
 	// Handle input of reloading
 	if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) client.addActionType(RELOAD);
@@ -1403,80 +1419,77 @@ void loadModels_SafeArea()
 	// The position and Rotation Y and Z need to be swapped.
 	// Then the Z needs to be inverted on both the position and rotation
 
-	glm::vec3 offsetPos = glm::vec3(1300.0f, 2.824f, 0.0f);
-	glm::vec3 additionalScale = glm::vec3(1.0f);
-
 	// Load Floor's moodels.
-	loadModel(SA_M_Floor, "res/Safe_Area/Floor/Floor.obj", glm::vec3(0, -0.652, 0) + offsetPos, glm::vec3(0, 0, 0), glm::vec3(1.0f) * additionalScale, SA_T_Floor, 100.0f, -1.0f, 0.4f);
+	loadModel(SA_M_Floor, "res/Safe_Area/Floor/Floor.obj", glm::vec3(0, -0.652, 0), glm::vec3(0, 0, 0), glm::vec3(1.0f), SA_T_Floor, 100.0f, -1.0f, 0.4f);
 	SA_M_Floor.getModel()->setTiledAmount(glm::vec2(6.0f));
 
 	// Load Building models.
-	loadModel(SA_M_Building[0], "res/Safe_Area/Building/Building_Building.obj", glm::vec3(0, 0, 0) * additionalScale + offsetPos, glm::vec3(0, 0, 0), glm::vec3(1.0f) * additionalScale, SA_T_Building[0], 100.0f, 0.1f, 0.4f);
-	loadModel(SA_M_Building[1], "res/Safe_Area/Building/Building_Doors.obj", glm::vec3(0, 0, 0) * additionalScale + offsetPos, glm::vec3(0, 0, 0), glm::vec3(1.0f) * additionalScale, SA_T_Building[1], 100.0f, 0.1f, 0.4f);
-	loadModel(SA_M_Building[2], "res/Safe_Area/Building/Building_Wood.obj", glm::vec3(0, 0, 0) * additionalScale + offsetPos, glm::vec3(0, 0, 0), glm::vec3(1.0f) * additionalScale, SA_T_Building[2], 100.0f, 0.1f, 0.4f);
-	loadModel(SA_M_Building[3], "res/Safe_Area/Building/Building_Roof.obj", glm::vec3(0, 0, 0) * additionalScale + offsetPos, glm::vec3(0, 0, 0), glm::vec3(1.0f) * additionalScale, SA_T_Building[3], 100.0f, 0.1f, 0.4f);
-	loadModel(SA_M_Building[4], "res/Safe_Area/Building/Building_Wheel.obj", glm::vec3(0, 0, 0) * additionalScale + offsetPos, glm::vec3(0, 0, 0), glm::vec3(1.0f) * additionalScale, SA_T_Building[4], 100.0f, 0.1f, 0.4f);
+	loadModel(SA_M_Building[0], "res/Safe_Area/Building/Building_Building.obj", glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1.0f), SA_T_Building[0], 100.0f, 0.1f, 0.4f);
+	loadModel(SA_M_Building[1], "res/Safe_Area/Building/Building_Doors.obj", glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1.0f), SA_T_Building[1], 100.0f, 0.1f, 0.4f);
+	loadModel(SA_M_Building[2], "res/Safe_Area/Building/Building_Wood.obj", glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1.0f), SA_T_Building[2], 100.0f, 0.1f, 0.4f);
+	loadModel(SA_M_Building[3], "res/Safe_Area/Building/Building_Roof.obj", glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1.0f), SA_T_Building[3], 100.0f, 0.1f, 0.4f);
+	loadModel(SA_M_Building[4], "res/Safe_Area/Building/Building_Wheel.obj", glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1.0f), SA_T_Building[4], 100.0f, 0.1f, 0.4f);
 
 	// Load AmmoBoxes models.
 	// Front left
-	loadModel(SA_M_AmmoBoxes[0], "res/Safe_Area/Weapon_Box/Weapon_Box.obj",			 glm::vec3(-3.715f, 1.281f, 11.901f) * additionalScale + offsetPos, glm::vec3(0, glm::radians(-133.379f), 0), glm::vec3(1.0f) * additionalScale, SA_T_AmmoBoxes[0], SA_TN_AmmoBoxes[0], 100.0f, 0.1f, 0.6f);
-	loadModel(SA_M_AmmoBoxes[1], "res/Safe_Area/Weapon_Box/Weapon_Box_Granade.obj",  glm::vec3(-3.715f, 1.281f, 11.901f) * additionalScale + offsetPos, glm::vec3(0, glm::radians(-133.379f), 0), glm::vec3(1.0f) * additionalScale, SA_T_AmmoBoxes[1], SA_TN_AmmoBoxes[1], 20.0f, 0.6f, 0.6f);
-	loadModel(SA_M_AmmoBoxes[2], "res/Safe_Area/Weapon_Box/Weapon_Box_Granade2.obj", glm::vec3(-3.715f, 1.281f, 11.901f) * additionalScale + offsetPos, glm::vec3(0, glm::radians(-133.379f), 0), glm::vec3(1.0f) * additionalScale, SA_T_AmmoBoxes[2], SA_TN_AmmoBoxes[1], 20.0f, 0.6f, 0.6f);
-	loadModel(SA_M_AmmoBoxes[3], "res/Safe_Area/Weapon_Box/Weapon_Box_Granade3.obj", glm::vec3(-3.715f, 1.281f, 11.901f) * additionalScale + offsetPos, glm::vec3(0, glm::radians(-133.379f), 0), glm::vec3(1.0f) * additionalScale, SA_T_AmmoBoxes[3], SA_TN_AmmoBoxes[1], 20.0f, 0.6f, 0.6f);
-	loadModel(SA_M_AmmoBoxes[4], "res/Safe_Area/Weapon_Box/Weapon_Box_Granade4.obj", glm::vec3(-3.715f, 1.281f, 11.901f) * additionalScale + offsetPos, glm::vec3(0, glm::radians(-133.379f), 0), glm::vec3(1.0f) * additionalScale, SA_T_AmmoBoxes[4], SA_TN_AmmoBoxes[1], 20.0f, 0.6f, 0.6f);
-	loadModel(SA_M_AmmoBoxes[5], "res/Safe_Area/Weapon_Box/Weapon_Box_Granade5.obj", glm::vec3(-3.715f, 1.281f, 11.901f) * additionalScale + offsetPos, glm::vec3(0, glm::radians(-133.379f), 0), glm::vec3(1.0f) * additionalScale, SA_T_AmmoBoxes[5], SA_TN_AmmoBoxes[1], 20.0f, 0.6f, 0.6f);
-	loadModel(SA_M_AmmoBoxes[6], "res/Safe_Area/Weapon_Box/Weapon_Box_Granade6.obj", glm::vec3(-3.715f, 1.281f, 11.901f) * additionalScale + offsetPos, glm::vec3(0, glm::radians(-133.379f), 0), glm::vec3(1.0f) * additionalScale, SA_T_AmmoBoxes[6], SA_TN_AmmoBoxes[1], 20.0f, 0.6f, 0.6f);
+	loadModel(SA_M_AmmoBoxes[0], "res/Safe_Area/Weapon_Box/Weapon_Box.obj",			 glm::vec3(-3.715f, 1.281f, 11.901f), glm::vec3(0, glm::radians(-133.379f), 0), glm::vec3(1.0f), SA_T_AmmoBoxes[0], SA_TN_AmmoBoxes[0], 100.0f, 0.1f, 0.6f);
+	loadModel(SA_M_AmmoBoxes[1], "res/Safe_Area/Weapon_Box/Weapon_Box_Granade.obj",  glm::vec3(-3.715f, 1.281f, 11.901f), glm::vec3(0, glm::radians(-133.379f), 0), glm::vec3(1.0f), SA_T_AmmoBoxes[1], SA_TN_AmmoBoxes[1], 20.0f, 0.6f, 0.6f);
+	loadModel(SA_M_AmmoBoxes[2], "res/Safe_Area/Weapon_Box/Weapon_Box_Granade2.obj", glm::vec3(-3.715f, 1.281f, 11.901f), glm::vec3(0, glm::radians(-133.379f), 0), glm::vec3(1.0f), SA_T_AmmoBoxes[2], SA_TN_AmmoBoxes[1], 20.0f, 0.6f, 0.6f);
+	loadModel(SA_M_AmmoBoxes[3], "res/Safe_Area/Weapon_Box/Weapon_Box_Granade3.obj", glm::vec3(-3.715f, 1.281f, 11.901f), glm::vec3(0, glm::radians(-133.379f), 0), glm::vec3(1.0f), SA_T_AmmoBoxes[3], SA_TN_AmmoBoxes[1], 20.0f, 0.6f, 0.6f);
+	loadModel(SA_M_AmmoBoxes[4], "res/Safe_Area/Weapon_Box/Weapon_Box_Granade4.obj", glm::vec3(-3.715f, 1.281f, 11.901f), glm::vec3(0, glm::radians(-133.379f), 0), glm::vec3(1.0f), SA_T_AmmoBoxes[4], SA_TN_AmmoBoxes[1], 20.0f, 0.6f, 0.6f);
+	loadModel(SA_M_AmmoBoxes[5], "res/Safe_Area/Weapon_Box/Weapon_Box_Granade5.obj", glm::vec3(-3.715f, 1.281f, 11.901f), glm::vec3(0, glm::radians(-133.379f), 0), glm::vec3(1.0f), SA_T_AmmoBoxes[5], SA_TN_AmmoBoxes[1], 20.0f, 0.6f, 0.6f);
+	loadModel(SA_M_AmmoBoxes[6], "res/Safe_Area/Weapon_Box/Weapon_Box_Granade6.obj", glm::vec3(-3.715f, 1.281f, 11.901f), glm::vec3(0, glm::radians(-133.379f), 0), glm::vec3(1.0f), SA_T_AmmoBoxes[6], SA_TN_AmmoBoxes[1], 20.0f, 0.6f, 0.6f);
 	
 	// Back right
-	loadModel(SA_M_AmmoBoxes[7],  SA_M_AmmoBoxes[0], glm::vec3(3.656f, 1.281f, -13.91f) * additionalScale + offsetPos, glm::vec3(0, glm::radians(79.083f), 0), glm::vec3(1.0f) * additionalScale, SA_T_AmmoBoxes[0], SA_TN_AmmoBoxes[0], 100.0f, 0.1f, 0.6f);
-	loadModel(SA_M_AmmoBoxes[8],  SA_M_AmmoBoxes[1], glm::vec3(3.656f, 1.281f, -13.91f) * additionalScale + offsetPos, glm::vec3(0, glm::radians(79.083f), 0), glm::vec3(1.0f) * additionalScale, SA_T_AmmoBoxes[1], SA_TN_AmmoBoxes[1], 20.0f, 0.6f, 0.6f);
-	loadModel(SA_M_AmmoBoxes[9],  SA_M_AmmoBoxes[2], glm::vec3(3.656f, 1.281f, -13.91f) * additionalScale + offsetPos, glm::vec3(0, glm::radians(79.083f), 0), glm::vec3(1.0f) * additionalScale, SA_T_AmmoBoxes[2], SA_TN_AmmoBoxes[1], 20.0f, 0.6f, 0.6f);
-	loadModel(SA_M_AmmoBoxes[10], SA_M_AmmoBoxes[3], glm::vec3(3.656f, 1.281f, -13.91f) * additionalScale + offsetPos, glm::vec3(0, glm::radians(79.083f), 0), glm::vec3(1.0f) * additionalScale, SA_T_AmmoBoxes[3], SA_TN_AmmoBoxes[1], 20.0f, 0.6f, 0.6f);
-	loadModel(SA_M_AmmoBoxes[11], SA_M_AmmoBoxes[4], glm::vec3(3.656f, 1.281f, -13.91f) * additionalScale + offsetPos, glm::vec3(0, glm::radians(79.083f), 0), glm::vec3(1.0f) * additionalScale, SA_T_AmmoBoxes[4], SA_TN_AmmoBoxes[1], 20.0f, 0.6f, 0.6f);
-	loadModel(SA_M_AmmoBoxes[12], SA_M_AmmoBoxes[5], glm::vec3(3.656f, 1.281f, -13.91f) * additionalScale + offsetPos, glm::vec3(0, glm::radians(79.083f), 0), glm::vec3(1.0f) * additionalScale, SA_T_AmmoBoxes[5], SA_TN_AmmoBoxes[1], 20.0f, 0.6f, 0.6f);
-	loadModel(SA_M_AmmoBoxes[13], SA_M_AmmoBoxes[6], glm::vec3(3.656f, 1.281f, -13.91f) * additionalScale + offsetPos, glm::vec3(0, glm::radians(79.083f), 0), glm::vec3(1.0f) * additionalScale, SA_T_AmmoBoxes[6], SA_TN_AmmoBoxes[1], 20.0f, 0.6f, 0.6f);
+	loadModel(SA_M_AmmoBoxes[7],  SA_M_AmmoBoxes[0], glm::vec3(3.656f, 1.281f, -13.91f), glm::vec3(0, glm::radians(79.083f), 0), glm::vec3(1.0f), SA_T_AmmoBoxes[0], SA_TN_AmmoBoxes[0], 100.0f, 0.1f, 0.6f);
+	loadModel(SA_M_AmmoBoxes[8],  SA_M_AmmoBoxes[1], glm::vec3(3.656f, 1.281f, -13.91f), glm::vec3(0, glm::radians(79.083f), 0), glm::vec3(1.0f), SA_T_AmmoBoxes[1], SA_TN_AmmoBoxes[1], 20.0f, 0.6f, 0.6f);
+	loadModel(SA_M_AmmoBoxes[9],  SA_M_AmmoBoxes[2], glm::vec3(3.656f, 1.281f, -13.91f), glm::vec3(0, glm::radians(79.083f), 0), glm::vec3(1.0f), SA_T_AmmoBoxes[2], SA_TN_AmmoBoxes[1], 20.0f, 0.6f, 0.6f);
+	loadModel(SA_M_AmmoBoxes[10], SA_M_AmmoBoxes[3], glm::vec3(3.656f, 1.281f, -13.91f), glm::vec3(0, glm::radians(79.083f), 0), glm::vec3(1.0f), SA_T_AmmoBoxes[3], SA_TN_AmmoBoxes[1], 20.0f, 0.6f, 0.6f);
+	loadModel(SA_M_AmmoBoxes[11], SA_M_AmmoBoxes[4], glm::vec3(3.656f, 1.281f, -13.91f), glm::vec3(0, glm::radians(79.083f), 0), glm::vec3(1.0f), SA_T_AmmoBoxes[4], SA_TN_AmmoBoxes[1], 20.0f, 0.6f, 0.6f);
+	loadModel(SA_M_AmmoBoxes[12], SA_M_AmmoBoxes[5], glm::vec3(3.656f, 1.281f, -13.91f), glm::vec3(0, glm::radians(79.083f), 0), glm::vec3(1.0f), SA_T_AmmoBoxes[5], SA_TN_AmmoBoxes[1], 20.0f, 0.6f, 0.6f);
+	loadModel(SA_M_AmmoBoxes[13], SA_M_AmmoBoxes[6], glm::vec3(3.656f, 1.281f, -13.91f), glm::vec3(0, glm::radians(79.083f), 0), glm::vec3(1.0f), SA_T_AmmoBoxes[6], SA_TN_AmmoBoxes[1], 20.0f, 0.6f, 0.6f);
 	
 	// Middle room
-	loadModel(SA_M_AmmoBoxes[14], SA_M_AmmoBoxes[0], glm::vec3(-5.456f, 1.281f, 1.797f) * additionalScale + offsetPos, glm::vec3(0, glm::radians(-164.795f), 0), glm::vec3(1.0f) * additionalScale, SA_T_AmmoBoxes[0], SA_TN_AmmoBoxes[0], 100.0f, 0.1f, 0.6f);
-	loadModel(SA_M_AmmoBoxes[15], SA_M_AmmoBoxes[1], glm::vec3(-5.456f, 1.281f, 1.797f) * additionalScale + offsetPos, glm::vec3(0, glm::radians(-164.795f), 0), glm::vec3(1.0f) * additionalScale, SA_T_AmmoBoxes[1], SA_TN_AmmoBoxes[1], 20.0f, 0.6f, 0.6f);
-	loadModel(SA_M_AmmoBoxes[16], SA_M_AmmoBoxes[2], glm::vec3(-5.456f, 1.281f, 1.797f) * additionalScale + offsetPos, glm::vec3(0, glm::radians(-164.795f), 0), glm::vec3(1.0f) * additionalScale, SA_T_AmmoBoxes[2], SA_TN_AmmoBoxes[1], 20.0f, 0.6f, 0.6f);
-	loadModel(SA_M_AmmoBoxes[17], SA_M_AmmoBoxes[3], glm::vec3(-5.456f, 1.281f, 1.797f) * additionalScale + offsetPos, glm::vec3(0, glm::radians(-164.795f), 0), glm::vec3(1.0f) * additionalScale, SA_T_AmmoBoxes[3], SA_TN_AmmoBoxes[1], 20.0f, 0.6f, 0.6f);
-	loadModel(SA_M_AmmoBoxes[18], SA_M_AmmoBoxes[4], glm::vec3(-5.456f, 1.281f, 1.797f) * additionalScale + offsetPos, glm::vec3(0, glm::radians(-164.795f), 0), glm::vec3(1.0f) * additionalScale, SA_T_AmmoBoxes[4], SA_TN_AmmoBoxes[1], 20.0f, 0.6f, 0.6f);
-	loadModel(SA_M_AmmoBoxes[19], SA_M_AmmoBoxes[5], glm::vec3(-5.456f, 1.281f, 1.797f) * additionalScale + offsetPos, glm::vec3(0, glm::radians(-164.795f), 0), glm::vec3(1.0f) * additionalScale, SA_T_AmmoBoxes[5], SA_TN_AmmoBoxes[1], 20.0f, 0.6f, 0.6f);
-	loadModel(SA_M_AmmoBoxes[20], SA_M_AmmoBoxes[6], glm::vec3(-5.456f, 1.281f, 1.797f) * additionalScale + offsetPos, glm::vec3(0, glm::radians(-164.795f), 0), glm::vec3(1.0f) * additionalScale, SA_T_AmmoBoxes[6], SA_TN_AmmoBoxes[1], 20.0f, 0.6f, 0.6f);
+	loadModel(SA_M_AmmoBoxes[14], SA_M_AmmoBoxes[0], glm::vec3(-5.456f, 1.281f, 1.797f), glm::vec3(0, glm::radians(-164.795f), 0), glm::vec3(1.0f), SA_T_AmmoBoxes[0], SA_TN_AmmoBoxes[0], 100.0f, 0.1f, 0.6f);
+	loadModel(SA_M_AmmoBoxes[15], SA_M_AmmoBoxes[1], glm::vec3(-5.456f, 1.281f, 1.797f), glm::vec3(0, glm::radians(-164.795f), 0), glm::vec3(1.0f), SA_T_AmmoBoxes[1], SA_TN_AmmoBoxes[1], 20.0f, 0.6f, 0.6f);
+	loadModel(SA_M_AmmoBoxes[16], SA_M_AmmoBoxes[2], glm::vec3(-5.456f, 1.281f, 1.797f), glm::vec3(0, glm::radians(-164.795f), 0), glm::vec3(1.0f), SA_T_AmmoBoxes[2], SA_TN_AmmoBoxes[1], 20.0f, 0.6f, 0.6f);
+	loadModel(SA_M_AmmoBoxes[17], SA_M_AmmoBoxes[3], glm::vec3(-5.456f, 1.281f, 1.797f), glm::vec3(0, glm::radians(-164.795f), 0), glm::vec3(1.0f), SA_T_AmmoBoxes[3], SA_TN_AmmoBoxes[1], 20.0f, 0.6f, 0.6f);
+	loadModel(SA_M_AmmoBoxes[18], SA_M_AmmoBoxes[4], glm::vec3(-5.456f, 1.281f, 1.797f), glm::vec3(0, glm::radians(-164.795f), 0), glm::vec3(1.0f), SA_T_AmmoBoxes[4], SA_TN_AmmoBoxes[1], 20.0f, 0.6f, 0.6f);
+	loadModel(SA_M_AmmoBoxes[19], SA_M_AmmoBoxes[5], glm::vec3(-5.456f, 1.281f, 1.797f), glm::vec3(0, glm::radians(-164.795f), 0), glm::vec3(1.0f), SA_T_AmmoBoxes[5], SA_TN_AmmoBoxes[1], 20.0f, 0.6f, 0.6f);
+	loadModel(SA_M_AmmoBoxes[20], SA_M_AmmoBoxes[6], glm::vec3(-5.456f, 1.281f, 1.797f), glm::vec3(0, glm::radians(-164.795f), 0), glm::vec3(1.0f), SA_T_AmmoBoxes[6], SA_TN_AmmoBoxes[1], 20.0f, 0.6f, 0.6f);
 
 	// Load Barrels models.
-	loadModel(SA_M_Barrels[0], "res/Safe_Area/Barrel/Barrel.obj", glm::vec3(-7.725f, -0.623f, -9.331f) * additionalScale + offsetPos, glm::vec3(0, glm::radians(-22.889f), 0), glm::vec3(1.0f) * additionalScale, SA_T_Barrels[1], 35.0f, 0.5f, 0.1f); // Red
-	loadModel(SA_M_Barrels[1], SA_M_Barrels[0], glm::vec3(-4.665f, -0.227f, -14.639f) * additionalScale + offsetPos, glm::vec3(glm::radians(14.743f), glm::radians(-91.479f), glm::radians(-0.389f)), glm::vec3(1.0f) * additionalScale, SA_T_Barrels[0], 35.0f, 0.5f, 0.1f); // Green
-	loadModel(SA_M_Barrels[2], SA_M_Barrels[0], glm::vec3(-7.725f, 2.815f, -13.345f) * additionalScale + offsetPos, glm::vec3(glm::radians(1.203f), 0, 0), glm::vec3(1.0f) * additionalScale, SA_T_Barrels[2], 30.0f, 0.5f, 0.1f);
-	loadModel(SA_M_Barrels[3], SA_M_Barrels[0], glm::vec3(-7.725f, -0.623f, -14.639f) * additionalScale + offsetPos, glm::vec3(0.0f), glm::vec3(1.0f) * additionalScale, SA_T_Barrels[2], 30.0f, 0.5f, 0.1f);
-	loadModel(SA_M_Barrels[4], SA_M_Barrels[0], glm::vec3(-7.725f, -0.623f, -11.614f) * additionalScale + offsetPos, glm::vec3(glm::radians(-12.803f), glm::radians(18.968f), 0), glm::vec3(1.0f) * additionalScale, SA_T_Barrels[2], 30.0f, 0.5f, 0.1f);
-	loadModel(SA_M_Barrels[5], SA_M_Barrels[0], glm::vec3(-7.725f, 0.204f, 14.789f) * additionalScale + offsetPos, glm::vec3(glm::radians(-66.793f), glm::radians(0.618f), glm::radians(19.981f)), glm::vec3(1.0f) * additionalScale, SA_T_Barrels[1], 35.0f, 0.5f, 0.1f);
+	loadModel(SA_M_Barrels[0], "res/Safe_Area/Barrel/Barrel.obj", glm::vec3(-7.725f, -0.623f, -9.331f), glm::vec3(0, glm::radians(-22.889f), 0), glm::vec3(1.0f), SA_T_Barrels[1], 35.0f, 0.5f, 0.1f); // Red
+	loadModel(SA_M_Barrels[1], SA_M_Barrels[0], glm::vec3(-4.665f, -0.227f, -14.639f), glm::vec3(glm::radians(14.743f), glm::radians(-91.479f), glm::radians(-0.389f)), glm::vec3(1.0f), SA_T_Barrels[0], 35.0f, 0.5f, 0.1f); // Green
+	loadModel(SA_M_Barrels[2], SA_M_Barrels[0], glm::vec3(-7.725f, 2.815f, -13.345f), glm::vec3(glm::radians(1.203f), 0, 0), glm::vec3(1.0f), SA_T_Barrels[2], 30.0f, 0.5f, 0.1f);
+	loadModel(SA_M_Barrels[3], SA_M_Barrels[0], glm::vec3(-7.725f, -0.623f, -14.639f), glm::vec3(0.0f), glm::vec3(1.0f), SA_T_Barrels[2], 30.0f, 0.5f, 0.1f);
+	loadModel(SA_M_Barrels[4], SA_M_Barrels[0], glm::vec3(-7.725f, -0.623f, -11.614f), glm::vec3(glm::radians(-12.803f), glm::radians(18.968f), 0), glm::vec3(1.0f), SA_T_Barrels[2], 30.0f, 0.5f, 0.1f);
+	loadModel(SA_M_Barrels[5], SA_M_Barrels[0], glm::vec3(-7.725f, 0.204f, 14.789f), glm::vec3(glm::radians(-66.793f), glm::radians(0.618f), glm::radians(19.981f)), glm::vec3(1.0f), SA_T_Barrels[1], 35.0f, 0.5f, 0.1f);
 	
 	// Load Barriers models.
-	loadModel(SA_M_Barriers[0], "res/Safe_Area/ConcreteBarrier/ConcreteBarrier.obj", glm::vec3(5.746f, 0.734f, 14.737f) * additionalScale + offsetPos, glm::vec3(0.0f), glm::vec3(1.0f) * additionalScale, SA_T_Barriers, SA_TN_Barriers, 100.0f, 0.0f, 0.1f);
-	loadModel(SA_M_Barriers[1], SA_M_Barriers[0], glm::vec3(2.4800f, 0.734f, 14.737f) * additionalScale + offsetPos, glm::vec3(0.0f), glm::vec3(1.0f) * additionalScale, SA_T_Barriers, SA_TN_Barriers, 100.0f, 0.1f, 0.1f);
-	loadModel(SA_M_Barriers[2], SA_M_Barriers[0], glm::vec3(-0.987f, 0.734f, 14.737f) * additionalScale + offsetPos, glm::vec3(0.0f), glm::vec3(1.0f) * additionalScale, SA_T_Barriers, SA_TN_Barriers, 100.0f, 0.1f, 0.1f);
-	loadModel(SA_M_Barriers[3], SA_M_Barriers[0], glm::vec3(-4.258f, 0.734f, 14.737f) * additionalScale + offsetPos, glm::vec3(0.0f), glm::vec3(1.0f) * additionalScale, SA_T_Barriers, SA_TN_Barriers, 100.0f, 0.1f, 0.1f);
+	loadModel(SA_M_Barriers[0], "res/Safe_Area/ConcreteBarrier/ConcreteBarrier.obj", glm::vec3(5.746f, 0.734f, 14.737f), glm::vec3(0.0f), glm::vec3(1.0f), SA_T_Barriers, SA_TN_Barriers, 100.0f, 0.0f, 0.1f);
+	loadModel(SA_M_Barriers[1], SA_M_Barriers[0], glm::vec3(2.4800f, 0.734f, 14.737f), glm::vec3(0.0f), glm::vec3(1.0f), SA_T_Barriers, SA_TN_Barriers, 100.0f, 0.1f, 0.1f);
+	loadModel(SA_M_Barriers[2], SA_M_Barriers[0], glm::vec3(-0.987f, 0.734f, 14.737f), glm::vec3(0.0f), glm::vec3(1.0f), SA_T_Barriers, SA_TN_Barriers, 100.0f, 0.1f, 0.1f);
+	loadModel(SA_M_Barriers[3], SA_M_Barriers[0], glm::vec3(-4.258f, 0.734f, 14.737f), glm::vec3(0.0f), glm::vec3(1.0f), SA_T_Barriers, SA_TN_Barriers, 100.0f, 0.1f, 0.1f);
 
 	// Load Crates models.
-	loadModel(SA_M_Crate[0], "res/Safe_Area/WoodBox/WoodBox.obj", glm::vec3(9.607f, 3.429f, -9.033f) * additionalScale + offsetPos, glm::vec3(0, glm::radians(-18.961f), 0), glm::vec3(1.0f) * additionalScale, SA_T_Crate, SA_TN_Crate, 100.0f, 1.0f, 0.1f);
-	loadModel(SA_M_Crate[1], SA_M_Crate[0], glm::vec3(9.031f, 0.783f, -10.471f) * additionalScale + offsetPos, glm::vec3(0), glm::vec3(1.0f) * additionalScale, SA_T_Crate, SA_TN_Crate, 100.0f, 1.0f, 0.1f);
-	loadModel(SA_M_Crate[2], SA_M_Crate[0], glm::vec3(9.472f, 0.975f, 4.032f) * additionalScale + offsetPos, glm::vec3(glm::radians(-0.109f), glm::radians(0.046f), glm::radians(15.49f)), glm::vec3(1.0f) * additionalScale, SA_T_Crate, SA_TN_Crate, 100.0f, 1.0f, 0.1f);
-	loadModel(SA_M_Crate[3], SA_M_Crate[0], glm::vec3(9.646f, 3.446f, -5.908f) * additionalScale + offsetPos, glm::vec3(0), glm::vec3(1.0f) * additionalScale, SA_T_Crate, SA_TN_Crate, 100.0f, 1.0f, 0.1f);
-	loadModel(SA_M_Crate[4], SA_M_Crate[0], glm::vec3(9.646f, 3.759f, 3.778f) * additionalScale + offsetPos, glm::vec3(0, 0, glm::radians(5.235f)), glm::vec3(1.0f) * additionalScale, SA_T_Crate, SA_TN_Crate, 100.0f, 1.0f, 0.1f);
-	loadModel(SA_M_Crate[5], SA_M_Crate[0], glm::vec3(9.031f, 0.783f, -6.575f) * additionalScale + offsetPos, glm::vec3(0), glm::vec3(1.0f) * additionalScale, SA_T_Crate, SA_TN_Crate, 100.0f, 1.0f, 0.1f);
+	loadModel(SA_M_Crate[0], "res/Safe_Area/WoodBox/WoodBox.obj", glm::vec3(9.607f, 3.429f, -9.033f), glm::vec3(0, glm::radians(-18.961f), 0), glm::vec3(1.0f), SA_T_Crate, SA_TN_Crate, 100.0f, 1.0f, 0.1f);
+	loadModel(SA_M_Crate[1], SA_M_Crate[0], glm::vec3(9.031f, 0.783f, -10.471f), glm::vec3(0), glm::vec3(1.0f), SA_T_Crate, SA_TN_Crate, 100.0f, 1.0f, 0.1f);
+	loadModel(SA_M_Crate[2], SA_M_Crate[0], glm::vec3(9.472f, 0.975f, 4.032f), glm::vec3(glm::radians(-0.109f), glm::radians(0.046f), glm::radians(15.49f)), glm::vec3(1.0f), SA_T_Crate, SA_TN_Crate, 100.0f, 1.0f, 0.1f);
+	loadModel(SA_M_Crate[3], SA_M_Crate[0], glm::vec3(9.646f, 3.446f, -5.908f), glm::vec3(0), glm::vec3(1.0f), SA_T_Crate, SA_TN_Crate, 100.0f, 1.0f, 0.1f);
+	loadModel(SA_M_Crate[4], SA_M_Crate[0], glm::vec3(9.646f, 3.759f, 3.778f), glm::vec3(0, 0, glm::radians(5.235f)), glm::vec3(1.0f), SA_T_Crate, SA_TN_Crate, 100.0f, 1.0f, 0.1f);
+	loadModel(SA_M_Crate[5], SA_M_Crate[0], glm::vec3(9.031f, 0.783f, -6.575f), glm::vec3(0), glm::vec3(1.0f), SA_T_Crate, SA_TN_Crate, 100.0f, 1.0f, 0.1f);
 	
 	// Load Crate2 model.
-	loadModel(SA_M_Crate2, "res/Safe_Area/WoodBox2/WoodBox2.obj", glm::vec3(10.217f, 5.708f, -7.628f) * additionalScale + offsetPos, glm::vec3(0, glm::radians(6.99f), 0), glm::vec3(1.0f) * additionalScale, SA_T_Crate2, 100.0f, 1.0f, 0.1f);
+	loadModel(SA_M_Crate2, "res/Safe_Area/WoodBox2/WoodBox2.obj", glm::vec3(10.217f, 5.708f, -7.628f), glm::vec3(0, glm::radians(6.99f), 0), glm::vec3(1.0f), SA_T_Crate2, 100.0f, 1.0f, 0.1f);
 	
 	// Load Pallets models.
-	loadModel(SA_M_Pallets[0], "res/Safe_Area/Pallet/Pallet.obj", glm::vec3(9.958f, 1.409f, -12.077f) * additionalScale + offsetPos, glm::vec3(glm::radians(90.0f), glm::radians(29.358f), glm::radians(81.467f)), glm::vec3(1.0f) * additionalScale, SA_T_Pallets, SA_TN_Pallets, 100.0f, 0.1f, 0.1f);
-	loadModel(SA_M_Pallets[1], SA_M_Pallets[0], glm::vec3(9.362f, 1.409f, -14.006f) * additionalScale + offsetPos, glm::vec3(glm::radians(90.0f), glm::radians(52.264f), glm::radians(81.467f)), glm::vec3(1.0f) * additionalScale, SA_T_Pallets, SA_TN_Pallets, 100.0f, 0.1f, 0.1f);
+	loadModel(SA_M_Pallets[0], "res/Safe_Area/Pallet/Pallet.obj", glm::vec3(9.958f, 1.409f, -12.077f), glm::vec3(glm::radians(90.0f), glm::radians(29.358f), glm::radians(81.467f)), glm::vec3(1.0f), SA_T_Pallets, SA_TN_Pallets, 100.0f, 0.1f, 0.1f);
+	loadModel(SA_M_Pallets[1], SA_M_Pallets[0], glm::vec3(9.362f, 1.409f, -14.006f), glm::vec3(glm::radians(90.0f), glm::radians(52.264f), glm::radians(81.467f)), glm::vec3(1.0f), SA_T_Pallets, SA_TN_Pallets, 100.0f, 0.1f, 0.1f);
 
 	// Load SandBag model.
-	loadModel(SA_M_SandBag[0], "res/Safe_Area/SandBags/SandBags.obj", glm::vec3(8.933f, -0.623, 10.087f) * additionalScale + offsetPos, glm::vec3(0, glm::radians(66.783f), 0), glm::vec3(1.0f) * additionalScale, SA_T_SandBag, SA_TN_SandBag, 100.0f, 0.1f, 0.1f);
-	loadModel(SA_M_SandBag[1], SA_M_SandBag[0], glm::vec3(-8.436f, -0.623, 4.834f) * additionalScale + offsetPos, glm::vec3(0, glm::radians(89.368f), 0), glm::vec3(1.0f) * additionalScale, SA_T_SandBag, SA_TN_SandBag, 100.0f, 0.1f, 0.1f);
+	loadModel(SA_M_SandBag[0], "res/Safe_Area/SandBags/SandBags.obj", glm::vec3(8.933f, -0.623, 10.087f), glm::vec3(0, glm::radians(66.783f), 0), glm::vec3(1.0f), SA_T_SandBag, SA_TN_SandBag, 100.0f, 0.1f, 0.1f);
+	loadModel(SA_M_SandBag[1], SA_M_SandBag[0], glm::vec3(-8.436f, -0.623, 4.834f), glm::vec3(0, glm::radians(89.368f), 0), glm::vec3(1.0f), SA_T_SandBag, SA_TN_SandBag, 100.0f, 0.1f, 0.1f);
 }
 
 // Load Forrest Map Models
@@ -1845,21 +1858,21 @@ void LoadModels_ForrestMap()
 			reflect = 0.1f,
 			ambient = 0.2f;
 
-		multiPos = glm::vec3(-315.2f, 12.943f, -345.934f);
+		multiPos = glm::vec3(-313.2f, 12.943f, -341.934f);
 		multiRot = glm::vec3(0.0f, glm::radians(-90.0f), 0.0f);
 		loadModel(FM_M_MILITARY_BUNKER[0], "res/Forrest_Area/Military_Bunker/Bunker_roof.obj", multiPos, multiRot, glm::vec3(1.0f), FM_T_MILITARY_BUNKER[0], 60.0f, 0.25f, ambient);
-		loadModel(FM_M_MILITARY_BUNKER[1], "res/Forrest_Area/Military_Bunker/Bunker_Side2.obj", multiPos, multiRot, glm::vec3(1.0f), FM_T_MILITARY_BUNKER[1], shine, reflect, ambient);
-		loadModel(FM_M_MILITARY_BUNKER[2], "res/Forrest_Area/Military_Bunker/Bunker_Side1.obj", multiPos, multiRot, glm::vec3(1.0f), FM_T_MILITARY_BUNKER[2], shine, reflect, ambient);
+		loadModel(FM_M_MILITARY_BUNKER[1], "res/Forrest_Area/Military_Bunker/Bunker_Side1.obj", multiPos, multiRot, glm::vec3(1.0f), FM_T_MILITARY_BUNKER[1], shine, reflect, ambient);
+		loadModel(FM_M_MILITARY_BUNKER[2], "res/Forrest_Area/Military_Bunker/Bunker_Side2.obj", multiPos, multiRot, glm::vec3(1.0f), FM_T_MILITARY_BUNKER[2], shine, reflect, ambient);
 
-		multiPos = glm::vec3(-276.797f, 12.943f, -202.188f);
+		multiPos = glm::vec3(-274.797f, 12.943f, -199.188f);
 		multiRot = glm::vec3(0.0f);
 		loadModel(FM_M_MILITARY_BUNKER[3], FM_M_MILITARY_BUNKER[0], multiPos, multiRot, glm::vec3(1.0f), FM_T_MILITARY_BUNKER[0], 60.0f, 0.25f, ambient);
 		loadModel(FM_M_MILITARY_BUNKER[4], FM_M_MILITARY_BUNKER[1], multiPos, multiRot, glm::vec3(1.0f), FM_T_MILITARY_BUNKER[1], shine, reflect, ambient);
 		loadModel(FM_M_MILITARY_BUNKER[5], FM_M_MILITARY_BUNKER[2], multiPos, multiRot, glm::vec3(1.0f), FM_T_MILITARY_BUNKER[2], shine, reflect, ambient);
 
-		multiPos = glm::vec3(-370.587f, 12.943f, -202.188f);
+		multiPos = glm::vec3(-368.587f, 12.943f, -199.188f);
 		multiRot = glm::vec3(0.0f);
-		loadModel(FM_M_MILITARY_BUNKER[6], FM_M_MILITARY_BUNKER[0], multiPos, multiRot, glm::vec3(1.0f), FM_T_MILITARY_BUNKER[0], 60.0f, 0.25f, ambient);
+		loadModel(FM_M_MILITARY_BUNKER[6], FM_M_MILITARY_BUNKER[0], multiPos, multiRot, glm::vec3(1.0f), FM_T_MILITARY_BUNKER[0], 60.0f, 0.25f, 0.1f);
 		loadModel(FM_M_MILITARY_BUNKER[7], FM_M_MILITARY_BUNKER[1], multiPos, multiRot, glm::vec3(1.0f), FM_T_MILITARY_BUNKER[1], shine, reflect, ambient);
 		loadModel(FM_M_MILITARY_BUNKER[8], FM_M_MILITARY_BUNKER[2], multiPos, multiRot, glm::vec3(1.0f), FM_T_MILITARY_BUNKER[2], shine, reflect, ambient);
 	}
@@ -1946,7 +1959,7 @@ void LoadModels_ForrestMap()
 
 		loadModel(FM_M_TERRAIN, "res/Forrest_Area/Terrain/Mountains/Mountains.obj", glm::vec3(0.0f, -32.0f, 0.0f), glm::vec3(0.0f), glm::vec3(1.0f), FM_T_TERRAIN, FM_TN_TERRAIN, shine, reflect, ambient);
 
-		FM_M_FLATTERRAIN.create(&loader.loadObjFile("res/Forrest_Area/Terrain/Ground/GroundPlane.obj", false, false), glm::vec3(0.0f, 0.0f, 2.0f), glm::vec3(0.0f), FM_T_FLATTERRAIN[0], FM_T_FLATTERRAIN[1], FM_T_FLATTERRAIN[2], FM_T_FLATTERRAIN[3], FM_T_FLATTERRAIN[4]);
+		FM_M_FLATTERRAIN.create(&loader.loadObjFile("res/Forrest_Area/Terrain/Ground/GroundPlane.obj", false, false), glm::vec3(-4.85f, 0.0f, 1.009f), glm::vec3(0.0f), FM_T_FLATTERRAIN[0], FM_T_FLATTERRAIN[1], FM_T_FLATTERRAIN[2], FM_T_FLATTERRAIN[3], FM_T_FLATTERRAIN[4]);
 	}
 
 	// == TOWN_HOUSE ==

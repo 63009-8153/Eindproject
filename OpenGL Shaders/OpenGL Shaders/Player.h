@@ -39,7 +39,7 @@ class Player : public Model
 		float health, maxHealth;
 		glm::vec3 speed;
 		float attackStrength;
-		Gun gun;
+		//Gun gun;
 
 		int networkAnimType;
 
