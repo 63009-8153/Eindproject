@@ -189,13 +189,14 @@ void ClientGame::getPlayerData(Player & player, int index)
 	if (player.active) {
 
 		// Set the position
-		player.setPosition(allClients[index].position);
+		player.setPosition(glm::vec3(allClients[index].position.x, 0.0f, allClients[index].position.z));
 		player.setRotation(allClients[index].rotation);
 
 		// Set the health
 		player.health = allClients[index].health;
 		player.maxHealth = allClients[index].maxHealth;
-
+		player.ammo = allClients[index].ammo;
+		player.points = allClients[index].points;
 		player.networkAnimType = allClients[index].animType;
 	}
 }
@@ -211,7 +212,7 @@ void ClientGame::getPlayerData(Player & player)
 		if (allClients[i].playerID == myClientID)
 		{
 			// Set the position
-			player.setPosition(allClients[i].position);
+			player.setPosition(glm::vec3(allClients[i].position.x, 0.0f, allClients[i].position.z));
 
 			// Set the health
 			player.health = allClients[i].health;
@@ -219,7 +220,8 @@ void ClientGame::getPlayerData(Player & player)
 
 			// Set the velocity
 			player.setVelocity(allClients[i].velocity);
-
+			player.ammo = allClients[i].ammo;
+			player.points = allClients[i].points;
 			player.networkAnimType = allClients[i].animType;
 			return;
 		}

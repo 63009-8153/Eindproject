@@ -18,9 +18,10 @@ public:
 
 	void render(std::vector<texture2D> *textures);
 
-private:
 	gameobject quad;
 	GuiShaderProgram shader;
+private:
+
 };
 
 #endif

@@ -29,10 +29,10 @@ clock_t programStartClock = std::clock();
 bool clientRunning = false;
 ClientGame client;
 
-double	clientLoopDeltaTime		 = 0,
-		clientLoopLastRenderTime = 0;
+double	clientLoopDeltaTime = 0,
+clientLoopLastRenderTime = 0;
 
-void (*networkUpdateFunction)(void) = nullptr;
+void(*networkUpdateFunction)(void) = nullptr;
 
 // ============  GAME PROGRAM VARIABLES ============
 
@@ -51,8 +51,8 @@ Loader loader;
 Camera camera;
 
 MasterRenderer modelRenderer,
-			   terrainRenderer,
-			   normalModelRenderer;
+terrainRenderer,
+normalModelRenderer;
 WaterMasterRenderer waterRenderer;
 ShadowMasterRenderer shadowRenderer;
 GuiRenderer guiRenderer;
@@ -87,33 +87,33 @@ Model SA_M_SandBag[2];
 
 GLuint	FM_T_FLATTERRAIN[5];
 GLuint	FM_T_TERRAIN,
-		FM_TN_TERRAIN;
+FM_TN_TERRAIN;
 GLuint  FM_T_AMBULANCE[5],
-		FM_TN_AMBULANCE[5];
+FM_TN_AMBULANCE[5];
 GLuint  FM_T_COMMAND_TENT,
-		FM_TN_COMMAND_TENT;
+FM_TN_COMMAND_TENT;
 GLuint  FM_T_ARMY_TENT[3],
-		FM_TN_ARMY_TENT[2];
+FM_TN_ARMY_TENT[2];
 GLuint  FM_T_ARMY_TRUCK[5];
 GLuint	FM_T_BARRIER,
-		FM_TN_BARRIER;
+FM_TN_BARRIER;
 GLuint	FM_T_CONTAINER,
-		FM_TN_CONTAINER;
+FM_TN_CONTAINER;
 GLuint	FM_T_FENCE[3],
-		FM_TN_FENCE[3];
+FM_TN_FENCE[3];
 GLuint	FM_T_BROKENFENCE1[3], FM_T_BROKENFENCE2[3],
-		FM_TN_BROKENFENCE[3];
+FM_TN_BROKENFENCE[3];
 GLuint	FM_T_ROADLIGHT[3], FM_TS_ROADLIGHT;
 GLuint	FM_T_MILITARY_BUNKER[3];
 GLuint  FM_T_TRAFFICCONE;
 GLuint	FM_T_ROAD[3],
-		FM_TN_ROAD;
+FM_TN_ROAD;
 GLuint	FM_T_STATUE,
-		FM_TN_STATUE;
+FM_TN_STATUE;
 GLuint	FM_T_RAIL[2];
 GLuint	FM_T_TOWNHOUSE;
 GLuint	FM_T_WELL,
-		FM_TN_WELL;
+FM_TN_WELL;
 GLuint  T_GUN_WALTER;
 GLuint	T_MUZZLEFLASH_WALTER;
 
@@ -147,7 +147,8 @@ std::vector<gameobject> enemyAnimationModels;
 std::vector<s_anim> enemyAnimations;
 
 std::vector<texture2D> GuiElements;
-texture2D gotoSafeArea, gotoMainMap;
+texture2D gotoSafeArea, gotoMainMap, buyAmmo, infoGui;
+texture2D numbers[10];
 texture2D crossHair;
 
 std::vector<Light*> lights;
@@ -164,8 +165,8 @@ glm::vec3 clearColor = glm::vec3(0.32f, 0.32f, 0.32f);
 
 double last_render_time = 0;
 double deltaTime = 0,
-	   frameStartTime = 0,
-	   debugTime = 0;
+frameStartTime = 0,
+debugTime = 0;
 float fps = 0;
 int frame = 0;
 int gameState = 0;
@@ -174,10 +175,10 @@ float Max_Fps = 61.5f;
 bool limit_fps = false;
 
 /* The Anti-Aliasing type used in the program.
-   Can be one of the following:
-   * MSAA - MultiSampled Anti-Aliasing
-   * SSAA - SuperSampled Anti-Aliasing :! Under Contstruction !:
-   * FXAA - Fast Approximate Anti-Aliasing
+Can be one of the following:
+* MSAA - MultiSampled Anti-Aliasing
+* SSAA - SuperSampled Anti-Aliasing :! Under Contstruction !:
+* FXAA - Fast Approximate Anti-Aliasing
 */
 int AAType = FXAA;
 
@@ -275,7 +276,7 @@ int main() {
 	// ===============  GAME LOGIC ====================
 
 	// Initialise GLFW and throw error if it failed
-	if (!glfwInit()){
+	if (!glfwInit()) {
 		throw std::runtime_error("Failed to initialize GLFW");
 		exit(-1);
 	}
@@ -283,9 +284,7 @@ int main() {
 	// ========  Initialise  ==========
 	last_render_time = glfwGetTime();
 
-	
-
-//TODO: StartScreen Loop here
+	//TODO: StartScreen Loop here
 
 	// ===  DISPLAY  ===
 	//Create a display and initialise GLEW
@@ -314,7 +313,7 @@ int main() {
 
 	// ===  GUI  ===
 	loadAndInitialiseGUI();
-	
+
 	// ===  INPUT  ===
 	//Set input mode
 	glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
@@ -339,18 +338,19 @@ int main() {
 	//Initialise gameState
 	gameState = 1;
 
-	player.init(glm::vec3(0), glm::vec3(0), glm::vec3(0), 1);
+	player.init(glm::vec3(0), glm::vec3(0), glm::vec3(0), 100);
+	//player.active = true;
 
 	// Hide the cursor
 	DisplayManager::gameCursor();
-//TODO: glfwCreateCursor can set a picture of the cursor
+	//TODO: glfwCreateCursor can set a picture of the cursor
 
 	// Set the mouse in the middle of the screen at start so there is no unwanted staring rotation
 	handleMouseInput(true);
 
 	//Mouse button input
 	glfwSetInputMode(window, GLFW_STICKY_MOUSE_BUTTONS, 1);
-	
+  
 	do {
 
 		//renderWaterCubeMap();
@@ -364,12 +364,12 @@ int main() {
 		currentWaterMoveFactor += (float)(WAVE_SPEED * deltaTime);
 		if (currentWaterMoveFactor > 1) currentWaterMoveFactor -= 1;
 		waterRenderer.setMoveFactor(currentWaterMoveFactor);
-		
+
 		/* ========= Add models to list for rendering ============== */
 
 		unsigned int i = 0;
 
-		if (glm::distance(glm::vec3(1300.0f, 0.0f, 0.0f), camera.position) < OPTIMIZE_SAFEAREA_DIST){
+		if (glm::distance(glm::vec3(1300.0f, 0.0f, 0.0f), camera.position) < OPTIMIZE_SAFEAREA_DIST) {
 
 			// Add Floor model to renderList
 			modelRenderer.addToRenderList(SA_M_Floor.getModel());
@@ -390,7 +390,6 @@ int main() {
 			for (i = 0; i < 2; i++) normalModelRenderer.addToRenderList(SA_M_Pallets[i].getModel());
 			// Add SandBag model to renderList.
 			for (i = 0; i < 2; i++) normalModelRenderer.addToRenderList(SA_M_SandBag[i].getModel());
-
 		}
 		else {
 			// Add the flat terrain to the terrain renderer
@@ -510,12 +509,12 @@ int main() {
 
 		//Add water to the renderer list
 		//waterRenderer.addToRenderList(&water);
-		
+
 		/* =============== Start of rendering ===================== */
-		
+
 		//Render reflection and refraction texture of the water
 		//renderWaterTextures();
-		
+
 		//Render the shadow texture
 		//renderShadowTexture(&sun);
 
@@ -531,25 +530,32 @@ int main() {
 			// Teleport to the position in the main map
 			GuiElements.push_back(gotoMainMap);
 		}
-		
+		// Check if we want and can buy ammo
+		if (player.canUse(glm::vec3(1294.302f, 1, 2.409f), USE_DISTANCE) || player.canUse(glm::vec3(1296.043f, 1, 12.514f), USE_DISTANCE) || player.canUse(glm::vec3(1303.414f, 1, -13.289f), USE_DISTANCE)) {
+			//Show text for buying ammo
+			GuiElements.push_back(buyAmmo);
+		}
+
 		if (player.health > 0) GuiElements.push_back(crossHair);
+		GuiElements.push_back(infoGui);
 
 		glFinish();
 		frameStartTime = glfwGetTime();
 
 		//Render scene to multisampled anti-aliased framebuffer
 		sceneRenderer.bindRenderToTextureFrameBuffer();
-			MasterRenderer::prepare();
+		MasterRenderer::prepare();
 
-			//Render everything
+		//Render everything
 
-			skybox.render(&camera);
+		skybox.render(&camera);
 
-			terrainRenderer.render(lights, &camera, glm::vec4(0, -1, 0, 100000));
-			waterRenderer.render(lights, &camera);
+		terrainRenderer.render(lights, &camera, glm::vec4(0, -1, 0, 100000));
+		waterRenderer.render(lights, &camera);
 
-			modelRenderer.render(lights, &camera, glm::vec4(0, -1, 0, 100000));
-			normalModelRenderer.render(lights, &camera, glm::vec4(0, -1, 0, 100000));
+		modelRenderer.render(lights, &camera, glm::vec4(0, -1, 0, 100000));
+		normalModelRenderer.render(lights, &camera, glm::vec4(0, -1, 0, 100000));
+
 
 			// Render own player animation
 			//player.getAnimModel()->Draw(modelRenderer.shader, lights, &camera, glm::vec4(0, -1, 0, 100000));
@@ -573,16 +579,18 @@ int main() {
 					}
 				}
 			}
+		
 
-			// Render all enemy animations
-			for (int i = 0; i < MAX_ENEMIES; i++) {
-				if (enemies[i].active) {
-					if (glm::distance(enemies[i].getPosition(), camera.position) < OPTIMIZE_DIST) {
-						enemies[i].getAnimModel()->Draw(normalModelRenderer.shader, lights, &camera, glm::vec4(0, -1, 0, 100000));
-					}
+		// Render all enemy animations
+		for (int i = 0; i < MAX_ENEMIES; i++) {
+			if (enemies[i].active) {
+				if (glm::distance(enemies[i].getPosition(), camera.position) < OPTIMIZE_DIST) {
+					enemies[i].getAnimModel()->Draw(normalModelRenderer.shader, lights, &camera, glm::vec4(0, -1, 0, 100000));
 				}
 			}
+		}
 		
+
 		sceneRenderer.unbindFrameBuffer();
 
 		glFinish();
@@ -602,7 +610,7 @@ int main() {
 			//Render image to antiAliased buffed with the FXAA Shader
 			antiAliasedRenderer.renderToFrameBuffer(sceneRenderer.getOutputTexture());
 		}
-		
+
 		//Renderer antialiased framebuffer to brightfilter
 		brightFilter.renderToFrameBuffer(antiAliasedRenderer.getOutputTexture());
 		brightFilter.renderToScreen();
@@ -627,11 +635,34 @@ int main() {
 
 		// Render GuiElements
 		guiRenderer.render(&GuiElements);
-		
-		
+
+		//Set health
+		std::string health = std::to_string((int)player.health);
+		for (int i = 0; i < health.size(); i++) {
+			const char temp = health[i];
+			numbers[atoi(&temp)].setPosition(glm::vec2(0.335f + i*0.07, 0.3f));
+			numbers[atoi(&temp)].Draw(guiRenderer.shader, guiRenderer.quad);
+		}
+
+		//Set points
+		std::string points = std::to_string(player.points);
+		for (int i = 0; i < points.size(); i++) {
+			const char temp = points[i];
+			numbers[atoi(&temp)].setPosition(glm::vec2(0.335f + i*0.07, 0.2f));
+			numbers[atoi(&temp)].Draw(guiRenderer.shader, guiRenderer.quad);
+		}
+
+		//Set ammo counter
+		std::string ammo = std::to_string(player.ammo);
+		for (int i = 0; i < ammo.size(); i++) {
+			const char temp = ammo[i];
+			numbers[atoi(&temp)].setPosition(glm::vec2(0.335f + i*0.07, 0.1f));
+			numbers[atoi(&temp)].Draw(guiRenderer.shader, guiRenderer.quad);
+		}
+
 		//Swap Buffers (Send image to the screen)
 		glfwSwapBuffers(window);
-	
+
 		/* ================== End of rendering ======================= */
 
 		//Clear all objects from renderlists.
@@ -681,7 +712,7 @@ int main() {
 
 		// Set the rotation of the player for the next update
 		client.setPlayerData(player);
-		
+
 		// Set the camera rotation to the players rotation and convert it to radians
 		camera.rotation = glm::radians(player.getRotation());
 		// Set the camera position
@@ -694,7 +725,7 @@ int main() {
 
 		if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) gameState = 0;
 		if (DisplayManager::updateDisplay() < 0) gameState = 0;
-	}while (gameState >= 1);
+	} while (gameState >= 1);
 
 	// Show the cursor again
 	DisplayManager::showCursor();
@@ -705,10 +736,10 @@ int main() {
 	//Clean all programs up
 	modelRenderer.cleanUp();
 	normalModelRenderer.cleanUp();
-	terrainRenderer.cleanUp(); 
+	terrainRenderer.cleanUp();
 	waterRenderer.cleanUp();
 	shadowRenderer.cleanUp();
-	
+
 	loader.cleanUp();
 
 	//Make the clientloop stop running and end its thread
@@ -769,7 +800,7 @@ void handleGameInput()
 
 	// Handle input of sprinting
 	if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) client.addActionType(MOVE_RUN);
-	
+
 	// Reset wants to shoot
 	player.wantsToShoot = false;
 
@@ -816,6 +847,7 @@ void loadAndInitialiseWater()
 	water.getWaterTile()->setAmbientLight(0.5f);
 	water.getWaterTile()->setShadowMap(shadowRenderer.getShadowDepthTexture());
 }
+
 // Load and initialise all GUI elements
 void loadAndInitialiseGUI()
 {
@@ -829,6 +861,23 @@ void loadAndInitialiseGUI()
 	gotoMainMap.setScale(glm::vec2(0.5f));
 	gotoMainMap.setPosition(glm::vec2(1.0f, 0.5f));
 
+	// Load buyAmmo
+	buyAmmo.loadImage("res/GUI/buyAmmo.bmp", true, false);
+	buyAmmo.setScale(glm::vec2(0.5f));
+	buyAmmo.setPosition(glm::vec2(1.0f, 0.5f));
+
+	// Load infoGUI
+	infoGui.loadImage("res/GUI/infoGui.bmp", true, false);
+	infoGui.setScale(glm::vec2(0.5f));
+	infoGui.setPosition(glm::vec2(-0.19f, 0.555f));
+
+	// Load numbers
+	for (int i = 0; i < 10; i++) {
+		std::string name = "res/GUI/number" + std::to_string(i) + ".bmp";
+		numbers[i].loadImage(name.c_str(), true, false);
+		numbers[i].setScale(glm::vec2(0.03f));
+	}
+	
 	// Load the crosshair
 	crossHair.loadImage("res/GUI/Crosshair.bmp", true, false);
 	crossHair.setScale(glm::vec2(0.15f));
@@ -902,31 +951,31 @@ void renderWaterCubeMap()
 
 	glm::vec3 reflectionPosition = glm::vec3(0.0f, 10.0f, 0.0f); //Has to be a vec3 of the position
 	const glm::vec3 faceRotations[6] = {
-		glm::vec3(0, glm::radians(-90.0f), glm::radians(180.0f)),
-		glm::vec3(0, glm::radians(90.0f),  glm::radians(180.0f)),
-		glm::vec3(glm::radians(-90.0f), 0, 0),//
-		glm::vec3(glm::radians(90.0f),  0, 0),//
-		glm::vec3(0, glm::radians(180.0f), glm::radians(180.0f)),
-		glm::vec3(0, 0,	glm::radians(180.0f))
+	glm::vec3(0, glm::radians(-90.0f), glm::radians(180.0f)),
+	glm::vec3(0, glm::radians(90.0f),  glm::radians(180.0f)),
+	glm::vec3(glm::radians(-90.0f), 0, 0),//
+	glm::vec3(glm::radians(90.0f),  0, 0),//
+	glm::vec3(0, glm::radians(180.0f), glm::radians(180.0f)),
+	glm::vec3(0, 0,	glm::radians(180.0f))
 	};
 
 	waterReflection.bindFrameBuffer();
 	for (unsigned int i = 0; i < 6; i++) {
-		//Bind the right side
-		waterReflection.bindFrameBufferRenderTexture(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i);
-		//Clear the buffer
-		MasterRenderer::prepare();
-		//Render
+	//Bind the right side
+	waterReflection.bindFrameBufferRenderTexture(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i);
+	//Clear the buffer
+	MasterRenderer::prepare();
+	//Render
 
-		skybox.renderUpdated(&camera, 90.0f, reflectionPosition, faceRotations[i]);
+	skybox.renderUpdated(&camera, 90.0f, reflectionPosition, faceRotations[i]);
 
-		//normalModelRenderer.renderUpdated(lights, &camera, glm::vec4(0, -1, 0, 100000), 90.0f, reflectionPosition, faceRotations[i]); //Normal render
-		terrainRenderer.renderUpdated(lights, &camera, glm::vec4(0, -1, 0, 100000), 90.0f, reflectionPosition, faceRotations[i]); //Normal render
+	//normalModelRenderer.renderUpdated(lights, &camera, glm::vec4(0, -1, 0, 100000), 90.0f, reflectionPosition, faceRotations[i]); //Normal render
+	terrainRenderer.renderUpdated(lights, &camera, glm::vec4(0, -1, 0, 100000), 90.0f, reflectionPosition, faceRotations[i]); //Normal render
 
-		//glEnable(GL_CLIP_DISTANCE0);
-		//normalModelRenderer.renderUpdated(lights, &camera, glm::vec4(0, 1, 0, -water.getWaterTile()->getPosition().y + 1.0f), 90.0f, reflectionPosition, faceRotations[i]); //Reflection render
-		//normalModelRenderer.renderUpdated(lights, &camera, glm::vec4(0, -1, 0, water.getWaterTile()->getPosition().y + 1.0f), 90.0f, reflectionPosition, faceRotations[i]); //Refraction render
-		//glDisable(GL_CLIP_DISTANCE0);
+	//glEnable(GL_CLIP_DISTANCE0);
+	//normalModelRenderer.renderUpdated(lights, &camera, glm::vec4(0, 1, 0, -water.getWaterTile()->getPosition().y + 1.0f), 90.0f, reflectionPosition, faceRotations[i]); //Reflection render
+	//normalModelRenderer.renderUpdated(lights, &camera, glm::vec4(0, -1, 0, water.getWaterTile()->getPosition().y + 1.0f), 90.0f, reflectionPosition, faceRotations[i]); //Refraction render
+	//glDisable(GL_CLIP_DISTANCE0);
 	}
 	waterReflection.unbindFrameBuffer(SCREEN_WIDTH, SCREEN_HEIGHT);
 	//waterReflection.deleteBuffers(); //Only if we dont want to use the framebuffer ever again
@@ -1049,7 +1098,7 @@ void clientLoop(void *)
 	clientRunning = true;
 
 	// Client networking loop
-	while(clientRunning){
+	while (clientRunning) {
 		// Receive and parse data.
 		client.updateClient();
 
@@ -1088,10 +1137,10 @@ void SendLobbyData()
 {
 	//if (/*want to start the game*/)
 	//{
-		// Add a action Start Game
-		client.addActionType(GAME_START);
-		// Send the packet to the server
-		client.sendLobbyUpdate();
+	// Add a action Start Game
+	client.addActionType(GAME_START);
+	// Send the packet to the server
+	client.sendLobbyUpdate();
 	//}
 
 	// If the lobbyTimer has started running
@@ -1111,7 +1160,7 @@ void SendGameData()
 	handleGameInput();
 
 	//if(client.hasActionType())
-		client.sendPlayerData();
+	client.sendPlayerData();
 }
 
 // Load all graphics
@@ -1142,9 +1191,9 @@ void LoadGraphics_SafeArea()
 	SA_T_Building[3] = loader.loadTexture("res/Safe_Area/Building/Textures/stroh.bmp", true); // Roof
 	SA_T_Building[4] = loader.loadTexture("res/Safe_Area/Building/Textures/wood.bmp", true); // Wheel
 
-	// Load AmmoBox's texture and normals.
-	SA_T_AmmoBoxes[0]  = loader.loadTexture("res/Safe_Area/Weapon_Box/Textures/box_d.bmp", true);
-	SA_T_AmmoBoxes[1]  = loader.loadTexture("res/Safe_Area/Weapon_Box/Textures/roc_d.bmp", true);
+																							 // Load AmmoBox's texture and normals.
+	SA_T_AmmoBoxes[0] = loader.loadTexture("res/Safe_Area/Weapon_Box/Textures/box_d.bmp", true);
+	SA_T_AmmoBoxes[1] = loader.loadTexture("res/Safe_Area/Weapon_Box/Textures/roc_d.bmp", true);
 	SA_T_AmmoBoxes[2] = loader.loadTexture("res/Safe_Area/Weapon_Box/Textures/roc_d.bmp", true);
 	SA_T_AmmoBoxes[3] = loader.loadTexture("res/Safe_Area/Weapon_Box/Textures/roc_d.bmp", true);
 	SA_T_AmmoBoxes[4] = loader.loadTexture("res/Safe_Area/Weapon_Box/Textures/roc_d.bmp", true);
@@ -1159,22 +1208,22 @@ void LoadGraphics_SafeArea()
 	SA_T_Barrels[2] = loader.loadTexture("res/Safe_Area/Barrel/Textures/regular_barrel.bmp", true);
 
 	// Load Barrier's texture and normals.
-	SA_T_Barriers  = loader.loadTexture("res/Safe_Area/ConcreteBarrier/Textures/Barrier.bmp", true);
+	SA_T_Barriers = loader.loadTexture("res/Safe_Area/ConcreteBarrier/Textures/Barrier.bmp", true);
 	SA_TN_Barriers = loader.loadTexture("res/Safe_Area/ConcreteBarrier/Textures/Normal.bmp", false);
 
 	// Load Crate's texture and normal.
-	SA_T_Crate  = loader.loadTexture("res/Safe_Area/WoodBox/Textures/diffuse.bmp", true);
+	SA_T_Crate = loader.loadTexture("res/Safe_Area/WoodBox/Textures/diffuse.bmp", true);
 	SA_TN_Crate = loader.loadTexture("res/Safe_Area/WoodBox/Textures/normal.bmp", false);
 
 	// Load Crate2's texture.
 	SA_T_Crate2 = loader.loadTexture("res/Safe_Area/WoodBox2/Textures/WoodBox2.bmp", true);
 
 	// Load Pallet's textures
-	SA_T_Pallets  = loader.loadTexture("res/Safe_Area/Pallet/Textures/Pallet_dif.bmp", true);
+	SA_T_Pallets = loader.loadTexture("res/Safe_Area/Pallet/Textures/Pallet_dif.bmp", true);
 	SA_TN_Pallets = loader.loadTexture("res/Safe_Area/Pallet/Textures/Pallet_norm.bmp", false);
 
 	// Load SandBag's texture and normal.
-	SA_T_SandBag  = loader.loadTexture("res/Safe_Area/SandBags/Textures/sandbags_d.bmp", true);
+	SA_T_SandBag = loader.loadTexture("res/Safe_Area/SandBags/Textures/sandbags_d.bmp", true);
 	SA_TN_SandBag = loader.loadTexture("res/Safe_Area/SandBags/Textures/sandbags_n.bmp", false);
 }
 // Load Forrest Map Graphics
@@ -1292,7 +1341,6 @@ void anim5() {
 void anim6() {
 	playerAnimations[5] = Player::loadAnimations("res/PlayerAnimations/Run_Forward/", animobjs[5], 156, 16, 62, true);
 }
-
 void anim7()
 {
 	enemyAnimations[0] = Enemy::loadAnimations("res/EnemyAnimations/Walk_Forward/", animobjs[6], 0, 38, 45, true);
@@ -1391,23 +1439,23 @@ void loadModels_SafeArea()
 
 	// Load AmmoBoxes models.
 	// Front left
-	loadModel(SA_M_AmmoBoxes[0], "res/Safe_Area/Weapon_Box/Weapon_Box.obj",			 glm::vec3(-3.715f, 1.281f, 11.901f) * additionalScale + offsetPos, glm::vec3(0, glm::radians(-133.379f), 0), glm::vec3(1.0f) * additionalScale, SA_T_AmmoBoxes[0], SA_TN_AmmoBoxes[0], 100.0f, 0.1f, 0.6f);
-	loadModel(SA_M_AmmoBoxes[1], "res/Safe_Area/Weapon_Box/Weapon_Box_Granade.obj",  glm::vec3(-3.715f, 1.281f, 11.901f) * additionalScale + offsetPos, glm::vec3(0, glm::radians(-133.379f), 0), glm::vec3(1.0f) * additionalScale, SA_T_AmmoBoxes[1], SA_TN_AmmoBoxes[1], 20.0f, 0.6f, 0.6f);
+	loadModel(SA_M_AmmoBoxes[0], "res/Safe_Area/Weapon_Box/Weapon_Box.obj", glm::vec3(-3.715f, 1.281f, 11.901f) * additionalScale + offsetPos, glm::vec3(0, glm::radians(-133.379f), 0), glm::vec3(1.0f) * additionalScale, SA_T_AmmoBoxes[0], SA_TN_AmmoBoxes[0], 100.0f, 0.1f, 0.6f);
+	loadModel(SA_M_AmmoBoxes[1], "res/Safe_Area/Weapon_Box/Weapon_Box_Granade.obj", glm::vec3(-3.715f, 1.281f, 11.901f) * additionalScale + offsetPos, glm::vec3(0, glm::radians(-133.379f), 0), glm::vec3(1.0f) * additionalScale, SA_T_AmmoBoxes[1], SA_TN_AmmoBoxes[1], 20.0f, 0.6f, 0.6f);
 	loadModel(SA_M_AmmoBoxes[2], "res/Safe_Area/Weapon_Box/Weapon_Box_Granade2.obj", glm::vec3(-3.715f, 1.281f, 11.901f) * additionalScale + offsetPos, glm::vec3(0, glm::radians(-133.379f), 0), glm::vec3(1.0f) * additionalScale, SA_T_AmmoBoxes[2], SA_TN_AmmoBoxes[1], 20.0f, 0.6f, 0.6f);
 	loadModel(SA_M_AmmoBoxes[3], "res/Safe_Area/Weapon_Box/Weapon_Box_Granade3.obj", glm::vec3(-3.715f, 1.281f, 11.901f) * additionalScale + offsetPos, glm::vec3(0, glm::radians(-133.379f), 0), glm::vec3(1.0f) * additionalScale, SA_T_AmmoBoxes[3], SA_TN_AmmoBoxes[1], 20.0f, 0.6f, 0.6f);
 	loadModel(SA_M_AmmoBoxes[4], "res/Safe_Area/Weapon_Box/Weapon_Box_Granade4.obj", glm::vec3(-3.715f, 1.281f, 11.901f) * additionalScale + offsetPos, glm::vec3(0, glm::radians(-133.379f), 0), glm::vec3(1.0f) * additionalScale, SA_T_AmmoBoxes[4], SA_TN_AmmoBoxes[1], 20.0f, 0.6f, 0.6f);
 	loadModel(SA_M_AmmoBoxes[5], "res/Safe_Area/Weapon_Box/Weapon_Box_Granade5.obj", glm::vec3(-3.715f, 1.281f, 11.901f) * additionalScale + offsetPos, glm::vec3(0, glm::radians(-133.379f), 0), glm::vec3(1.0f) * additionalScale, SA_T_AmmoBoxes[5], SA_TN_AmmoBoxes[1], 20.0f, 0.6f, 0.6f);
 	loadModel(SA_M_AmmoBoxes[6], "res/Safe_Area/Weapon_Box/Weapon_Box_Granade6.obj", glm::vec3(-3.715f, 1.281f, 11.901f) * additionalScale + offsetPos, glm::vec3(0, glm::radians(-133.379f), 0), glm::vec3(1.0f) * additionalScale, SA_T_AmmoBoxes[6], SA_TN_AmmoBoxes[1], 20.0f, 0.6f, 0.6f);
-	
+
 	// Back right
-	loadModel(SA_M_AmmoBoxes[7],  SA_M_AmmoBoxes[0], glm::vec3(3.656f, 1.281f, -13.91f) * additionalScale + offsetPos, glm::vec3(0, glm::radians(79.083f), 0), glm::vec3(1.0f) * additionalScale, SA_T_AmmoBoxes[0], SA_TN_AmmoBoxes[0], 100.0f, 0.1f, 0.6f);
-	loadModel(SA_M_AmmoBoxes[8],  SA_M_AmmoBoxes[1], glm::vec3(3.656f, 1.281f, -13.91f) * additionalScale + offsetPos, glm::vec3(0, glm::radians(79.083f), 0), glm::vec3(1.0f) * additionalScale, SA_T_AmmoBoxes[1], SA_TN_AmmoBoxes[1], 20.0f, 0.6f, 0.6f);
-	loadModel(SA_M_AmmoBoxes[9],  SA_M_AmmoBoxes[2], glm::vec3(3.656f, 1.281f, -13.91f) * additionalScale + offsetPos, glm::vec3(0, glm::radians(79.083f), 0), glm::vec3(1.0f) * additionalScale, SA_T_AmmoBoxes[2], SA_TN_AmmoBoxes[1], 20.0f, 0.6f, 0.6f);
+	loadModel(SA_M_AmmoBoxes[7], SA_M_AmmoBoxes[0], glm::vec3(3.656f, 1.281f, -13.91f) * additionalScale + offsetPos, glm::vec3(0, glm::radians(79.083f), 0), glm::vec3(1.0f) * additionalScale, SA_T_AmmoBoxes[0], SA_TN_AmmoBoxes[0], 100.0f, 0.1f, 0.6f);
+	loadModel(SA_M_AmmoBoxes[8], SA_M_AmmoBoxes[1], glm::vec3(3.656f, 1.281f, -13.91f) * additionalScale + offsetPos, glm::vec3(0, glm::radians(79.083f), 0), glm::vec3(1.0f) * additionalScale, SA_T_AmmoBoxes[1], SA_TN_AmmoBoxes[1], 20.0f, 0.6f, 0.6f);
+	loadModel(SA_M_AmmoBoxes[9], SA_M_AmmoBoxes[2], glm::vec3(3.656f, 1.281f, -13.91f) * additionalScale + offsetPos, glm::vec3(0, glm::radians(79.083f), 0), glm::vec3(1.0f) * additionalScale, SA_T_AmmoBoxes[2], SA_TN_AmmoBoxes[1], 20.0f, 0.6f, 0.6f);
 	loadModel(SA_M_AmmoBoxes[10], SA_M_AmmoBoxes[3], glm::vec3(3.656f, 1.281f, -13.91f) * additionalScale + offsetPos, glm::vec3(0, glm::radians(79.083f), 0), glm::vec3(1.0f) * additionalScale, SA_T_AmmoBoxes[3], SA_TN_AmmoBoxes[1], 20.0f, 0.6f, 0.6f);
 	loadModel(SA_M_AmmoBoxes[11], SA_M_AmmoBoxes[4], glm::vec3(3.656f, 1.281f, -13.91f) * additionalScale + offsetPos, glm::vec3(0, glm::radians(79.083f), 0), glm::vec3(1.0f) * additionalScale, SA_T_AmmoBoxes[4], SA_TN_AmmoBoxes[1], 20.0f, 0.6f, 0.6f);
 	loadModel(SA_M_AmmoBoxes[12], SA_M_AmmoBoxes[5], glm::vec3(3.656f, 1.281f, -13.91f) * additionalScale + offsetPos, glm::vec3(0, glm::radians(79.083f), 0), glm::vec3(1.0f) * additionalScale, SA_T_AmmoBoxes[5], SA_TN_AmmoBoxes[1], 20.0f, 0.6f, 0.6f);
 	loadModel(SA_M_AmmoBoxes[13], SA_M_AmmoBoxes[6], glm::vec3(3.656f, 1.281f, -13.91f) * additionalScale + offsetPos, glm::vec3(0, glm::radians(79.083f), 0), glm::vec3(1.0f) * additionalScale, SA_T_AmmoBoxes[6], SA_TN_AmmoBoxes[1], 20.0f, 0.6f, 0.6f);
-	
+
 	// Middle room
 	loadModel(SA_M_AmmoBoxes[14], SA_M_AmmoBoxes[0], glm::vec3(-5.456f, 1.281f, 1.797f) * additionalScale + offsetPos, glm::vec3(0, glm::radians(-164.795f), 0), glm::vec3(1.0f) * additionalScale, SA_T_AmmoBoxes[0], SA_TN_AmmoBoxes[0], 100.0f, 0.1f, 0.6f);
 	loadModel(SA_M_AmmoBoxes[15], SA_M_AmmoBoxes[1], glm::vec3(-5.456f, 1.281f, 1.797f) * additionalScale + offsetPos, glm::vec3(0, glm::radians(-164.795f), 0), glm::vec3(1.0f) * additionalScale, SA_T_AmmoBoxes[1], SA_TN_AmmoBoxes[1], 20.0f, 0.6f, 0.6f);
@@ -1424,7 +1472,7 @@ void loadModels_SafeArea()
 	loadModel(SA_M_Barrels[3], SA_M_Barrels[0], glm::vec3(-7.725f, -0.623f, -14.639f) * additionalScale + offsetPos, glm::vec3(0.0f), glm::vec3(1.0f) * additionalScale, SA_T_Barrels[2], 30.0f, 0.5f, 0.1f);
 	loadModel(SA_M_Barrels[4], SA_M_Barrels[0], glm::vec3(-7.725f, -0.623f, -11.614f) * additionalScale + offsetPos, glm::vec3(glm::radians(-12.803f), glm::radians(18.968f), 0), glm::vec3(1.0f) * additionalScale, SA_T_Barrels[2], 30.0f, 0.5f, 0.1f);
 	loadModel(SA_M_Barrels[5], SA_M_Barrels[0], glm::vec3(-7.725f, 0.204f, 14.789f) * additionalScale + offsetPos, glm::vec3(glm::radians(-66.793f), glm::radians(0.618f), glm::radians(19.981f)), glm::vec3(1.0f) * additionalScale, SA_T_Barrels[1], 35.0f, 0.5f, 0.1f);
-	
+
 	// Load Barriers models.
 	loadModel(SA_M_Barriers[0], "res/Safe_Area/ConcreteBarrier/ConcreteBarrier.obj", glm::vec3(5.746f, 0.734f, 14.737f) * additionalScale + offsetPos, glm::vec3(0.0f), glm::vec3(1.0f) * additionalScale, SA_T_Barriers, SA_TN_Barriers, 100.0f, 0.0f, 0.1f);
 	loadModel(SA_M_Barriers[1], SA_M_Barriers[0], glm::vec3(2.4800f, 0.734f, 14.737f) * additionalScale + offsetPos, glm::vec3(0.0f), glm::vec3(1.0f) * additionalScale, SA_T_Barriers, SA_TN_Barriers, 100.0f, 0.1f, 0.1f);
@@ -1438,10 +1486,10 @@ void loadModels_SafeArea()
 	loadModel(SA_M_Crate[3], SA_M_Crate[0], glm::vec3(9.646f, 3.446f, -5.908f) * additionalScale + offsetPos, glm::vec3(0), glm::vec3(1.0f) * additionalScale, SA_T_Crate, SA_TN_Crate, 100.0f, 1.0f, 0.1f);
 	loadModel(SA_M_Crate[4], SA_M_Crate[0], glm::vec3(9.646f, 3.759f, 3.778f) * additionalScale + offsetPos, glm::vec3(0, 0, glm::radians(5.235f)), glm::vec3(1.0f) * additionalScale, SA_T_Crate, SA_TN_Crate, 100.0f, 1.0f, 0.1f);
 	loadModel(SA_M_Crate[5], SA_M_Crate[0], glm::vec3(9.031f, 0.783f, -6.575f) * additionalScale + offsetPos, glm::vec3(0), glm::vec3(1.0f) * additionalScale, SA_T_Crate, SA_TN_Crate, 100.0f, 1.0f, 0.1f);
-	
+
 	// Load Crate2 model.
 	loadModel(SA_M_Crate2, "res/Safe_Area/WoodBox2/WoodBox2.obj", glm::vec3(10.217f, 5.708f, -7.628f) * additionalScale + offsetPos, glm::vec3(0, glm::radians(6.99f), 0), glm::vec3(1.0f) * additionalScale, SA_T_Crate2, 100.0f, 1.0f, 0.1f);
-	
+
 	// Load Pallets models.
 	loadModel(SA_M_Pallets[0], "res/Safe_Area/Pallet/Pallet.obj", glm::vec3(9.958f, 1.409f, -12.077f) * additionalScale + offsetPos, glm::vec3(glm::radians(90.0f), glm::radians(29.358f), glm::radians(81.467f)), glm::vec3(1.0f) * additionalScale, SA_T_Pallets, SA_TN_Pallets, 100.0f, 0.1f, 0.1f);
 	loadModel(SA_M_Pallets[1], SA_M_Pallets[0], glm::vec3(9.362f, 1.409f, -14.006f) * additionalScale + offsetPos, glm::vec3(glm::radians(90.0f), glm::radians(52.264f), glm::radians(81.467f)), glm::vec3(1.0f) * additionalScale, SA_T_Pallets, SA_TN_Pallets, 100.0f, 0.1f, 0.1f);
@@ -1551,20 +1599,20 @@ void LoadModels_ForrestMap()
 			ambient = 0.15f;
 
 		loadModel(FM_M_BARRIER[0], "res/Forrest_Area/Barrier/barrier.obj", glm::vec3(-143.101f, 1.833f, -496.647f), glm::vec3(0.0f, glm::radians(-171.108f), 0.0f), glm::vec3(1.0f), FM_T_BARRIER, FM_TN_BARRIER, shine, reflect, ambient);
-		loadModel(FM_M_BARRIER[1],  FM_M_BARRIER[0], glm::vec3(-138.153f, 1.833f, -497.33f), glm::vec3(0.0f, glm::radians(-2.893f), 0.0f), glm::vec3(1.0f), FM_T_BARRIER, FM_TN_BARRIER, shine, reflect, ambient);
-		loadModel(FM_M_BARRIER[2],  FM_M_BARRIER[0], glm::vec3(-133.234f, 1.833f, -497.587f), glm::vec3(0.0f, glm::radians(-171.369f), 0.0f), glm::vec3(1.0f), FM_T_BARRIER, FM_TN_BARRIER, shine, reflect, ambient);
-		loadModel(FM_M_BARRIER[3],  FM_M_BARRIER[0], glm::vec3(-128.054f, 1.833f, -497.537f), glm::vec3(0.0f, glm::radians(169.062f), 0.0f), glm::vec3(1.0f), FM_T_BARRIER, FM_TN_BARRIER, shine, reflect, ambient);
-		loadModel(FM_M_BARRIER[4],  FM_M_BARRIER[0], glm::vec3(-123.147f, 1.833f, -496.198f), glm::vec3(0.0f, glm::radians(-20.006f), 0.0f), glm::vec3(1.0f), FM_T_BARRIER, FM_TN_BARRIER, shine, reflect, ambient);
-		loadModel(FM_M_BARRIER[5],  FM_M_BARRIER[0], glm::vec3(-117.907f, 1.833f, -495.336f), glm::vec3(0.0f), glm::vec3(1.0f), FM_T_BARRIER, FM_TN_BARRIER, shine, reflect, ambient);
-		loadModel(FM_M_BARRIER[6],  FM_M_BARRIER[0], glm::vec3(-112.459f, 1.833f, -495.602f), glm::vec3(0.0f, glm::radians(-172.327f), 0.0f), glm::vec3(1.0f), FM_T_BARRIER, FM_TN_BARRIER, shine, reflect, ambient);
-		
-		loadModel(FM_M_BARRIER[7],  FM_M_BARRIER[0], glm::vec3(-141.758f, 1.833f, 153.703f), glm::vec3(0.0f, glm::radians(112.686f), 0.0f), glm::vec3(1.0f), FM_T_BARRIER, FM_TN_BARRIER, shine, reflect, ambient);
-		loadModel(FM_M_BARRIER[8],  FM_M_BARRIER[0], glm::vec3(-138.351f, 1.833f, 159.479f), glm::vec3(0.0f, glm::radians(-56.24f), 0.0f), glm::vec3(1.0f), FM_T_BARRIER, FM_TN_BARRIER, shine, reflect, ambient);
-		loadModel(FM_M_BARRIER[9],  FM_M_BARRIER[0], glm::vec3(-135.995f, 1.833f, 165.182f), glm::vec3(0.0f, glm::radians(-62.378f), 0.0f), glm::vec3(1.0f), FM_T_BARRIER, FM_TN_BARRIER, shine, reflect, ambient);
+		loadModel(FM_M_BARRIER[1], FM_M_BARRIER[0], glm::vec3(-138.153f, 1.833f, -497.33f), glm::vec3(0.0f, glm::radians(-2.893f), 0.0f), glm::vec3(1.0f), FM_T_BARRIER, FM_TN_BARRIER, shine, reflect, ambient);
+		loadModel(FM_M_BARRIER[2], FM_M_BARRIER[0], glm::vec3(-133.234f, 1.833f, -497.587f), glm::vec3(0.0f, glm::radians(-171.369f), 0.0f), glm::vec3(1.0f), FM_T_BARRIER, FM_TN_BARRIER, shine, reflect, ambient);
+		loadModel(FM_M_BARRIER[3], FM_M_BARRIER[0], glm::vec3(-128.054f, 1.833f, -497.537f), glm::vec3(0.0f, glm::radians(169.062f), 0.0f), glm::vec3(1.0f), FM_T_BARRIER, FM_TN_BARRIER, shine, reflect, ambient);
+		loadModel(FM_M_BARRIER[4], FM_M_BARRIER[0], glm::vec3(-123.147f, 1.833f, -496.198f), glm::vec3(0.0f, glm::radians(-20.006f), 0.0f), glm::vec3(1.0f), FM_T_BARRIER, FM_TN_BARRIER, shine, reflect, ambient);
+		loadModel(FM_M_BARRIER[5], FM_M_BARRIER[0], glm::vec3(-117.907f, 1.833f, -495.336f), glm::vec3(0.0f), glm::vec3(1.0f), FM_T_BARRIER, FM_TN_BARRIER, shine, reflect, ambient);
+		loadModel(FM_M_BARRIER[6], FM_M_BARRIER[0], glm::vec3(-112.459f, 1.833f, -495.602f), glm::vec3(0.0f, glm::radians(-172.327f), 0.0f), glm::vec3(1.0f), FM_T_BARRIER, FM_TN_BARRIER, shine, reflect, ambient);
+
+		loadModel(FM_M_BARRIER[7], FM_M_BARRIER[0], glm::vec3(-141.758f, 1.833f, 153.703f), glm::vec3(0.0f, glm::radians(112.686f), 0.0f), glm::vec3(1.0f), FM_T_BARRIER, FM_TN_BARRIER, shine, reflect, ambient);
+		loadModel(FM_M_BARRIER[8], FM_M_BARRIER[0], glm::vec3(-138.351f, 1.833f, 159.479f), glm::vec3(0.0f, glm::radians(-56.24f), 0.0f), glm::vec3(1.0f), FM_T_BARRIER, FM_TN_BARRIER, shine, reflect, ambient);
+		loadModel(FM_M_BARRIER[9], FM_M_BARRIER[0], glm::vec3(-135.995f, 1.833f, 165.182f), glm::vec3(0.0f, glm::radians(-62.378f), 0.0f), glm::vec3(1.0f), FM_T_BARRIER, FM_TN_BARRIER, shine, reflect, ambient);
 		loadModel(FM_M_BARRIER[10], FM_M_BARRIER[0], glm::vec3(-132.799f, 1.833f, 169.891f), glm::vec3(0.0f, glm::radians(135.924f), 0.0f), glm::vec3(1.0f), FM_T_BARRIER, FM_TN_BARRIER, shine, reflect, ambient);
 		loadModel(FM_M_BARRIER[11], FM_M_BARRIER[0], glm::vec3(-127.808f, 1.833f, 173.611f), glm::vec3(0.0f, glm::radians(-30.061f), 0.0f), glm::vec3(1.0f), FM_T_BARRIER, FM_TN_BARRIER, shine, reflect, ambient);
 		loadModel(FM_M_BARRIER[12], FM_M_BARRIER[0], glm::vec3(-122.116f, 1.833f, 176.671f), glm::vec3(0.0f, glm::radians(-21.642f), 0.0f), glm::vec3(1.0f), FM_T_BARRIER, FM_TN_BARRIER, shine, reflect, ambient);
-		
+
 		loadModel(FM_M_BARRIER[13], FM_M_BARRIER[0], glm::vec3(370.609f, 1.833f, -278.094f), glm::vec3(0.0f, glm::radians(-81.108f), 0.0f), glm::vec3(1.0f), FM_T_BARRIER, FM_TN_BARRIER, shine, reflect, ambient);
 		loadModel(FM_M_BARRIER[14], FM_M_BARRIER[0], glm::vec3(369.925f, 1.833f, -283.042f), glm::vec3(0.0f, glm::radians(87.107f), 0.0f), glm::vec3(1.0f), FM_T_BARRIER, FM_TN_BARRIER, shine, reflect, ambient);
 		loadModel(FM_M_BARRIER[15], FM_M_BARRIER[0], glm::vec3(369.668f, 1.833f, -287.961f), glm::vec3(0.0f, glm::radians(-81.369f), 0.0f), glm::vec3(1.0f), FM_T_BARRIER, FM_TN_BARRIER, shine, reflect, ambient);
@@ -1572,7 +1620,7 @@ void LoadModels_ForrestMap()
 		loadModel(FM_M_BARRIER[17], FM_M_BARRIER[0], glm::vec3(371.057f, 1.833f, -298.048f), glm::vec3(0.0f, glm::radians(69.994f), 0.0f), glm::vec3(1.0f), FM_T_BARRIER, FM_TN_BARRIER, shine, reflect, ambient);
 		loadModel(FM_M_BARRIER[18], FM_M_BARRIER[0], glm::vec3(371.919f, 1.833f, -303.288f), glm::vec3(0.0f, glm::radians(90.0f), 0.0f), glm::vec3(1.0f), FM_T_BARRIER, FM_TN_BARRIER, shine, reflect, ambient);
 		loadModel(FM_M_BARRIER[19], FM_M_BARRIER[0], glm::vec3(371.653f, 1.833f, -308.736f), glm::vec3(0.0f, glm::radians(-82.327f), 0.0f), glm::vec3(1.0f), FM_T_BARRIER, FM_TN_BARRIER, shine, reflect, ambient);
-		
+
 		loadModel(FM_M_BARRIER[20], FM_M_BARRIER[0], glm::vec3(369.925f, 1.833f, 176.461f), glm::vec3(0.0f, glm::radians(87.107f), 0.0f), glm::vec3(1.0f), FM_T_BARRIER, FM_TN_BARRIER, shine, reflect, ambient);
 		loadModel(FM_M_BARRIER[21], FM_M_BARRIER[0], glm::vec3(369.668f, 1.833f, 171.542f), glm::vec3(0.0f, glm::radians(-81.369f), 0.0f), glm::vec3(1.0f), FM_T_BARRIER, FM_TN_BARRIER, shine, reflect, ambient);
 		loadModel(FM_M_BARRIER[22], FM_M_BARRIER[0], glm::vec3(369.718f, 1.833f, 166.362f), glm::vec3(0.0f, glm::radians(-100.938f), 0.0f), glm::vec3(1.0f), FM_T_BARRIER, FM_TN_BARRIER, shine, reflect, ambient);
@@ -1588,17 +1636,17 @@ void LoadModels_ForrestMap()
 			ambient = 0.25f;
 
 		loadModel(FM_M_CONTAINER[0], "res/Forrest_Area/Container/Container.obj", glm::vec3(-31.262f, 0.0f, -161.87f), glm::vec3(0.0f, glm::radians(-56.409f), 0.0f), glm::vec3(1.0f), FM_T_CONTAINER, FM_TN_CONTAINER, shine, reflect, ambient);
-		loadModel(FM_M_CONTAINER[1],  FM_M_CONTAINER[0], glm::vec3(-31.262f, 10.397f, -161.87f), glm::vec3(0.0f, glm::radians(109.951f), 0.0f), glm::vec3(1.0f), FM_T_CONTAINER, FM_TN_CONTAINER, shine, reflect, ambient);
-		loadModel(FM_M_CONTAINER[2],  FM_M_CONTAINER[0], glm::vec3(-50.499f, 0.0f, -150.363f), glm::vec3(0.0f, glm::radians(-146.494f), 0.0f), glm::vec3(1.0f), FM_T_CONTAINER, FM_TN_CONTAINER, shine, reflect, ambient);
-		loadModel(FM_M_CONTAINER[3],  FM_M_CONTAINER[0], glm::vec3(-50.499f, 10.397f, -150.363f), glm::vec3(0.0f, glm::radians(67.108f), 0.0f), glm::vec3(1.0f), FM_T_CONTAINER, FM_TN_CONTAINER, shine, reflect, ambient);
-		loadModel(FM_M_CONTAINER[4],  FM_M_CONTAINER[0], glm::vec3(-26.27f, 0.0f, -127.293f), glm::vec3(0.0f, glm::radians(166.165f), 0.0f), glm::vec3(1.0f), FM_T_CONTAINER, FM_TN_CONTAINER, shine, reflect, ambient);
-		loadModel(FM_M_CONTAINER[5],  FM_M_CONTAINER[0], glm::vec3(-26.27f, 6.034f, -144.865f), glm::vec3(glm::radians(2.238f), glm::radians(71.634f), glm::radians(30.544f)), glm::vec3(1.0f), FM_T_CONTAINER, FM_TN_CONTAINER, shine, reflect, ambient);
-		
-		loadModel(FM_M_CONTAINER[6],  FM_M_CONTAINER[0], glm::vec3(-334.474f, 0.0f, -414.971f), glm::vec3(0.0f, glm::radians(-146.494f), 0.0f), glm::vec3(1.0f), FM_T_CONTAINER, FM_TN_CONTAINER, shine, reflect, ambient);
-		loadModel(FM_M_CONTAINER[7],  FM_M_CONTAINER[0], glm::vec3(-342.599f, 0.0f, -437.529f), glm::vec3(0.0f, glm::radians(144.614f), 0.0f), glm::vec3(1.0f), FM_T_CONTAINER, FM_TN_CONTAINER, shine, reflect, ambient);
-		
-		loadModel(FM_M_CONTAINER[8],  FM_M_CONTAINER[0], glm::vec3(5.661f, 0.0f, -161.87f), glm::vec3(0.0f, glm::radians(-56.409f), 0.0f), glm::vec3(1.0f), FM_T_CONTAINER, FM_TN_CONTAINER, shine, reflect, ambient);
-		loadModel(FM_M_CONTAINER[9],  FM_M_CONTAINER[0], glm::vec3(25.421f, 0.0f, -198.133f), glm::vec3(0.0f, glm::radians(30.923f), 0.0f), glm::vec3(1.0f), FM_T_CONTAINER, FM_TN_CONTAINER, shine, reflect, ambient);
+		loadModel(FM_M_CONTAINER[1], FM_M_CONTAINER[0], glm::vec3(-31.262f, 10.397f, -161.87f), glm::vec3(0.0f, glm::radians(109.951f), 0.0f), glm::vec3(1.0f), FM_T_CONTAINER, FM_TN_CONTAINER, shine, reflect, ambient);
+		loadModel(FM_M_CONTAINER[2], FM_M_CONTAINER[0], glm::vec3(-50.499f, 0.0f, -150.363f), glm::vec3(0.0f, glm::radians(-146.494f), 0.0f), glm::vec3(1.0f), FM_T_CONTAINER, FM_TN_CONTAINER, shine, reflect, ambient);
+		loadModel(FM_M_CONTAINER[3], FM_M_CONTAINER[0], glm::vec3(-50.499f, 10.397f, -150.363f), glm::vec3(0.0f, glm::radians(67.108f), 0.0f), glm::vec3(1.0f), FM_T_CONTAINER, FM_TN_CONTAINER, shine, reflect, ambient);
+		loadModel(FM_M_CONTAINER[4], FM_M_CONTAINER[0], glm::vec3(-26.27f, 0.0f, -127.293f), glm::vec3(0.0f, glm::radians(166.165f), 0.0f), glm::vec3(1.0f), FM_T_CONTAINER, FM_TN_CONTAINER, shine, reflect, ambient);
+		loadModel(FM_M_CONTAINER[5], FM_M_CONTAINER[0], glm::vec3(-26.27f, 6.034f, -144.865f), glm::vec3(glm::radians(2.238f), glm::radians(71.634f), glm::radians(30.544f)), glm::vec3(1.0f), FM_T_CONTAINER, FM_TN_CONTAINER, shine, reflect, ambient);
+
+		loadModel(FM_M_CONTAINER[6], FM_M_CONTAINER[0], glm::vec3(-334.474f, 0.0f, -414.971f), glm::vec3(0.0f, glm::radians(-146.494f), 0.0f), glm::vec3(1.0f), FM_T_CONTAINER, FM_TN_CONTAINER, shine, reflect, ambient);
+		loadModel(FM_M_CONTAINER[7], FM_M_CONTAINER[0], glm::vec3(-342.599f, 0.0f, -437.529f), glm::vec3(0.0f, glm::radians(144.614f), 0.0f), glm::vec3(1.0f), FM_T_CONTAINER, FM_TN_CONTAINER, shine, reflect, ambient);
+
+		loadModel(FM_M_CONTAINER[8], FM_M_CONTAINER[0], glm::vec3(5.661f, 0.0f, -161.87f), glm::vec3(0.0f, glm::radians(-56.409f), 0.0f), glm::vec3(1.0f), FM_T_CONTAINER, FM_TN_CONTAINER, shine, reflect, ambient);
+		loadModel(FM_M_CONTAINER[9], FM_M_CONTAINER[0], glm::vec3(25.421f, 0.0f, -198.133f), glm::vec3(0.0f, glm::radians(30.923f), 0.0f), glm::vec3(1.0f), FM_T_CONTAINER, FM_TN_CONTAINER, shine, reflect, ambient);
 		loadModel(FM_M_CONTAINER[10], FM_M_CONTAINER[0], glm::vec3(5.661f, 0.0f, -181.868f), glm::vec3(0.0f, glm::radians(35.986f), 0.0f), glm::vec3(1.0f), FM_T_CONTAINER, FM_TN_CONTAINER, shine, reflect, ambient);
 		loadModel(FM_M_CONTAINER[11], FM_M_CONTAINER[0], glm::vec3(25.703f, 5.595f, -181.868f), glm::vec3(glm::radians(-0.822f), glm::radians(-57.57f), glm::radians(-27.23f)), glm::vec3(1.0f), FM_T_CONTAINER, FM_TN_CONTAINER, shine, reflect, ambient);
 
@@ -1791,7 +1839,7 @@ void LoadModels_ForrestMap()
 
 		multiPos = glm::vec3(-12.478f, 0.0f, -495.964f);
 		multiRot = glm::vec3(0.0f);
-		
+
 		loadModel(FM_M_BROKEN_FENCE1[0], "res/Forrest_Area/Fences/Broken_Fence/Broken1/Broken1_Logends.obj", multiPos, multiRot, glm::vec3(1.0f), FM_T_BROKENFENCE1[0], FM_TN_FENCE[0], shine, reflect, ambient);
 		loadModel(FM_M_BROKEN_FENCE1[1], "res/Forrest_Area/Fences/Broken_Fence/Broken1/Broken1_Logs.obj", multiPos, multiRot, glm::vec3(1.0f), FM_T_BROKENFENCE1[1], FM_TN_FENCE[1], shine, reflect, ambient);
 		loadModel(FM_M_BROKEN_FENCE1[2], "res/Forrest_Area/Fences/Broken_Fence/Broken1/Broken1_Planks.obj", multiPos, multiRot, glm::vec3(1.0f), FM_T_BROKENFENCE1[2], FM_TN_FENCE[2], shine, reflect, ambient);
@@ -1895,7 +1943,7 @@ void LoadModels_ForrestMap()
 		loadModel(FM_M_ROAD[0], "res/Forrest_Area/Roads/ArmyRoad.obj", glm::vec3(-130.899f, 0.125f, -254.0f), glm::vec3(0.0f), glm::vec3(1.0f), FM_T_ROAD[0], FM_TN_ROAD, shine, reflect, ambient);
 		loadModel(FM_M_ROAD[1], "res/Forrest_Area/Roads/BuildingRoad.obj", glm::vec3(191.358f, 0.15f, -293.095f), glm::radians(glm::vec3(0.000f, 90.000f, 0.000f)), glm::vec3(1.0f), FM_T_ROAD[1], FM_TN_ROAD, shine, reflect, ambient);
 		loadModel(FM_M_ROAD[2], "res/Forrest_Area/Roads/TRoad.obj", glm::vec3(-9.782f, 0.05f, 166.212f), glm::radians(glm::vec3(0.000f, 90.000f, 0.000f)), glm::vec3(1.0f), FM_T_ROAD[2], FM_TN_ROAD, shine, reflect, ambient);
-	
+
 		FM_M_ROAD[0].getModel()->setTiledAmount(glm::vec2(0.0f, 100.0f));
 		FM_M_ROAD[1].getModel()->setTiledAmount(glm::vec2(0.0f, 100.0f));
 		FM_M_ROAD[2].getModel()->setTiledAmount(glm::vec2(0.0f, 100.0f));
@@ -1986,7 +2034,7 @@ void loadRoadLight(int iteration, glm::vec3 pos, glm::vec3 rot)
 		reflect = 0.5f,
 		ambient = 0.1f;
 
-	loadModel(FM_M_ROADLIGHT[(iteration * 3)],	   FM_M_ROADLIGHT[0], pos, rot, glm::vec3(1.0f), FM_T_ROADLIGHT[0], shine, reflect, ambient);
+	loadModel(FM_M_ROADLIGHT[(iteration * 3)], FM_M_ROADLIGHT[0], pos, rot, glm::vec3(1.0f), FM_T_ROADLIGHT[0], shine, reflect, ambient);
 	FM_M_ROADLIGHT[(iteration * 3)].getModel()->setSpecularMap(FM_TS_ROADLIGHT);
 	loadModel(FM_M_ROADLIGHT[(iteration * 3) + 1], FM_M_ROADLIGHT[1], pos, rot, glm::vec3(1.0f), FM_T_ROADLIGHT[1], shine, reflect, ambient);
 	loadModel(FM_M_ROADLIGHT[(iteration * 3) + 2], FM_M_ROADLIGHT[2], pos, rot, glm::vec3(1.0f), FM_T_ROADLIGHT[2], shine, reflect, ambient);
@@ -2007,7 +2055,7 @@ void loadArmyTent(int iteration, glm::vec3 pos, glm::vec3 rot)
 		reflect = 0.1f,
 		ambient = 0.2f;
 
-	loadModel(FM_M_ARMY_TENT[(iteration * 3)],	   FM_M_ARMY_TENT[0], pos, rot, glm::vec3(1.0f), FM_T_ARMY_TENT[0], FM_TN_ARMY_TENT[0], shine, reflect, ambient);
+	loadModel(FM_M_ARMY_TENT[(iteration * 3)], FM_M_ARMY_TENT[0], pos, rot, glm::vec3(1.0f), FM_T_ARMY_TENT[0], FM_TN_ARMY_TENT[0], shine, reflect, ambient);
 	loadModel(FM_M_ARMY_TENT[(iteration * 3) + 1], FM_M_ARMY_TENT[1], pos, rot, glm::vec3(1.0f), FM_T_ARMY_TENT[1], FM_TN_ARMY_TENT[1], shine, reflect, ambient);
 	loadModel(FM_M_ARMY_TENT[(iteration * 3) + 2], FM_M_ARMY_TENT[2], pos, rot, glm::vec3(1.0f), FM_T_ARMY_TENT[2], shine, reflect, ambient);
 }
@@ -2026,7 +2074,7 @@ void loadArmyTruck(int iteration, glm::vec3 pos, glm::vec3 rot)
 		rrreflect = 0.5f,
 		rrambient = 0.2f;
 
-	loadModel(FM_M_ARMY_TRUCK[(iteration * 5)],		FM_M_ARMY_TRUCK[0], pos, rot, glm::vec3(1.0f), FM_T_ARMY_TRUCK[0], shine, reflect, ambient);
+	loadModel(FM_M_ARMY_TRUCK[(iteration * 5)], FM_M_ARMY_TRUCK[0], pos, rot, glm::vec3(1.0f), FM_T_ARMY_TRUCK[0], shine, reflect, ambient);
 	loadModel(FM_M_ARMY_TRUCK[(iteration * 5) + 1], FM_M_ARMY_TRUCK[1], pos, rot, glm::vec3(1.0f), FM_T_ARMY_TRUCK[1], rshine, rreflect, rambient);
 	loadModel(FM_M_ARMY_TRUCK[(iteration * 5) + 2], FM_M_ARMY_TRUCK[2], pos, rot, glm::vec3(1.0f), FM_T_ARMY_TRUCK[2], rshine, rreflect, rambient);
 	loadModel(FM_M_ARMY_TRUCK[(iteration * 5) + 3], FM_M_ARMY_TRUCK[3], pos, rot, glm::vec3(1.0f), FM_T_ARMY_TRUCK[3], rrshine, rrreflect, rrambient);
@@ -2463,7 +2511,7 @@ void loadModel(Model &model, // Variable to set
 {
 	// Load modeldata and set the variable.
 	model.setModel(&loader.loadObjFile(modelFilename.c_str(), false, false));
-	
+
 	// Initialise model
 	model.Initialise(pos, rot, scale);
 
