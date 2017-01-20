@@ -14,6 +14,11 @@ Player::Player()
 	animationExtraTime = 0;
 
 	active = false;
+
+	wantsToShoot = false;
+	canShoot = false;
+
+	ammo = 1;
 }
 //Destructor
 Player::~Player()
@@ -40,6 +45,8 @@ void Player::init(glm::vec3 position, glm::vec3 rotation, glm::vec3 scale, float
 	currentAnimationFrame = 0;
 
 	animationExtraTime = 0;
+
+	shooting = false;
 
 	active = false;
 	gun.Init(position, rotation);
@@ -176,4 +183,19 @@ void Player::update()
 	setRotation(rot);
 
 	gun.Update(getPosition(), getRotation());
+
+	// Reset shooting
+	shooting = false;
+
+	// If we want to shoot and we can shoot and we have bullets
+	if (wantsToShoot && canShoot && ammo > 0) {
+		shooting = true;
+		canShoot = false;
+
+		shootTimer = 0.3333;
+	}
+
+	// Shoot timer
+	if (shootTimer < 0.0) canShoot = true;
+	else shootTimer -= deltaTime;
 }

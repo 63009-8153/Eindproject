@@ -64,7 +64,7 @@ void Enemy::setActive(glm::vec3 position)
 gameobject *Enemy::getAnimModel(){
 	if (currentAnimationFrame >= enemyAnimationModels.size()) currentAnimationFrame = (enemyAnimationModels.size() - 1);
 
-	enemyAnimationModels[currentAnimationFrame].setPosition(glm::vec3(getPosition().x, getPosition().y - 2.0f, getPosition().z));
+	enemyAnimationModels[currentAnimationFrame].setPosition(glm::vec3(getPosition().x, 0.0f, getPosition().z));
 	enemyAnimationModels[currentAnimationFrame].setRotation(glm::radians(-glm::vec3(0.0f, getRotation().y + 180.0f, 0.0f)));
 	enemyAnimationModels[currentAnimationFrame].setScale(glm::vec3(0.02f));
 
