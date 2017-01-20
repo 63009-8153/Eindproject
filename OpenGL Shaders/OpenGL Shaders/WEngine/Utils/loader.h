@@ -4,6 +4,9 @@
 #include "File.h"
 #include "../GameObject/gameobject.h"
 
+extern void drawLoadingScreen();
+extern bool gameLoading;
+
 class Loader
 {
 public:

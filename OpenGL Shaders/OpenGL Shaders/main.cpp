@@ -39,6 +39,7 @@ void(*networkUpdateFunction)(void) = nullptr;
 GLFWwindow* window;
 
 SimpleAudioLib::AudioEntity* waltershoot[MAX_LOBBYSIZE];
+SimpleAudioLib::AudioEntity* ambient;
 
 float mouseSensitivity = 1.0f;
 
@@ -51,8 +52,8 @@ Loader loader;
 Camera camera;
 
 MasterRenderer modelRenderer,
-terrainRenderer,
-normalModelRenderer;
+			   terrainRenderer,
+			   normalModelRenderer;
 WaterMasterRenderer waterRenderer;
 ShadowMasterRenderer shadowRenderer;
 GuiRenderer guiRenderer;
@@ -87,33 +88,33 @@ Model SA_M_SandBag[2];
 
 GLuint	FM_T_FLATTERRAIN[5];
 GLuint	FM_T_TERRAIN,
-FM_TN_TERRAIN;
+		FM_TN_TERRAIN;
 GLuint  FM_T_AMBULANCE[5],
-FM_TN_AMBULANCE[5];
+		FM_TN_AMBULANCE[5];
 GLuint  FM_T_COMMAND_TENT,
-FM_TN_COMMAND_TENT;
+		FM_TN_COMMAND_TENT;
 GLuint  FM_T_ARMY_TENT[3],
-FM_TN_ARMY_TENT[2];
+		FM_TN_ARMY_TENT[2];
 GLuint  FM_T_ARMY_TRUCK[5];
 GLuint	FM_T_BARRIER,
-FM_TN_BARRIER;
+		FM_TN_BARRIER;
 GLuint	FM_T_CONTAINER,
-FM_TN_CONTAINER;
+		FM_TN_CONTAINER;
 GLuint	FM_T_FENCE[3],
-FM_TN_FENCE[3];
+		FM_TN_FENCE[3];
 GLuint	FM_T_BROKENFENCE1[3], FM_T_BROKENFENCE2[3],
-FM_TN_BROKENFENCE[3];
+		FM_TN_BROKENFENCE[3];
 GLuint	FM_T_ROADLIGHT[3], FM_TS_ROADLIGHT;
 GLuint	FM_T_MILITARY_BUNKER[3];
 GLuint  FM_T_TRAFFICCONE;
 GLuint	FM_T_ROAD[3],
-FM_TN_ROAD;
+		FM_TN_ROAD;
 GLuint	FM_T_STATUE,
-FM_TN_STATUE;
+		FM_TN_STATUE;
 GLuint	FM_T_RAIL[2];
 GLuint	FM_T_TOWNHOUSE;
 GLuint	FM_T_WELL,
-FM_TN_WELL;
+		FM_TN_WELL;
 GLuint  T_GUN_WALTER;
 GLuint	T_MUZZLEFLASH_WALTER;
 
@@ -137,6 +138,7 @@ Model FM_M_STATUE;
 Model FM_M_RAIL[2];
 Model FM_M_TOWNHOUSE[2];
 Model FM_M_WELL;
+
 Model GUN_WALTER;
 Model MUZZLEFLASH_WALTER[MAX_LOBBYSIZE];
 
@@ -148,7 +150,8 @@ std::vector<s_anim> enemyAnimations;
 
 std::vector<texture2D> GuiElements;
 texture2D gotoSafeArea, gotoMainMap, 
-	  buyAmmo, infoGui;
+	      buyAmmo, infoGui;
+texture2D loadScreen_Background, loadScreen_LoaderIcon;
 texture2D numbers[10];
 texture2D crossHair;
 
@@ -172,6 +175,9 @@ float fps = 0;
 int frame = 0;
 int gameState = 0;
 
+float loadIconRotation = 0.0f, loadIconScale = 90.0f;
+bool gameLoading = true;
+
 float Max_Fps = 61.5f;
 bool limit_fps = false;
 
@@ -184,6 +190,9 @@ Can be one of the following:
 int AAType = FXAA;
 
 // ===  FUNCTIONS  ===
+
+// Generic function to draw the load screen. This function will take care of the rotation
+void drawLoadingScreen();
 
 // Load a model with only a texture
 void loadModel(Model &model, std::string modelFilename, glm::vec3 pos, glm::vec3 rot, glm::vec3 scale, GLuint textureID, float shineDamper, float reflectivity, float ambientLight);
@@ -215,6 +224,11 @@ void renderWaterCubeMap();
 
 // Load and initialise all waterTiles
 void loadAndInitialiseWater();
+
+// Load and intialise the loadscreen images
+void loadAndInitialiseLoadScreen();
+// Draw all the load screen images and set the loader rotation
+void drawLoadScreen(float rotation, float scale);
 // Load and initialise all GUI elements
 void loadAndInitialiseGUI();
 // Load and initialise all framebuffers
@@ -264,15 +278,17 @@ void loadTreeModels();
 
 
 int main() {
-
 	// Initialise the audioSystem
 	SimpleAudioLib::CoreSystem& audioSystem = SimpleAudioLib::CoreSystem::getInstance();
 	audioSystem.initWithDefaultDevice();
 
-	/* This is code to load a sound file and then play it */
+	// Load all sounds to be used for shooting
 	for (unsigned int i = 0; i < MAX_LOBBYSIZE; i++) {
 		waltershoot[i] = audioSystem.createAudioEntityFromFile("res/Sounds/WalterShoot.wav");
 	}
+	// Load the ambient sound
+	ambient = audioSystem.createAudioEntityFromFile("res/Sounds/AmbientLoop.wav");
+	ambient->setGain(0.4f);
 
 	// ===============  GAME LOGIC ====================
 
@@ -309,6 +325,14 @@ int main() {
 	// Load and initialise all renderers
 	loadAndInitialiseRenderers();
 
+	// == Draw the first loadscreen image ==
+
+	// Load and initialise the loadscreen images
+	loadAndInitialiseLoadScreen();
+
+	// Draw the loadscreen for the first time
+	drawLoadScreen(0.0f, 90.0f);
+
 	// ===  SKYBOX  ===
 	loadSkybox();
 
@@ -327,6 +351,8 @@ int main() {
 	loadGraphics();
 	// Load all models and initialise
 	loadModels();
+
+	gameLoading = false;
 
 	// ============  NETWORKING LOGIC =================
 
@@ -351,6 +377,8 @@ int main() {
 
 	//Mouse button input
 	glfwSetInputMode(window, GLFW_STICKY_MOUSE_BUTTONS, 1);
+
+	ambient->play(true);
   
 	do {
 
@@ -854,23 +882,33 @@ void loadAndInitialiseWater()
 // Load and intialise the loadscreen images
 void loadAndInitialiseLoadScreen() {
 	// Load and initialise the loadscreen background
-	loadScreen_Background.loadImage("res/GUI/loadingscreenBackground.bmp", true);
+	loadScreen_Background.loadImage("res/GUI/loadingscreenBackground.bmp", true, false);
 	loadScreen_Background.setScale(glm::vec2(1.0f));
-	loadScreen_Background.setPosition(glm::vec2(0.0f));
+	loadScreen_Background.setPosition(glm::vec2(1.0f));
 	
 	// Load and initialise the loadicon image
-	loadScreen_LoaderIcon.loadImage("res/GUI/loadicon.bmp", true);
+	loadScreen_LoaderIcon.loadImage("res/GUI/loadicon.bmp", true, false);
 	loadScreen_LoaderIcon.setScale(glm::vec2(0.15f));
-	loadScreen_LoaderIcon.setPosition(glm::vec2(1.83f));
+	loadScreen_LoaderIcon.setPosition(glm::vec2(1.83f, 0.17));
 	loadScreen_LoaderIcon.setRotation(0.0f);
 }
-void drawLoadScreen(float rotation) {
+void drawLoadingScreen()
+{
+	loadIconRotation += 2.5f;
+	loadIconScale += 5.0f;
+
+	float scale = 0.14f + (0.01 * ((sin(glm::radians(loadIconScale)) + 1.0f) / 2.0f));
+	float rotation = sin(glm::radians(loadIconRotation)) * 45.0f;
+	drawLoadScreen(rotation, scale);
+}
+void drawLoadScreen(float rotation, float scale) {
 	MasterRenderer::prepare();
 
 	// Draw the loading background at the back
 	loadScreen_Background.Draw(guiRenderer.shader, guiRenderer.quad);
 
 	// Set the loader icon rotation and draw this
+	loadScreen_LoaderIcon.setScale(glm::vec2(scale));
 	loadScreen_LoaderIcon.setRotation(rotation);
 	loadScreen_LoaderIcon.Draw(guiRenderer.shader, guiRenderer.quad);
 
