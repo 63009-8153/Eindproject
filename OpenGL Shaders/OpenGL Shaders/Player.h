@@ -45,6 +45,11 @@ class Player : public Model
 
 		bool active;
 
+		bool shooting, wantsToShoot, canShoot;
+		double shootTimer;
+
+		int ammo;
+
 	private:
 
 		int currentAnimationType,

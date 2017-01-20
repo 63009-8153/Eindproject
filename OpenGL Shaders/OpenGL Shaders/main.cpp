@@ -38,7 +38,7 @@ void (*networkUpdateFunction)(void) = nullptr;
 
 GLFWwindow* window;
 
-SimpleAudioLib::AudioEntity* sound;
+SimpleAudioLib::AudioEntity* waltershoot[MAX_LOBBYSIZE];
 
 float mouseSensitivity = 1.0f;
 
@@ -115,6 +115,7 @@ GLuint	FM_T_TOWNHOUSE;
 GLuint	FM_T_WELL,
 		FM_TN_WELL;
 GLuint  T_GUN_WALTER;
+GLuint	T_MUZZLEFLASH_WALTER;
 
 Tree  trees;
 Terrain FM_M_FLATTERRAIN;
@@ -137,6 +138,7 @@ Model FM_M_RAIL[2];
 Model FM_M_TOWNHOUSE[2];
 Model FM_M_WELL;
 Model GUN_WALTER;
+Model MUZZLEFLASH_WALTER[MAX_LOBBYSIZE];
 
 std::vector<gameobject> animationModels;
 std::vector<s_anim> playerAnimations;
@@ -266,11 +268,9 @@ int main() {
 	audioSystem.initWithDefaultDevice();
 
 	/* This is code to load a sound file and then play it */
-	sound = audioSystem.createAudioEntityFromFile("res/Sounds/tada.wav");
-	// Play sound
-	//sound->play(true);
-
-	player.active = true;
+	for (unsigned int i = 0; i < MAX_LOBBYSIZE; i++) {
+		waltershoot[i] = audioSystem.createAudioEntityFromFile("res/Sounds/WalterShoot.wav");
+	}
 
 	// ===============  GAME LOGIC ====================
 
@@ -348,13 +348,8 @@ int main() {
 	// Set the mouse in the middle of the screen at start so there is no unwanted staring rotation
 	handleMouseInput(true);
 
-	/*
 	//Mouse button input
 	glfwSetInputMode(window, GLFW_STICKY_MOUSE_BUTTONS, 1);
-	int state = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
-	if (state == GLFW_PRESS)
-		upgrade_cow();
-	*/
 	
 	do {
 
@@ -505,7 +500,13 @@ int main() {
 			}
 		}
 
-		modelRenderer.addToRenderList(player.gun.gun_model.getModel());
+		if(player.health > 0) modelRenderer.addToRenderList(player.gun.gun_model.getModel());
+
+		if (player.shooting && player.health > 0) {
+			MUZZLEFLASH_WALTER[0].setPosition(player.gun.gun_model.getPosition());
+			MUZZLEFLASH_WALTER[0].setRotation(player.gun.gun_model.getRotation());
+			modelRenderer.addToRenderList(MUZZLEFLASH_WALTER[0].getModel());
+		}
 
 		//Add water to the renderer list
 		//waterRenderer.addToRenderList(&water);
@@ -531,7 +532,7 @@ int main() {
 			GuiElements.push_back(gotoMainMap);
 		}
 		
-		GuiElements.push_back(crossHair);
+		if (player.health > 0) GuiElements.push_back(crossHair);
 
 		glFinish();
 		frameStartTime = glfwGetTime();
@@ -552,11 +553,24 @@ int main() {
 
 			// Render own player animation
 			//player.getAnimModel()->Draw(modelRenderer.shader, lights, &camera, glm::vec4(0, -1, 0, 100000));
+			
+			// Check if own player is shooting
+			if (player.shooting && player.health > 0) {
+				//printf("Ownplayer has shot!\n");
+				waltershoot[0]->rewind();
+				waltershoot[0]->play();
+			}
 
 			// Render all other player's animations
 			for (int i = 0; i < MAX_LOBBYSIZE; i++) {
 				if (otherPlayers[i].active) {
 					otherPlayers[i].getAnimModel()->Draw(modelRenderer.shader, lights, &camera, glm::vec4(0, -1, 0, 100000));
+					// Other player is shooting
+					if (otherPlayers[i].shooting) {
+						//printf("Player %d has shot!\n", i);
+						waltershoot[i]->rewind();
+						waltershoot[i]->play();
+					}
 				}
 			}
 
@@ -648,6 +662,8 @@ int main() {
 		for (int i = 0; i < MAX_LOBBYSIZE; i++) {
 			// Update all other player's animation
 			otherPlayers[i].updateAnimation(otherPlayers[i].networkAnimType);
+
+			if (otherPlayers[i].shooting) otherPlayers[i].shooting = false;
 		}
 
 		for (int i = 0; i < MAX_ENEMIES; i++) {
@@ -754,8 +770,14 @@ void handleGameInput()
 	// Handle input of sprinting
 	if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) client.addActionType(MOVE_RUN);
 	
+	// Reset wants to shoot
+	player.wantsToShoot = false;
+
 	// Handle input of shooting
-	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) client.addActionType(SHOOT);
+	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
+		client.addActionType(SHOOT);
+		player.wantsToShoot = true;
+	}
 	
 	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) client.addActionType(JUMP);
 
@@ -1339,6 +1361,11 @@ void loadModels()
 
 	T_GUN_WALTER = loader.loadTexture("res/Gun/walter_pk_48/black.bmp", true);
 	loadModel(GUN_WALTER, "res/Gun/walter_pk_48/walter.obj", glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1.0f), T_GUN_WALTER, 100.0f, 0.1f, 0.4f);
+
+	T_MUZZLEFLASH_WALTER = loader.loadTexture("res/Gun/walter_pk_48/muzzleFlash.bmp", true);
+	for (unsigned int i = 0; i < MAX_LOBBYSIZE; i++) {
+		loadModel(MUZZLEFLASH_WALTER[i], "res/Gun/walter_pk_48/muzzleFlashObj.obj", glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1.0f), T_MUZZLEFLASH_WALTER, 100.0f, 0.1f, 0.4f);
+	}
 }
 // Load Safe Area Models
 void loadModels_SafeArea()
