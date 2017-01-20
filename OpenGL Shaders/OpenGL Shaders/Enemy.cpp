@@ -64,7 +64,7 @@ void Enemy::setActive(glm::vec3 position)
 gameobject *Enemy::getAnimModel(){
 	if (currentAnimationFrame >= enemyAnimationModels.size()) currentAnimationFrame = (enemyAnimationModels.size() - 1);
 
-	enemyAnimationModels[currentAnimationFrame].setPosition(getPosition());
+	enemyAnimationModels[currentAnimationFrame].setPosition(glm::vec3(getPosition().x, getPosition().y - 2.0f, getPosition().z));
 	enemyAnimationModels[currentAnimationFrame].setRotation(glm::radians(-glm::vec3(0.0f, getRotation().y + 180.0f, 0.0f)));
 	enemyAnimationModels[currentAnimationFrame].setScale(glm::vec3(0.02f));
 
@@ -74,7 +74,7 @@ gameobject *Enemy::getAnimModel(){
 s_anim Enemy::loadAnimations(char * animationFolder, std::vector<gameobject> &gameobjects, int startframe, int frames, double fps, bool loop)
 {
 	s_anim a;
-	a.startframe = enemyAnimationModels.size();
+	a.startframe = startframe;
 	a.endframe = a.startframe + (frames - 1);
 	a.loop = loop;
 	a.fps = fps;
@@ -112,8 +112,10 @@ void Enemy::createAnimationModels()
 
 void Enemy::updateAnimation(int currentType)
 {
-	if (!active) return;
-	if (currentType < 0 || currentType > 5) currentType = currentAnimationType;
+	if (!active) {
+		return;
+	}
+	if (currentType < 0 || currentType > 2) currentType = currentAnimationType;
 
 	bool animationEnded = false;
 
