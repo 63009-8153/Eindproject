@@ -49,7 +49,8 @@ void Player::init(glm::vec3 position, glm::vec3 rotation, glm::vec3 scale, float
 	shooting = false;
 
 	active = false;
-	//gun.Init(position, rotation);
+	
+	gun.Init(position, rotation);
 }
 
 //Set the amount of damage the player does.

@@ -38,6 +38,7 @@ void(*networkUpdateFunction)(void) = nullptr;
 
 GLFWwindow* window;
 
+SimpleAudioLib::AudioEntity* zombieGrawl[MAX_ENEMIES];
 SimpleAudioLib::AudioEntity* waltershoot[MAX_LOBBYSIZE];
 SimpleAudioLib::AudioEntity* ambient;
 
@@ -282,9 +283,15 @@ int main() {
 	SimpleAudioLib::CoreSystem& audioSystem = SimpleAudioLib::CoreSystem::getInstance();
 	audioSystem.initWithDefaultDevice();
 
+	// Load all sounds to be used for the zombies
+	for (unsigned int i = 0; i < MAX_LOBBYSIZE; i++) {
+		//zombieGrawl[i] = audioSystem.createAudioEntityFromFile("res/Sounds/.wav");
+		//zombieGrawl[i]->setGain(0.8f);
+	}
 	// Load all sounds to be used for shooting
 	for (unsigned int i = 0; i < MAX_LOBBYSIZE; i++) {
 		waltershoot[i] = audioSystem.createAudioEntityFromFile("res/Sounds/WalterShoot.wav");
+		waltershoot[i]->setGain(0.8f);
 	}
 	// Load the ambient sound
 	ambient = audioSystem.createAudioEntityFromFile("res/Sounds/AmbientLoop.wav");
@@ -301,8 +308,6 @@ int main() {
 	// ========  Initialise  ==========
 	last_render_time = glfwGetTime();
 
-	//TODO: StartScreen Loop here
-
 	// ===  DISPLAY  ===
 	//Create a display and initialise GLEW
 	DisplayManager::createDisplay(SCREEN_WIDTH, SCREEN_HEIGHT, PROGRAM_NAME, false);
@@ -316,9 +321,6 @@ int main() {
 	camera.Set(glm::vec3(0, 10, 0), glm::vec3(0, 0, 0));
 
 	// ===  Framebuffers  ===
-
-	//Initialise framebuffer for cubemap texture waterReflection
-	//waterReflection.initialseFrameBuffer(1280);
 
 	// Load and initialise all framebuffers
 	loadAllFrameBuffers();
@@ -366,7 +368,6 @@ int main() {
 	gameState = 1;
 
 	player.init(glm::vec3(0), glm::vec3(0), glm::vec3(0), 100);
-	//player.active = true;
 
 	// Hide the cursor
 	DisplayManager::gameCursor();
@@ -378,13 +379,10 @@ int main() {
 	//Mouse button input
 	glfwSetInputMode(window, GLFW_STICKY_MOUSE_BUTTONS, 1);
 
+	// Start playing the ambient sound in a loop
 	ambient->play(true);
   
 	do {
-
-		//renderWaterCubeMap();
-		//GuiElements[0].rotation = (float)frame / 100.0f;
-
 		//Prepare rendering on default framebuffer
 		MasterRenderer::prepare();
 
@@ -536,17 +534,10 @@ int main() {
 			modelRenderer.addToRenderList(MUZZLEFLASH_WALTER[0].getModel());
 		}
 
-		//Add water to the renderer list
-		//waterRenderer.addToRenderList(&water);
-
 		/* =============== Start of rendering ===================== */
-
-		//Render reflection and refraction texture of the water
-		//renderWaterTextures();
 
 		//Render the shadow texture
 		//renderShadowTexture(&sun);
-
 
 		// If we can use the useable object at the position we want to draw text that shows the user can use the object by pressing a button
 		// Check if we want and can use one of the positions that make the player go to the safe area
@@ -559,6 +550,7 @@ int main() {
 			// Teleport to the position in the main map
 			GuiElements.push_back(gotoMainMap);
 		}
+
 		// Check if we want and can buy ammo
 		if (player.canUse(glm::vec3(1294.302f, 1, 2.409f), USE_DISTANCE) || player.canUse(glm::vec3(1296.043f, 1, 12.514f), USE_DISTANCE) || player.canUse(glm::vec3(1303.414f, 1, -13.289f), USE_DISTANCE)) {
 			//Show text for buying ammo
@@ -568,14 +560,13 @@ int main() {
 		if (player.health > 0) GuiElements.push_back(crossHair);
 		GuiElements.push_back(infoGui);
 
-		glFinish();
 		frameStartTime = glfwGetTime();
 
 		//Render scene to multisampled anti-aliased framebuffer
 		sceneRenderer.bindRenderToTextureFrameBuffer();
 		MasterRenderer::prepare();
 
-		//Render everything
+		// == Render everything ==
 
 		skybox.render(&camera);
 
@@ -585,30 +576,15 @@ int main() {
 		modelRenderer.render(lights, &camera, glm::vec4(0, -1, 0, 100000));
 		normalModelRenderer.render(lights, &camera, glm::vec4(0, -1, 0, 100000));
 
-
-			// Render own player animation
-			//player.getAnimModel()->Draw(modelRenderer.shader, lights, &camera, glm::vec4(0, -1, 0, 100000));
+		// Render own player animation
+		//player.getAnimModel()->Draw(modelRenderer.shader, lights, &camera, glm::vec4(0, -1, 0, 100000));
 			
-			// Check if own player is shooting
-			if (player.shooting && player.health > 0) {
-				//printf("Ownplayer has shot!\n");
-				waltershoot[0]->rewind();
-				waltershoot[0]->play();
+		// Render all other player's animations
+		for (int i = 0; i < MAX_LOBBYSIZE; i++) {
+			if (otherPlayers[i].active) {
+				otherPlayers[i].getAnimModel()->Draw(modelRenderer.shader, lights, &camera, glm::vec4(0, -1, 0, 100000));
 			}
-
-			// Render all other player's animations
-			for (int i = 0; i < MAX_LOBBYSIZE; i++) {
-				if (otherPlayers[i].active) {
-					otherPlayers[i].getAnimModel()->Draw(modelRenderer.shader, lights, &camera, glm::vec4(0, -1, 0, 100000));
-					// Other player is shooting
-					if (otherPlayers[i].shooting) {
-						//printf("Player %d has shot!\n", i);
-						waltershoot[i]->rewind();
-						waltershoot[i]->play();
-					}
-				}
-			}
-		
+		}
 
 		// Render all enemy animations
 		for (int i = 0; i < MAX_ENEMIES; i++) {
@@ -619,11 +595,7 @@ int main() {
 			}
 		}
 		
-
 		sceneRenderer.unbindFrameBuffer();
-
-		glFinish();
-		debugTime = glfwGetTime();
 
 		/* =================== Post processing below! ============== */
 
@@ -665,7 +637,8 @@ int main() {
 		// Render GuiElements
 		guiRenderer.render(&GuiElements);
 
-		//Set health
+		//Draw health text
+		if (player.health < 0) player.health = 0.0f;
 		std::string health = std::to_string((int)player.health);
 		for (int i = 0; i < health.size(); i++) {
 			const char temp = health[i];
@@ -673,7 +646,8 @@ int main() {
 			numbers[atoi(&temp)].Draw(guiRenderer.shader, guiRenderer.quad);
 		}
 
-		//Set points
+		//Draw points text
+		if (player.points < 0) player.points = 0;
 		std::string points = std::to_string(player.points);
 		for (int i = 0; i < points.size(); i++) {
 			const char temp = points[i];
@@ -681,7 +655,8 @@ int main() {
 			numbers[atoi(&temp)].Draw(guiRenderer.shader, guiRenderer.quad);
 		}
 
-		//Set ammo counter
+		//Draw ammo counter text
+		if (player.ammo < 0) player.ammo = 0;
 		std::string ammo = std::to_string(player.ammo);
 		for (int i = 0; i < ammo.size(); i++) {
 			const char temp = ammo[i];
@@ -689,7 +664,7 @@ int main() {
 			numbers[atoi(&temp)].Draw(guiRenderer.shader, guiRenderer.quad);
 		}
 
-		//Swap Buffers (Send image to the screen)
+		// == Swap Buffers (Send image to the screen) ==
 		glfwSwapBuffers(window);
 
 		/* ================== End of rendering ======================= */
@@ -719,20 +694,41 @@ int main() {
 		// Update own animation
 		player.updateAnimation(player.networkAnimType);
 
+		// Check if own player is shooting
+		if (player.shooting && player.health > 0) {
+			waltershoot[0]->rewind();
+			waltershoot[0]->play();
+		}
+
+		// Update all other players
 		for (int i = 0; i < MAX_LOBBYSIZE; i++) {
 			// Update all other player's animation
 			otherPlayers[i].updateAnimation(otherPlayers[i].networkAnimType);
 
-			if (otherPlayers[i].shooting) otherPlayers[i].shooting = false;
+			// Other player is shooting
+			if (otherPlayers[i].shooting) {
+				waltershoot[i]->rewind();
+				waltershoot[i]->play();
+
+				otherPlayers[i].shooting = false;
+			}
 		}
 
+		// Update enemies
 		for (int i = 0; i < MAX_ENEMIES; i++) {
 			// Update the enemy data with the data received from the server
 			client.getEnemyData(enemies[i], i);
 			// Update the enemy, this will also update the animation
 			enemies[i].update();
+
+			for (unsigned int i = 0; i < MAX_LOBBYSIZE; i++) {
+				glm::vec3 p = enemies[i].getPosition();
+				glm::vec3 r = enemies[i].getRotation();
+				zombieGrawl[i]->setPosition(p.x, p.y, p.z);
+			}
 		}
 
+		// Update players
 		// Get and update the player with its new position, it's health and the rest But not the rotation!!!
 		client.getPlayerData(player);
 		for (int i = 0; i < MAX_LOBBYSIZE; i++) {
@@ -748,8 +744,12 @@ int main() {
 		camera.position = player.getPosition();
 		camera.position.y = 6.0f;
 
+		audioSystem.setListenerPosition(camera.position.x, camera.position.y, camera.position.z);
+		ambient->setPosition(camera.position.x, camera.position.y, camera.position.z);
+		waltershoot[0]->setPosition(camera.position.x, camera.position.y, camera.position.z);
+
 		//Set title to hold fps info
-		std::string fpsStr = std::string(PROGRAM_NAME) + " FPS: " + std::to_string(fps) + " deltaTime: " + std::to_string(deltaTime * 100) /*+ " Mouse: x: " + std::to_string(rot.x) + " y: " + std::to_string(rot.y)*/;
+		std::string fpsStr = std::string(PROGRAM_NAME) + " FPS: " + std::to_string(fps) + " deltaTime: " + std::to_string(deltaTime * 100);
 		DisplayManager::setDisplayTitle(fpsStr.c_str());
 
 		if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) gameState = 0;
@@ -915,6 +915,7 @@ void drawLoadScreen(float rotation, float scale) {
 	// Send the image to the screen.
 	glfwSwapBuffers(window);
 }
+
 // Load and initialise all GUI elements
 void loadAndInitialiseGUI()
 {
