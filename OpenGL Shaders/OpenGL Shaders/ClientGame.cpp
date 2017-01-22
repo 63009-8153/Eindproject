@@ -197,6 +197,11 @@ void ClientGame::getPlayerData(Player & player, int index)
 		player.maxHealth = allClients[index].maxHealth;
 		player.ammo = allClients[index].ammo;
 		player.points = allClients[index].points;
+
+		if (allClients[index].currentWeapon >= 0 && allClients[index].currentWeapon < 2) {
+			player.currentGun = allClients[index].currentWeapon;
+		}
+
 		player.networkAnimType = allClients[index].animType;
 	}
 }
@@ -222,6 +227,11 @@ void ClientGame::getPlayerData(Player & player)
 			player.setVelocity(allClients[i].velocity);
 			player.ammo = allClients[i].ammo;
 			player.points = allClients[i].points;
+
+			if (allClients[i].currentWeapon >= 0 && allClients[i].currentWeapon < 2) {
+				player.currentGun = allClients[i].currentWeapon;
+			}
+			
 			player.networkAnimType = allClients[i].animType;
 			return;
 		}

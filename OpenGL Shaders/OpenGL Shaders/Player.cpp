@@ -18,6 +18,8 @@ Player::Player()
 	wantsToShoot = false;
 	canShoot = false;
 
+	currentGun = 0;
+
 	ammo = 1;
 }
 //Destructor
@@ -49,8 +51,38 @@ void Player::init(glm::vec3 position, glm::vec3 rotation, glm::vec3 scale, float
 	shooting = false;
 
 	active = false;
-	
-	gun.Init(position, rotation);
+	currentGun = 0;
+}
+
+void Player::initGun(int index, Model & gunModel, Model &gunMuzzleFlash, double shootingTime)
+{
+	gun[index].Init(getPosition(), getRotation(), gunModel, gunMuzzleFlash, shootingTime);
+}
+
+void Player::setGunSounds(int gunIndex, SimpleAudioLib::CoreSystem & audioSystem, const char * filepath, unsigned int iterations, float gain)
+{
+	gun[gunIndex].createSound(audioSystem, filepath, iterations, gain);
+}
+
+void Player::playShootSound()
+{
+	gun[currentGun].playSound();
+}
+
+void Player::cleanupSounds()
+{
+	gun[0].cleanupSound();
+	gun[1].cleanupSound();
+}
+
+Model * Player::getGunModel()
+{
+	return gun[currentGun].getGunModel();
+}
+
+Model * Player::getGunMuzzleFlash()
+{
+	return gun[currentGun].getGunMuzzleFlash();
 }
 
 //Set the amount of damage the player does.
@@ -183,7 +215,7 @@ void Player::update()
 	// Set the player rotation from mouse input
 	setRotation(rot);
 
-	gun.Update(getPosition(), getRotation());
+	gun[currentGun].Update(getPosition(), getRotation());
 
 	// Reset shooting
 	shooting = false;
@@ -193,10 +225,12 @@ void Player::update()
 		shooting = true;
 		canShoot = false;
 
-		shootTimer = 0.3333;
+		shootTimer = gun[currentGun].getShootTimer();
 	}
 
 	// Shoot timer
 	if (shootTimer < 0.0) canShoot = true;
 	else shootTimer -= deltaTime;
+
+	printf("CurrentGun: %d\n", currentGun);
 }

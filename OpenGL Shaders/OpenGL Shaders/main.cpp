@@ -39,7 +39,6 @@ void(*networkUpdateFunction)(void) = nullptr;
 GLFWwindow* window;
 
 SimpleAudioLib::AudioEntity* zombieGrawl[MAX_ENEMIES];
-SimpleAudioLib::AudioEntity* waltershoot[MAX_LOBBYSIZE];
 SimpleAudioLib::AudioEntity* ambient;
 
 float mouseSensitivity = 1.0f;
@@ -116,8 +115,8 @@ GLuint	FM_T_RAIL[2];
 GLuint	FM_T_TOWNHOUSE;
 GLuint	FM_T_WELL,
 		FM_TN_WELL;
-GLuint  T_GUN_WALTER;
-GLuint	T_MUZZLEFLASH_WALTER;
+GLuint  T_GUN_WALTER, T_MUZZLEFLASH_WALTER;
+GLuint  T_GUN_AK47, T_MUZZLEFLASH_AK47;
 
 Tree  trees;
 Terrain FM_M_FLATTERRAIN;
@@ -140,8 +139,8 @@ Model FM_M_RAIL[2];
 Model FM_M_TOWNHOUSE[2];
 Model FM_M_WELL;
 
-Model GUN_WALTER;
-Model MUZZLEFLASH_WALTER[MAX_LOBBYSIZE];
+Model GUN_WALTER, MUZZLEFLASH_WALTER;
+Model GUN_AK47, MUZZLEFLASH_AK47;
 
 std::vector<gameobject> animationModels;
 std::vector<s_anim> playerAnimations;
@@ -214,6 +213,8 @@ void loadModel(Model &model, Model &oriModel, glm::vec3 pos, glm::vec3 rot, glm:
 glm::vec2 handleMouseInput(bool trapMouseInWindow);
 // Handle user input
 void handleGameInput();
+// Scroll callback function
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 // Update time stuff
 void updateTime();
 // Render water textures
@@ -288,11 +289,10 @@ int main() {
 		//zombieGrawl[i] = audioSystem.createAudioEntityFromFile("res/Sounds/.wav");
 		//zombieGrawl[i]->setGain(0.8f);
 	}
-	// Load all sounds to be used for shooting
-	for (unsigned int i = 0; i < MAX_LOBBYSIZE; i++) {
-		waltershoot[i] = audioSystem.createAudioEntityFromFile("res/Sounds/WalterShoot.wav");
-		waltershoot[i]->setGain(0.8f);
-	}
+
+	player.setGunSounds(0, audioSystem, "res/Sounds/WalterShoot.wav", 2, 0.8f);
+	player.setGunSounds(1, audioSystem, "res/Sounds/AK47Shoot.wav", 10, 0.8f);
+
 	// Load the ambient sound
 	ambient = audioSystem.createAudioEntityFromFile("res/Sounds/AmbientLoop.wav");
 	ambient->setGain(0.4f);
@@ -345,6 +345,8 @@ int main() {
 	//Set input mode
 	glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
 
+	glfwSetScrollCallback(window, scroll_callback);
+
 	//Set input callback
 	//glfwSetKeyCallback(window, keyfun);
 
@@ -368,6 +370,8 @@ int main() {
 	gameState = 1;
 
 	player.init(glm::vec3(0), glm::vec3(0), glm::vec3(0), 100);
+	player.initGun(0, GUN_WALTER, MUZZLEFLASH_WALTER, 0.333);
+	player.initGun(1, GUN_AK47, MUZZLEFLASH_AK47, 0.13);
 
 	// Hide the cursor
 	DisplayManager::gameCursor();
@@ -526,12 +530,10 @@ int main() {
 			}
 		}
 
-		if(player.health > 0) modelRenderer.addToRenderList(player.gun.gun_model.getModel());
+		if(player.health > 0) modelRenderer.addToRenderList(player.getGunModel()->getModel());
 
 		if (player.shooting && player.health > 0) {
-			MUZZLEFLASH_WALTER[0].setPosition(player.gun.gun_model.getPosition());
-			MUZZLEFLASH_WALTER[0].setRotation(player.gun.gun_model.getRotation());
-			modelRenderer.addToRenderList(MUZZLEFLASH_WALTER[0].getModel());
+			//modelRenderer.addToRenderList(player.getGunMuzzleFlash()->getModel());
 		}
 
 		/* =============== Start of rendering ===================== */
@@ -696,8 +698,9 @@ int main() {
 
 		// Check if own player is shooting
 		if (player.shooting && player.health > 0) {
-			waltershoot[0]->rewind();
-			waltershoot[0]->play();
+			player.playShootSound();
+
+			modelRenderer.addToRenderList(player.getGunMuzzleFlash()->getModel());
 		}
 
 		// Update all other players
@@ -707,9 +710,7 @@ int main() {
 
 			// Other player is shooting
 			if (otherPlayers[i].shooting) {
-				waltershoot[i]->rewind();
-				waltershoot[i]->play();
-
+				
 				otherPlayers[i].shooting = false;
 			}
 		}
@@ -724,7 +725,7 @@ int main() {
 			for (unsigned int i = 0; i < MAX_LOBBYSIZE; i++) {
 				glm::vec3 p = enemies[i].getPosition();
 				glm::vec3 r = enemies[i].getRotation();
-				zombieGrawl[i]->setPosition(p.x, p.y, p.z);
+				//zombieGrawl[i]->setPosition(p.x, p.y, p.z);
 			}
 		}
 
@@ -746,7 +747,6 @@ int main() {
 
 		audioSystem.setListenerPosition(camera.position.x, camera.position.y, camera.position.z);
 		ambient->setPosition(camera.position.x, camera.position.y, camera.position.z);
-		waltershoot[0]->setPosition(camera.position.x, camera.position.y, camera.position.z);
 
 		//Set title to hold fps info
 		std::string fpsStr = std::string(PROGRAM_NAME) + " FPS: " + std::to_string(fps) + " deltaTime: " + std::to_string(deltaTime * 100);
@@ -778,10 +778,10 @@ int main() {
 	glfwTerminate();
 
 	// Clean up audio
-	for (unsigned int i = 0; i < MAX_LOBBYSIZE; i++) {
-		delete waltershoot[i];
-		waltershoot[i] = NULL;
-	}
+	player.cleanupSounds();
+
+	delete ambient;
+	ambient = NULL;
 
 	SimpleAudioLib::CoreSystem::release();
 }
@@ -847,7 +847,11 @@ void handleGameInput()
 	if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) client.addActionType(USE);
 
 	// Handle input of reloading
-	if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) client.addActionType(RELOAD);
+	//if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) client.addActionType(RELOAD);
+}
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
+{
+	client.addActionType(SWITCH);
 }
 // Update time stuff
 void updateTime()
@@ -1476,13 +1480,19 @@ void loadModels()
 	// If loading the animations is not done yet, wait for it here and then create vao's for all objects
 	endLoadAnimations();
 
+	// Walter pistol
 	T_GUN_WALTER = loader.loadTexture("res/Gun/walter_pk_48/black.bmp", true);
 	loadModel(GUN_WALTER, "res/Gun/walter_pk_48/walter.obj", glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1.0f), T_GUN_WALTER, 100.0f, 0.1f, 0.4f);
 
 	T_MUZZLEFLASH_WALTER = loader.loadTexture("res/Gun/walter_pk_48/muzzleFlash.bmp", true);
-	for (unsigned int i = 0; i < MAX_LOBBYSIZE; i++) {
-		loadModel(MUZZLEFLASH_WALTER[i], "res/Gun/walter_pk_48/muzzleFlashObj.obj", glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1.0f), T_MUZZLEFLASH_WALTER, 100.0f, 0.1f, 0.4f);
-	}
+	loadModel(MUZZLEFLASH_WALTER, "res/Gun/walter_pk_48/muzzleFlashObj.obj", glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1.0f), T_MUZZLEFLASH_WALTER, 100.0f, 0.1f, 0.4f);
+
+	// AK47 rifle
+	T_GUN_AK47 = loader.loadTexture("res/Gun/ak-47/AK-47Texture.bmp", true);
+	loadModel(GUN_AK47, "res/Gun/ak-47/AK-47Model.obj", glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1.0f), T_GUN_AK47, 100.0f, 0.1f, 0.4f);
+
+	T_MUZZLEFLASH_AK47 = loader.loadTexture("res/Gun/ak-47/muzzleFlash.bmp", true);
+	loadModel(MUZZLEFLASH_AK47, "res/Gun/ak-47/muzzleFlashObj.obj", glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1.0f), T_MUZZLEFLASH_AK47, 100.0f, 0.1f, 0.4f);
 }
 // Load Safe Area Models
 void loadModels_SafeArea()
@@ -2579,7 +2589,7 @@ void loadModel(Model &model, // Variable to set
 	float ambientLight) // Reflectivity
 {
 	// Load modeldata and set the variable.
-	model.setModel(&loader.loadObjFile(modelFilename.c_str(), false, false));
+	model.setModel(&loader.loadObjFile(modelFilename.c_str(), true, false));
 
 	// Initialise model
 	model.Initialise(pos, rot, scale);

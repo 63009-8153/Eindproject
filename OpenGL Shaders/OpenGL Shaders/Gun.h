@@ -5,20 +5,33 @@
 
 #include "Model.h"
 
-extern Model GUN_WALTER;
+#include "SAL/CoreSystem.h"
 
 class Gun
 {
-public:
-	Gun();
-	~Gun();
+	public:
+		Gun();
+		~Gun();
 
-	Model gun_model;
+		void Init(glm::vec3 position, glm::vec3 rotation, Model &gunModel, Model &gunMuzzleFlash, double Timer);
+		void Update(glm::vec3 position, glm::vec3 rotation);
 
-	void Init(glm::vec3 position, glm::vec3 rotation);
-	void Update(glm::vec3 position, glm::vec3 rotation);
+		void createSound(SimpleAudioLib::CoreSystem& audioSystem, const char * filepath, unsigned int iterations, float gain = 1.0f);
+		void playSound();
 
-private:
+		Model* getGunModel();
+		Model* getGunMuzzleFlash();
 
+		double getShootTimer();
+
+		void cleanupSound();
+
+	private:
+		Model gun_model;
+		Model gun_muzzleflash;
+		double shootTimer;
+
+		std::vector<SimpleAudioLib::AudioEntity*> shootSounds;
+		int currentSound;
 };
 #endif // !__GUN__
