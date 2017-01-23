@@ -231,6 +231,4 @@ void Player::update()
 	// Shoot timer
 	if (shootTimer < 0.0) canShoot = true;
 	else shootTimer -= deltaTime;
-
-	printf("CurrentGun: %d\n", currentGun);
 }

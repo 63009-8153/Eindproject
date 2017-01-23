@@ -17,6 +17,8 @@ typedef struct {
 	// All enemy data
 	enemyData enemies[MAX_ENEMIES];
 
+	long float checkSum;
+
 	void serialize(char * data) {
 		memcpy(data, this, sizeof(ClientReceivePacket));
 	}
@@ -33,6 +35,8 @@ typedef struct {
 	playerData player;
 	// My actions
 	actionTypes action_types[MAX_ACTIONS];
+
+	long float checkSum;
 
 	void serialize(char * data) {
 		memcpy(data, this, sizeof(ClientSendPacket));

@@ -1,5 +1,11 @@
 #include "ClientGame.h"
 
+namespace glm {
+	float vectorSum(vec3 v) {
+		return v.x + v.y + v.z;
+	}
+}
+
 // Constructor
 ClientGame::ClientGame() {
 	networkConnected = false;
@@ -96,25 +102,52 @@ void ClientGame::updateClient()
 				packet.deserialize(&(network_data[i]));
 				i += sizeof(ClientReceivePacket);
 
-				// Set the lobbysize
-				actualLobbySize = std::min(packet.lobbySize, (unsigned int)MAX_LOBBYSIZE);
-			
-				// Get all playerData
-				for (unsigned int k = 0; k < actualLobbySize; k++)
+				// Create checksum of all received data
+				long float checkSum = 0.0f;
+				for (unsigned int i = 0; i < MAX_LOBBYSIZE; i++)
 				{
-					allClients[k] = packet.players[k];
+					checkSum += glm::vectorSum(packet.players[i].position);
+					checkSum += glm::vectorSum(packet.players[i].rotation);
+					checkSum += packet.players[i].health;
+					checkSum += packet.players[i].ammo;
+					checkSum += packet.players[i].points;
+					checkSum += (float)packet.players[i].activePlayer;
+				}
+				for (unsigned int i = 0; i < MAX_ENEMIES; i++)
+				{
+					checkSum += glm::vectorSum(packet.enemies[i].position);
+					checkSum += glm::vectorSum(packet.enemies[i].rotation);
+					checkSum += packet.enemies[i].health;
+					checkSum += (float)packet.enemies[i].active;
+				}
+				
+				// Check if the calculated checksum is the same as the packets checksum
+				if (checkSum == packet.checkSum) {
 
-					if (myClientID == packet.players[k].playerID){
-						bool sh = myPlayerData.shooting;
+					// Set the lobbysize
+					actualLobbySize = std::min(packet.lobbySize, (unsigned int)MAX_LOBBYSIZE);
 
-						myPlayerData == packet.players[k];
+					// Get all playerData
+					for (unsigned int k = 0; k < actualLobbySize; k++)
+					{
+						allClients[k] = packet.players[k];
 
-						if (sh) myPlayerData.shooting = true;
+						if (myClientID == packet.players[k].playerID) {
+							bool sh = myPlayerData.shooting;
+
+							myPlayerData == packet.players[k];
+
+							if (sh) myPlayerData.shooting = true;
+						}
+					}
+
+					// Get all enemies
+					for (unsigned int l = 0; l < MAX_ENEMIES; l++) {
+						allEnemies[l] = packet.enemies[l];
 					}
 				}
-				// Get all enemies
-				for (unsigned int l = 0; l < MAX_ENEMIES; l++){
-					allEnemies[l] = packet.enemies[l];
+				else {
+					printf("Gamepacket received with invalid checkSum!\n");
 				}
 			}
 				break;
@@ -282,6 +315,17 @@ void ClientGame::sendPlayerData()
 	packet.packet_type = GAME_PACKET;
 
 	packet.player = myPlayerData;
+
+	// Create checksum of all received data
+	long float checkSum = 0.0f;
+	checkSum += glm::vectorSum(myPlayerData.position);
+	checkSum += glm::vectorSum(myPlayerData.rotation);
+	checkSum += myPlayerData.health;
+	checkSum += myPlayerData.ammo;
+	checkSum += myPlayerData.points;
+	checkSum += (float)myPlayerData.activePlayer;
+	// Set the calculated checksum in the packet
+	packet.checkSum = checkSum;
 
 	// Add all set actionTypes to the packet
 	for (int i = 0; i < MAX_ACTIONS; i++) {

@@ -18,6 +18,8 @@ public:
 
 	void render(std::vector<texture2D> *textures);
 
+	void cleanUp();
+
 	gameobject quad;
 	GuiShaderProgram shader;
 private:

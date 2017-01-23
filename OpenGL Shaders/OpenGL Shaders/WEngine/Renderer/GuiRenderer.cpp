@@ -49,3 +49,8 @@ void GuiRenderer::render(std::vector<texture2D> *textures)
 	glBindVertexArray(0);
 	shader.stop();
 }
+
+void GuiRenderer::cleanUp()
+{
+	shader.cleanUp();
+}

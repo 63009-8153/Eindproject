@@ -54,7 +54,6 @@ Camera camera;
 MasterRenderer modelRenderer,
 			   terrainRenderer,
 			   normalModelRenderer;
-WaterMasterRenderer waterRenderer;
 ShadowMasterRenderer shadowRenderer;
 GuiRenderer guiRenderer;
 
@@ -158,11 +157,7 @@ texture2D crossHair;
 std::vector<Light*> lights;
 Light sun, light0, light1, light2;
 
-WaterTile water;
-
 Skybox skybox;
-
-textureCubemap waterReflection;
 
 // ===  GAME INFO  ===
 glm::vec3 clearColor = glm::vec3(0.32f, 0.32f, 0.32f);
@@ -217,15 +212,8 @@ void handleGameInput();
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 // Update time stuff
 void updateTime();
-// Render water textures
-void renderWaterTextures();
 // Render shadow textures
 void renderShadowTexture(Light *shadowLight);
-// Render water cubemap : WORK IN PROGRESS :
-void renderWaterCubeMap();
-
-// Load and initialise all waterTiles
-void loadAndInitialiseWater();
 
 // Load and intialise the loadscreen images
 void loadAndInitialiseLoadScreen();
@@ -291,17 +279,17 @@ int main() {
 	}
 
 	player.setGunSounds(0, audioSystem, "res/Sounds/WalterShoot.wav", 2, 0.8f);
-	player.setGunSounds(1, audioSystem, "res/Sounds/AK47Shoot.wav", 10, 0.8f);
+	player.setGunSounds(1, audioSystem, "res/Sounds/AK47Shoot.wav", 10, 0.4f);
 
 	// Load the ambient sound
 	ambient = audioSystem.createAudioEntityFromFile("res/Sounds/AmbientLoop.wav");
-	ambient->setGain(0.4f);
+	ambient->setGain(0.5f);
 
 	// ===============  GAME LOGIC ====================
 
 	// Initialise GLFW and throw error if it failed
 	if (!glfwInit()) {
-		throw std::runtime_error("Failed to initialize GLFW");
+		throw std::runtime_error("Failed to initialize GLFW!");
 		exit(-1);
 	}
 
@@ -389,12 +377,6 @@ int main() {
 	do {
 		//Prepare rendering on default framebuffer
 		MasterRenderer::prepare();
-
-		//Change WaterMoveFactor for random(ish) water movement
-		float currentWaterMoveFactor = waterRenderer.getMoveFactor();
-		currentWaterMoveFactor += (float)(WAVE_SPEED * deltaTime);
-		if (currentWaterMoveFactor > 1) currentWaterMoveFactor -= 1;
-		waterRenderer.setMoveFactor(currentWaterMoveFactor);
 
 		/* ========= Add models to list for rendering ============== */
 
@@ -530,11 +512,7 @@ int main() {
 			}
 		}
 
-		if(player.health > 0) modelRenderer.addToRenderList(player.getGunModel()->getModel());
-
-		if (player.shooting && player.health > 0) {
-			//modelRenderer.addToRenderList(player.getGunMuzzleFlash()->getModel());
-		}
+		if(player.health > 0.0f) modelRenderer.addToRenderList(player.getGunModel()->getModel());
 
 		/* =============== Start of rendering ===================== */
 
@@ -573,7 +551,6 @@ int main() {
 		skybox.render(&camera);
 
 		terrainRenderer.render(lights, &camera, glm::vec4(0, -1, 0, 100000));
-		waterRenderer.render(lights, &camera);
 
 		modelRenderer.render(lights, &camera, glm::vec4(0, -1, 0, 100000));
 		normalModelRenderer.render(lights, &camera, glm::vec4(0, -1, 0, 100000));
@@ -675,7 +652,6 @@ int main() {
 		modelRenderer.clearRenderPass();
 		normalModelRenderer.clearRenderPass();
 		terrainRenderer.clearRenderPass();
-		waterRenderer.clearRenderPass();
 		GuiElements.clear();
 
 
@@ -710,7 +686,6 @@ int main() {
 
 			// Other player is shooting
 			if (otherPlayers[i].shooting) {
-				
 				otherPlayers[i].shooting = false;
 			}
 		}
@@ -722,11 +697,11 @@ int main() {
 			// Update the enemy, this will also update the animation
 			enemies[i].update();
 
-			for (unsigned int i = 0; i < MAX_LOBBYSIZE; i++) {
-				glm::vec3 p = enemies[i].getPosition();
-				glm::vec3 r = enemies[i].getRotation();
-				//zombieGrawl[i]->setPosition(p.x, p.y, p.z);
-			}
+			//for (unsigned int i = 0; i < MAX_LOBBYSIZE; i++) {
+			//	glm::vec3 p = enemies[i].getPosition();
+			//	glm::vec3 r = enemies[i].getRotation();
+			//	zombieGrawl[i]->setPosition(p.x, p.y, p.z);
+			//}
 		}
 
 		// Update players
@@ -766,7 +741,6 @@ int main() {
 	modelRenderer.cleanUp();
 	normalModelRenderer.cleanUp();
 	terrainRenderer.cleanUp();
-	waterRenderer.cleanUp();
 	shadowRenderer.cleanUp();
 
 	loader.cleanUp();
@@ -867,22 +841,6 @@ void updateTime()
 	frame++;
 }
 
-// Load and initialise all waterTiles
-void loadAndInitialiseWater()
-{
-	//Create a waterTile and set its attributes
-	water = WaterTile(glm::vec3(0, 2, -400), glm::vec3(0, 0, 0), glm::vec3(800, 500, 400));
-	water.setReflectionTexture(waterRenderer.getReflectionTexture());
-	water.setRefractionTexture(waterRenderer.getRefractionTexture());
-	water.setDuDvTexture(loader.loadTexture("res/Water/WaterDuDvMap.bmp", false));
-	water.setNormalMapTexture(loader.loadTexture("res/Water/WaterNormalMap.bmp", false));
-	water.setRefractionDepthTexture(waterRenderer.getRefractionDepthTexture());
-	water.getWaterTile()->setShineDamper(100);
-	water.getWaterTile()->setReflectivity(1);
-	water.getWaterTile()->setAmbientLight(0.5f);
-	water.getWaterTile()->setShadowMap(shadowRenderer.getShadowDepthTexture());
-}
-
 // Load and intialise the loadscreen images
 void loadAndInitialiseLoadScreen() {
 	// Load and initialise the loadscreen background
@@ -956,46 +914,6 @@ void loadAndInitialiseGUI()
 	crossHair.setPosition(glm::vec2(1.0f));
 }
 
-// Render water textures
-void renderWaterTextures()
-{
-	//Enable clipdistance 0
-	glEnable(GL_CLIP_DISTANCE0);
-
-	//Bind Reflection framebuffer
-	waterRenderer.bindReflectionFrameBuffer();
-	//Prepare rendering on the reflection framebuffer
-	MasterRenderer::prepare();
-
-	//Position the camera down to get the proper reflection
-	float distance = 2 * (camera.position.y - water.getWaterTile()->getPosition().y);
-	camera.position.y -= distance;
-	camera.rotation.x *= -1; //Invert pitch
-
-							 //Render all objects to the reflection of the water
-	skybox.render(&camera);
-	terrainRenderer.render(lights, &camera, glm::vec4(0, 1, 0, -water.getWaterTile()->getPosition().y + 1.0f));
-	//modelRenderer.render(lights, &camera, glm::vec4(0, 1, 0, -water.getWaterTile()->getPosition().y + 1.0f));
-	//normalModelRenderer.render(lights, &camera, glm::vec4(0, 1, 0, -water.getWaterTile()->getPosition().y));
-
-	camera.position.y += distance; //Position the camera back up
-	camera.rotation.x *= -1; //Invert pitch back to normal
-
-							 //Bind Refraction framebuffer
-	waterRenderer.bindRefractionFrameBuffer();
-	//Prepare rendering on the Refraction framebuffer
-	MasterRenderer::prepare();
-
-	//Render all elements to the refraction of the water
-	terrainRenderer.render(lights, &camera, glm::vec4(0, -1, 0, water.getWaterTile()->getPosition().y + 1.0f));
-	//modelRenderer.render(lights, &camera, glm::vec4(0, -1, 0, water.getWaterTile()->getPosition().y + 1.0f));
-	//normalModelRenderer.render(lights, &camera, glm::vec4(0, -1, 0, water.getWaterTile()->getPosition().y));
-
-	waterRenderer.unbindCurrentFrameBuffer();
-
-	//Disable clipdistance 0
-	glDisable(GL_CLIP_DISTANCE0);
-}
 // Render shadow textures
 void renderShadowTexture(Light *shadowLight)
 {
@@ -1008,53 +926,6 @@ void renderShadowTexture(Light *shadowLight)
 	shadowRenderer.render(shadowLight, &camera, &normalModelRenderer.gameobjects);
 
 	shadowRenderer.unbindCurrentFrameBuffer();
-}
-
-// Render water cubemap : WORK IN PROGRESS :
-void renderWaterCubeMap()
-{
-	/*
-	//Add normalmapped models to renderer list
-	normalModelRenderer.addToRenderList(model.getModel());
-	normalModelRenderer.addToRenderList(model2.getModel());
-	//Add terrain models to renderer list
-	terrainRenderer.addToRenderList(terrains[0].getModel());
-	terrainRenderer.addToRenderList(terrains[1].getModel());
-
-	glm::vec3 reflectionPosition = glm::vec3(0.0f, 10.0f, 0.0f); //Has to be a vec3 of the position
-	const glm::vec3 faceRotations[6] = {
-	glm::vec3(0, glm::radians(-90.0f), glm::radians(180.0f)),
-	glm::vec3(0, glm::radians(90.0f),  glm::radians(180.0f)),
-	glm::vec3(glm::radians(-90.0f), 0, 0),//
-	glm::vec3(glm::radians(90.0f),  0, 0),//
-	glm::vec3(0, glm::radians(180.0f), glm::radians(180.0f)),
-	glm::vec3(0, 0,	glm::radians(180.0f))
-	};
-
-	waterReflection.bindFrameBuffer();
-	for (unsigned int i = 0; i < 6; i++) {
-	//Bind the right side
-	waterReflection.bindFrameBufferRenderTexture(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i);
-	//Clear the buffer
-	MasterRenderer::prepare();
-	//Render
-
-	skybox.renderUpdated(&camera, 90.0f, reflectionPosition, faceRotations[i]);
-
-	//normalModelRenderer.renderUpdated(lights, &camera, glm::vec4(0, -1, 0, 100000), 90.0f, reflectionPosition, faceRotations[i]); //Normal render
-	terrainRenderer.renderUpdated(lights, &camera, glm::vec4(0, -1, 0, 100000), 90.0f, reflectionPosition, faceRotations[i]); //Normal render
-
-	//glEnable(GL_CLIP_DISTANCE0);
-	//normalModelRenderer.renderUpdated(lights, &camera, glm::vec4(0, 1, 0, -water.getWaterTile()->getPosition().y + 1.0f), 90.0f, reflectionPosition, faceRotations[i]); //Reflection render
-	//normalModelRenderer.renderUpdated(lights, &camera, glm::vec4(0, -1, 0, water.getWaterTile()->getPosition().y + 1.0f), 90.0f, reflectionPosition, faceRotations[i]); //Refraction render
-	//glDisable(GL_CLIP_DISTANCE0);
-	}
-	waterReflection.unbindFrameBuffer(SCREEN_WIDTH, SCREEN_HEIGHT);
-	//waterReflection.deleteBuffers(); //Only if we dont want to use the framebuffer ever again
-
-	normalModelRenderer.clearRenderPass();
-	terrainRenderer.clearRenderPass();
-	*/
 }
 
 // Load and initialise all framebuffers
@@ -1095,7 +966,6 @@ void loadAndInitialiseRenderers()
 	modelRenderer.load("WEngine/Shaders/Default/Default.vs", "WEngine/Shaders/Default/Default.fs", &camera);
 	normalModelRenderer.load("WEngine/Shaders/NormalMaps/NormalMap.vs", "WEngine/Shaders/NormalMaps/NormalMap.fs", &camera);
 	terrainRenderer.load("WEngine/Shaders/Terrain/Terrain.vs", "WEngine/Shaders/Terrain/Terrain.fs", &camera);
-	waterRenderer.load("WEngine/Shaders/Water/WaterShader.vs", "WEngine/Shaders/Water/WaterShader.fs", &camera);
 	shadowRenderer.load("WEngine/Shaders/Shadows/ShadowShader.vs", "WEngine/Shaders/Shadows/ShadowShader.fs");
 }
 // Load and initialise the skybox
@@ -1134,29 +1004,29 @@ void initialiseClient(char ipAddress[39], char port[5])
 	for (unsigned int i = 0; i < clientErrors.size(); i++)
 	{
 		switch (clientErrors[i]) {
-		case WSA_STARTUP_ERROR:
-			printf("ERROR -- Creating client WSAStartup\n");
-			return;
-			break;
-		case GET_ADDR_INFO_ERROR:
-			printf("ERROR -- Creating client getaddrinfo\n");
-			return;
-			break;
-		case CREATE_SOCKET_ERROR:
-			printf("ERROR -- Creating client createSocket\n");
-			return;
-			break;
-		case CONNECT_SOCKET_ERROR:
-			printf("ERROR -- Creating client connectSocket\n");
-			break;
-		case ALL_CONNECTING_SOCKETS_ERROR:
-			printf("ERROR -- Creating client connecting all sockets\n");
-			return;
-			break;
-		case SET_NONBLOCKING_ERROR:
-			printf("ERROR -- Creating client nonblocking\n");
-			return;
-			break;
+			case WSA_STARTUP_ERROR:
+				printf("ERROR -- Creating client WSAStartup\n");
+				return;
+				break;
+			case GET_ADDR_INFO_ERROR:
+				printf("ERROR -- Creating client getaddrinfo\n");
+				return;
+				break;
+			case CREATE_SOCKET_ERROR:
+				printf("ERROR -- Creating client createSocket\n");
+				return;
+				break;
+			case CONNECT_SOCKET_ERROR:
+				printf("ERROR -- Creating client connectSocket\n");
+				break;
+			case ALL_CONNECTING_SOCKETS_ERROR:
+				printf("ERROR -- Creating client connecting all sockets\n");
+				return;
+				break;
+			case SET_NONBLOCKING_ERROR:
+				printf("ERROR -- Creating client nonblocking\n");
+				return;
+				break;
 		}
 	}
 
@@ -1207,21 +1077,10 @@ void SendInitData()
 // When in lobby
 void SendLobbyData()
 {
-	//if (/*want to start the game*/)
-	//{
 	// Add a action Start Game
 	client.addActionType(GAME_START);
 	// Send the packet to the server
 	client.sendLobbyUpdate();
-	//}
-
-	// If the lobbyTimer has started running
-	if (client.gameStarting)
-	{
-
-		client.lobbyTimer -= (float)clientLoopDeltaTime;
-		if (client.lobbyTimer <= 0.0f) client.lobbyTimer = 0.0f;
-	}
 }
 
 // Send game data
@@ -1231,14 +1090,12 @@ void SendGameData()
 	// Update key input
 	handleGameInput();
 
-	//if(client.hasActionType())
 	client.sendPlayerData();
 }
 
 // Load all graphics
 void loadGraphics()
 {
-
 	// Load all the graphics for the safe area.
 	LoadGraphics_SafeArea();
 
@@ -1515,6 +1372,7 @@ void loadModels_SafeArea()
 	loadModel(SA_M_Building[2], "res/Safe_Area/Building/Building_Wood.obj", glm::vec3(0, 0, 0) * additionalScale + offsetPos, glm::vec3(0, 0, 0), glm::vec3(1.0f) * additionalScale, SA_T_Building[2], 100.0f, 0.1f, 0.4f);
 	loadModel(SA_M_Building[3], "res/Safe_Area/Building/Building_Roof.obj", glm::vec3(0, 0, 0) * additionalScale + offsetPos, glm::vec3(0, 0, 0), glm::vec3(1.0f) * additionalScale, SA_T_Building[3], 100.0f, 0.1f, 0.4f);
 	loadModel(SA_M_Building[4], "res/Safe_Area/Building/Building_Wheel.obj", glm::vec3(0, 0, 0) * additionalScale + offsetPos, glm::vec3(0, 0, 0), glm::vec3(1.0f) * additionalScale, SA_T_Building[4], 100.0f, 0.1f, 0.4f);
+	for(unsigned int i = 0; i < 5; i++) SA_M_Building[i].getModel()->cullFaces = false;
 
 	// Load AmmoBoxes models.
 	// Front left
@@ -2589,7 +2447,7 @@ void loadModel(Model &model, // Variable to set
 	float ambientLight) // Reflectivity
 {
 	// Load modeldata and set the variable.
-	model.setModel(&loader.loadObjFile(modelFilename.c_str(), true, false));
+	model.setModel(&loader.loadObjFile(modelFilename.c_str(), false, false));
 
 	// Initialise model
 	model.Initialise(pos, rot, scale);
