@@ -143,8 +143,9 @@ void ClientGame::updateClient()
 				break;
 
 			default:
+				ClientReceivePacket packet;
+				i += sizeof(ClientReceivePacket);
 				printf("ERROR: -- Packet received with Unknown packetType %u!!\n", packetType);
-				return;
 				break;
 		}
 	}
@@ -189,8 +190,15 @@ void ClientGame::getPlayerData(Player & player, int index)
 	if (player.active) {
 
 		// Set the position
-		player.setPosition(glm::vec3(allClients[index].position.x, 0.0f, allClients[index].position.z));
-		player.setRotation(allClients[index].rotation);
+		if (glm::distance(glm::vec3(player.getPosition().x, 0.0f, player.getPosition().z), glm::vec3(allClients[index].position.x, 0.0f, allClients[index].position.z)) < 100.0f || player.lastTimePositionChange) {
+			player.setPosition(glm::vec3(allClients[index].position.x, 0.0f, allClients[index].position.z));
+			player.setRotation(allClients[index].rotation);
+			player.lastTimePositionChange = false;
+		}
+		else {
+			printf("Position difference is larger than max!\n");
+			player.lastTimePositionChange = true;
+		}
 
 		// Set the health
 		player.health = allClients[index].health;
@@ -217,7 +225,15 @@ void ClientGame::getPlayerData(Player & player)
 		if (allClients[i].playerID == myClientID)
 		{
 			// Set the position
-			player.setPosition(glm::vec3(allClients[i].position.x, 0.0f, allClients[i].position.z));
+			// Set the position
+			if (glm::distance(glm::vec3(player.getPosition().x, 0.0f, player.getPosition().z), glm::vec3(allClients[i].position.x, 0.0f, allClients[i].position.z)) < 100.0f || player.lastTimePositionChange) {
+				player.setPosition(glm::vec3(allClients[i].position.x, 0.0f, allClients[i].position.z));
+				player.lastTimePositionChange = false;
+			}
+			else {
+				player.lastTimePositionChange = true;
+				printf("Position difference is larger than max!\n");
+			}
 
 			// Set the health
 			player.health = allClients[i].health;

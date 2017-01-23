@@ -61,6 +61,8 @@ class Player : public Model
 
 		int networkAnimType;
 
+		bool lastTimePositionChange = false;
+
 		bool active;
 
 	private:

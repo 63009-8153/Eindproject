@@ -1502,7 +1502,7 @@ void loadModels_SafeArea()
 	// The position and Rotation Y and Z need to be swapped.
 	// Then the Z needs to be inverted on both the position and rotation
 
-	glm::vec3 offsetPos = glm::vec3(1300.0f, 2.824f, 0.0f);
+	glm::vec3 offsetPos = glm::vec3(1300.0f, 0.652f, 0.0f);
 	glm::vec3 additionalScale = glm::vec3(1.0f);
 
 	// Load Floor's moodels.
