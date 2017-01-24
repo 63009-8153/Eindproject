@@ -29,7 +29,7 @@ public:
 	ClientGame();
 	// Constructor
 	// Connect to the server on ipAddress and port
-	ClientGame(char ipAddress[39], char port[5]);
+	ClientGame(const char ipAddress[39], char port[5]);
 	// Destructor
 	~ClientGame();
 

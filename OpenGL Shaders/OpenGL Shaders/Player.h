@@ -5,6 +5,8 @@
 #include "Model.h"
 #include "AnimationTypes.h"
 
+#include "Gun.h"
+
 extern std::vector<gameobject> animationModels;
 extern std::vector<s_anim> playerAnimations;
 
@@ -12,50 +14,62 @@ extern double deltaTime;
 
 extern glm::vec2 handleMouseInput(bool trapMouseInWindow);
 extern float mouseSensitivity;
-#include "Gun.h"
 
 class Player : public Model
 {
-public:
-	Player();
-	~Player();
+	public:
+		Player();
+		~Player();
 
-	void init(glm::vec3 position, glm::vec3 rotation, glm::vec3 scale, float _maxHealth);
-	void update();
+		void init(glm::vec3 position, glm::vec3 rotation, glm::vec3 scale, float _maxHealth);
+		void initGun(int index, Model &gunModel, Model &gunMuzzleFlash, double shootingTime);
 
-	void setAttackStrength(float dmg);
+		void setGunSounds(int gunIndex, SimpleAudioLib::CoreSystem& audioSystem, const char * filepath, unsigned int iterations, float gain = 1.0f);
+		void playShootSound();
 
-	gameobject *getAnimModel();
+		void cleanupSounds();
 
-	static s_anim loadAnimations(char * animationFolder, std::vector<gameobject> &gameobjects, int startframe, int frames, double fps, bool loop);
-	static void createAnimationModels();
-	static GLuint animationTexture;
+		Model* getGunModel();
+		Model* getGunMuzzleFlash();
 
-	void updateAnimation(int currentType);
-	void resetAnimation();
+		void update();
 
-	bool canUse(glm::vec3 useObjectOrigin, float maxDist);
+		void setAttackStrength(float dmg);
 
-	float health, maxHealth;
-	glm::vec3 speed;
-	float attackStrength;
+		gameobject *getAnimModel();
 
-	int ammo, points;
+		static s_anim loadAnimations(char * animationFolder, std::vector<gameobject> &gameobjects, int startframe, int frames, double fps, bool loop);
+		static void createAnimationModels();
+		static GLuint animationTexture;
 
-	Gun gun;
+		void updateAnimation(int currentType);
+		void resetAnimation();
 
-	bool shooting, wantsToShoot, canShoot;
-	double shootTimer;
+		bool canUse(glm::vec3 useObjectOrigin, float maxDist);
 
-	int networkAnimType;
+		float health, maxHealth;
+		glm::vec3 speed;
+		float attackStrength;
 
-	bool active;
+		int ammo, points;
 
-private:
+		Gun gun[2];
+		int currentGun;
 
-	int currentAnimationType,
-		currentAnimationFrame;
-	double animationExtraTime;
+		bool shooting, wantsToShoot, canShoot;
+		double shootTimer;
+
+		int networkAnimType;
+
+		bool lastTimePositionChange = false;
+
+		bool active;
+
+	private:
+
+		int currentAnimationType,
+			currentAnimationFrame;
+		double animationExtraTime;
 };
 
 #endif

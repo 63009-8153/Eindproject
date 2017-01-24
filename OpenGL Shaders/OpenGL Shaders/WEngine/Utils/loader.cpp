@@ -179,7 +179,7 @@ gameobject Loader::loadObjFile(const char * path, bool writeParsed, bool forcePa
 	//Close file
 	fclose(file);
 
-	printf("Model loaded!\n");
+	printf("Model loaded! %s\n", path);
 
 	//If there are more texture coords than vertices, we need to parse the obj file further so the texture aligns properly.
 	if (temp_uvs.size() > temp_vertices.size() || forceParse) {
@@ -302,6 +302,9 @@ gameobject Loader::loadObjFile(const char * path, bool writeParsed, bool forcePa
 
 	float *tangentsArray = &tangents[0].x;
 
+	// If the game is still loading, draw the updated loading screen
+	if (gameLoading) drawLoadingScreen();
+
 	//Return a gameobject with loaded data.
 	return loadToVAO(verticesArray, (temp_vertices.size() * 3), 
 					 indicesArray,  (indices.size()), 
@@ -391,7 +394,7 @@ gameobject Loader::loadObjFileData(const char * path, bool writeParsed, bool for
 	//Close file
 	fclose(file);
 
-	printf("Model loaded!\n");
+	printf("Model loaded! %s\n", path);
 
 	//If there are more texture coords than vertices, we need to parse the obj file further so the texture aligns properly.
 	if (temp_uvs.size() > temp_vertices.size() || forceParse) {
@@ -562,6 +565,9 @@ GLuint Loader::loadTexture(const char * imagepath, bool createMipmap)
 	//Save the texture id for cleanup
 	textures.push_back(textureID);
 
+	// If the game is still loading, draw the updated loading screen
+	if (gameLoading) drawLoadingScreen();
+
 	return textureID;
 }
 GLuint Loader::loadTextureInData(const char * imagepath, bool bmpAlign, bool createMipmap, unsigned char *&_data, int & width, int & height, int & size, GLenum & type)
@@ -669,6 +675,9 @@ GLuint Loader::loadTextureInData(const char * imagepath, bool bmpAlign, bool cre
 			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_LOD_BIAS, -0.4f); //More negative makes mipmap less
 		}
 	}
+
+	// If the game is still loading, draw the updated loading screen
+	if (gameLoading) drawLoadingScreen();
 
 	return textureID;
 }

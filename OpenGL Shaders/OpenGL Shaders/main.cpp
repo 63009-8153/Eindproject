@@ -14,7 +14,6 @@
 #define WAVE_SPEED 0.03
 
 #define MSAA 1
-#define SSAA 2
 #define FXAA 3
 
 #define OPTIMIZE_SAFEAREA_DIST 50.0f
@@ -38,7 +37,8 @@ void(*networkUpdateFunction)(void) = nullptr;
 
 GLFWwindow* window;
 
-SimpleAudioLib::AudioEntity* waltershoot[MAX_LOBBYSIZE];
+SimpleAudioLib::AudioEntity* zombieGrawl[MAX_ENEMIES];
+SimpleAudioLib::AudioEntity* ambient;
 
 float mouseSensitivity = 1.0f;
 
@@ -51,9 +51,8 @@ Loader loader;
 Camera camera;
 
 MasterRenderer modelRenderer,
-terrainRenderer,
-normalModelRenderer;
-WaterMasterRenderer waterRenderer;
+			   terrainRenderer,
+			   normalModelRenderer;
 ShadowMasterRenderer shadowRenderer;
 GuiRenderer guiRenderer;
 
@@ -87,35 +86,35 @@ Model SA_M_SandBag[2];
 
 GLuint	FM_T_FLATTERRAIN[5];
 GLuint	FM_T_TERRAIN,
-FM_TN_TERRAIN;
+		FM_TN_TERRAIN;
 GLuint  FM_T_AMBULANCE[5],
-FM_TN_AMBULANCE[5];
+		FM_TN_AMBULANCE[5];
 GLuint  FM_T_COMMAND_TENT,
-FM_TN_COMMAND_TENT;
+		FM_TN_COMMAND_TENT;
 GLuint  FM_T_ARMY_TENT[3],
-FM_TN_ARMY_TENT[2];
+		FM_TN_ARMY_TENT[2];
 GLuint  FM_T_ARMY_TRUCK[5];
 GLuint	FM_T_BARRIER,
-FM_TN_BARRIER;
+		FM_TN_BARRIER;
 GLuint	FM_T_CONTAINER,
-FM_TN_CONTAINER;
+		FM_TN_CONTAINER;
 GLuint	FM_T_FENCE[3],
-FM_TN_FENCE[3];
+		FM_TN_FENCE[3];
 GLuint	FM_T_BROKENFENCE1[3], FM_T_BROKENFENCE2[3],
-FM_TN_BROKENFENCE[3];
+		FM_TN_BROKENFENCE[3];
 GLuint	FM_T_ROADLIGHT[3], FM_TS_ROADLIGHT;
 GLuint	FM_T_MILITARY_BUNKER[3];
 GLuint  FM_T_TRAFFICCONE;
 GLuint	FM_T_ROAD[3],
-FM_TN_ROAD;
+		FM_TN_ROAD;
 GLuint	FM_T_STATUE,
-FM_TN_STATUE;
+		FM_TN_STATUE;
 GLuint	FM_T_RAIL[2];
 GLuint	FM_T_TOWNHOUSE;
 GLuint	FM_T_WELL,
-FM_TN_WELL;
-GLuint  T_GUN_WALTER;
-GLuint	T_MUZZLEFLASH_WALTER;
+		FM_TN_WELL;
+GLuint  T_GUN_WALTER, T_MUZZLEFLASH_WALTER;
+GLuint  T_GUN_AK47, T_MUZZLEFLASH_AK47;
 
 Tree  trees;
 Terrain FM_M_FLATTERRAIN;
@@ -137,8 +136,9 @@ Model FM_M_STATUE;
 Model FM_M_RAIL[2];
 Model FM_M_TOWNHOUSE[2];
 Model FM_M_WELL;
-Model GUN_WALTER;
-Model MUZZLEFLASH_WALTER[MAX_LOBBYSIZE];
+
+Model GUN_WALTER, MUZZLEFLASH_WALTER;
+Model GUN_AK47, MUZZLEFLASH_AK47;
 
 std::vector<gameobject> animationModels;
 std::vector<s_anim> playerAnimations;
@@ -147,29 +147,30 @@ std::vector<gameobject> enemyAnimationModels;
 std::vector<s_anim> enemyAnimations;
 
 std::vector<texture2D> GuiElements;
-texture2D gotoSafeArea, gotoMainMap, buyAmmo, infoGui;
+texture2D gotoSafeArea, gotoMainMap, 
+	      buyAmmo, infoGui;
+texture2D loadScreen_Background, loadScreen_LoaderIcon;
 texture2D numbers[10];
 texture2D crossHair;
 
 std::vector<Light*> lights;
 Light sun, light0, light1, light2;
 
-WaterTile water;
-
 Skybox skybox;
-
-textureCubemap waterReflection;
 
 // ===  GAME INFO  ===
 glm::vec3 clearColor = glm::vec3(0.32f, 0.32f, 0.32f);
 
 double last_render_time = 0;
 double deltaTime = 0,
-frameStartTime = 0,
-debugTime = 0;
+	   frameStartTime = 0,
+	   debugTime = 0;
 float fps = 0;
 int frame = 0;
 int gameState = 0;
+
+float loadIconRotation = 0.0f, loadIconScale = 90.0f;
+bool gameLoading = true;
 
 float Max_Fps = 61.5f;
 bool limit_fps = false;
@@ -183,6 +184,9 @@ Can be one of the following:
 int AAType = FXAA;
 
 // ===  FUNCTIONS  ===
+
+// Generic function to draw the load screen. This function will take care of the rotation
+void drawLoadingScreen();
 
 // Load a model with only a texture
 void loadModel(Model &model, std::string modelFilename, glm::vec3 pos, glm::vec3 rot, glm::vec3 scale, GLuint textureID, float shineDamper, float reflectivity, float ambientLight);
@@ -203,17 +207,17 @@ void loadModel(Model &model, Model &oriModel, glm::vec3 pos, glm::vec3 rot, glm:
 glm::vec2 handleMouseInput(bool trapMouseInWindow);
 // Handle user input
 void handleGameInput();
+// Scroll callback function
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 // Update time stuff
 void updateTime();
-// Render water textures
-void renderWaterTextures();
 // Render shadow textures
 void renderShadowTexture(Light *shadowLight);
-// Render water cubemap : WORK IN PROGRESS :
-void renderWaterCubeMap();
 
-// Load and initialise all waterTiles
-void loadAndInitialiseWater();
+// Load and intialise the loadscreen images
+void loadAndInitialiseLoadScreen();
+// Draw all the load screen images and set the loader rotation
+void drawLoadScreen(float rotation, float scale);
 // Load and initialise all GUI elements
 void loadAndInitialiseGUI();
 // Load and initialise all framebuffers
@@ -226,7 +230,7 @@ void loadSkybox();
 void initLights();
 
 // Initialise the client
-void initialiseClient(char ipAddress[39], char port[5]);
+void initialiseClient(const char ipAddress[39], char port[5]);
 // Client loop
 void clientLoop(void *);
 
@@ -260,31 +264,37 @@ void loadArmyTent(int iteration, glm::vec3 pos, glm::vec3 rot);
 void loadArmyTruck(int iteration, glm::vec3 pos, glm::vec3 rot);
 // Load the tree models
 void loadTreeModels();
+// Draw ui numbers
+void DrawUINumbers(int number, glm::vec2 pos);
 
+std::string ipAddress = "127.0.0.1";
 
 int main() {
+	printf("Type the IPAddress of the server here. Enter 0 for localhost: ");
+	std::cin >> ipAddress;
+	if (ipAddress.size() < 6) ipAddress = "127.0.0.1";
 
 	// Initialise the audioSystem
 	SimpleAudioLib::CoreSystem& audioSystem = SimpleAudioLib::CoreSystem::getInstance();
 	audioSystem.initWithDefaultDevice();
 
-	/* This is code to load a sound file and then play it */
-	for (unsigned int i = 0; i < MAX_LOBBYSIZE; i++) {
-		waltershoot[i] = audioSystem.createAudioEntityFromFile("res/Sounds/WalterShoot.wav");
-	}
+	player.setGunSounds(0, audioSystem, "res/Sounds/WalterShoot.wav", 2, 0.8f);
+	player.setGunSounds(1, audioSystem, "res/Sounds/AK47Shoot.wav", 10, 0.4f);
+
+	// Load the ambient sound
+	ambient = audioSystem.createAudioEntityFromFile("res/Sounds/AmbientLoop.wav");
+	ambient->setGain(0.5f);
 
 	// ===============  GAME LOGIC ====================
 
 	// Initialise GLFW and throw error if it failed
 	if (!glfwInit()) {
-		throw std::runtime_error("Failed to initialize GLFW");
+		throw std::runtime_error("Failed to initialize GLFW!");
 		exit(-1);
 	}
 
 	// ========  Initialise  ==========
 	last_render_time = glfwGetTime();
-
-	//TODO: StartScreen Loop here
 
 	// ===  DISPLAY  ===
 	//Create a display and initialise GLEW
@@ -300,13 +310,18 @@ int main() {
 
 	// ===  Framebuffers  ===
 
-	//Initialise framebuffer for cubemap texture waterReflection
-	//waterReflection.initialseFrameBuffer(1280);
-
 	// Load and initialise all framebuffers
 	loadAllFrameBuffers();
 	// Load and initialise all renderers
 	loadAndInitialiseRenderers();
+
+	// == Draw the first loadscreen image ==
+
+	// Load and initialise the loadscreen images
+	loadAndInitialiseLoadScreen();
+
+	// Draw the loadscreen for the first time
+	drawLoadScreen(0.0f, 90.0f);
 
 	// ===  SKYBOX  ===
 	loadSkybox();
@@ -318,6 +333,8 @@ int main() {
 	//Set input mode
 	glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
 
+	glfwSetScrollCallback(window, scroll_callback);
+
 	//Set input callback
 	//glfwSetKeyCallback(window, keyfun);
 
@@ -327,10 +344,12 @@ int main() {
 	// Load all models and initialise
 	loadModels();
 
+	gameLoading = false;
+
 	// ============  NETWORKING LOGIC =================
 
 	// Initialise, set the client and connect to the server.
-	initialiseClient("127.0.0.1", "6881");
+	initialiseClient(ipAddress.c_str(), "6881");
 
 	// ===  LIGHTS  ===
 	initLights();
@@ -339,7 +358,8 @@ int main() {
 	gameState = 1;
 
 	player.init(glm::vec3(0), glm::vec3(0), glm::vec3(0), 100);
-	//player.active = true;
+	player.initGun(0, GUN_WALTER, MUZZLEFLASH_WALTER, 0.333);
+	player.initGun(1, GUN_AK47, MUZZLEFLASH_AK47, 0.13);
 
 	// Hide the cursor
 	DisplayManager::gameCursor();
@@ -350,20 +370,13 @@ int main() {
 
 	//Mouse button input
 	glfwSetInputMode(window, GLFW_STICKY_MOUSE_BUTTONS, 1);
+
+	// Start playing the ambient sound in a loop
+	ambient->play(true);
   
 	do {
-
-		//renderWaterCubeMap();
-		//GuiElements[0].rotation = (float)frame / 100.0f;
-
 		//Prepare rendering on default framebuffer
 		MasterRenderer::prepare();
-
-		//Change WaterMoveFactor for random(ish) water movement
-		float currentWaterMoveFactor = waterRenderer.getMoveFactor();
-		currentWaterMoveFactor += (float)(WAVE_SPEED * deltaTime);
-		if (currentWaterMoveFactor > 1) currentWaterMoveFactor -= 1;
-		waterRenderer.setMoveFactor(currentWaterMoveFactor);
 
 		/* ========= Add models to list for rendering ============== */
 
@@ -499,25 +512,12 @@ int main() {
 			}
 		}
 
-		if(player.health > 0) modelRenderer.addToRenderList(player.gun.gun_model.getModel());
-
-		if (player.shooting && player.health > 0) {
-			MUZZLEFLASH_WALTER[0].setPosition(player.gun.gun_model.getPosition());
-			MUZZLEFLASH_WALTER[0].setRotation(player.gun.gun_model.getRotation());
-			modelRenderer.addToRenderList(MUZZLEFLASH_WALTER[0].getModel());
-		}
-
-		//Add water to the renderer list
-		//waterRenderer.addToRenderList(&water);
+		if(player.health > 0.0f) modelRenderer.addToRenderList(player.getGunModel()->getModel());
 
 		/* =============== Start of rendering ===================== */
 
-		//Render reflection and refraction texture of the water
-		//renderWaterTextures();
-
 		//Render the shadow texture
 		//renderShadowTexture(&sun);
-
 
 		// If we can use the useable object at the position we want to draw text that shows the user can use the object by pressing a button
 		// Check if we want and can use one of the positions that make the player go to the safe area
@@ -530,6 +530,7 @@ int main() {
 			// Teleport to the position in the main map
 			GuiElements.push_back(gotoMainMap);
 		}
+
 		// Check if we want and can buy ammo
 		if (player.canUse(glm::vec3(1294.302f, 1, 2.409f), USE_DISTANCE) || player.canUse(glm::vec3(1296.043f, 1, 12.514f), USE_DISTANCE) || player.canUse(glm::vec3(1303.414f, 1, -13.289f), USE_DISTANCE)) {
 			//Show text for buying ammo
@@ -539,47 +540,30 @@ int main() {
 		if (player.health > 0) GuiElements.push_back(crossHair);
 		GuiElements.push_back(infoGui);
 
-		glFinish();
 		frameStartTime = glfwGetTime();
 
 		//Render scene to multisampled anti-aliased framebuffer
 		sceneRenderer.bindRenderToTextureFrameBuffer();
 		MasterRenderer::prepare();
 
-		//Render everything
+		// == Render everything ==
 
 		skybox.render(&camera);
 
 		terrainRenderer.render(lights, &camera, glm::vec4(0, -1, 0, 100000));
-		waterRenderer.render(lights, &camera);
 
 		modelRenderer.render(lights, &camera, glm::vec4(0, -1, 0, 100000));
 		normalModelRenderer.render(lights, &camera, glm::vec4(0, -1, 0, 100000));
 
-
-			// Render own player animation
-			//player.getAnimModel()->Draw(modelRenderer.shader, lights, &camera, glm::vec4(0, -1, 0, 100000));
+		// Render own player animation
+		//player.getAnimModel()->Draw(modelRenderer.shader, lights, &camera, glm::vec4(0, -1, 0, 100000));
 			
-			// Check if own player is shooting
-			if (player.shooting && player.health > 0) {
-				//printf("Ownplayer has shot!\n");
-				waltershoot[0]->rewind();
-				waltershoot[0]->play();
+		// Render all other player's animations
+		for (int i = 0; i < MAX_LOBBYSIZE; i++) {
+			if (otherPlayers[i].active) {
+				otherPlayers[i].getAnimModel()->Draw(modelRenderer.shader, lights, &camera, glm::vec4(0, -1, 0, 100000));
 			}
-
-			// Render all other player's animations
-			for (int i = 0; i < MAX_LOBBYSIZE; i++) {
-				if (otherPlayers[i].active) {
-					otherPlayers[i].getAnimModel()->Draw(modelRenderer.shader, lights, &camera, glm::vec4(0, -1, 0, 100000));
-					// Other player is shooting
-					if (otherPlayers[i].shooting) {
-						//printf("Player %d has shot!\n", i);
-						waltershoot[i]->rewind();
-						waltershoot[i]->play();
-					}
-				}
-			}
-		
+		}
 
 		// Render all enemy animations
 		for (int i = 0; i < MAX_ENEMIES; i++) {
@@ -590,11 +574,7 @@ int main() {
 			}
 		}
 		
-
 		sceneRenderer.unbindFrameBuffer();
-
-		glFinish();
-		debugTime = glfwGetTime();
 
 		/* =================== Post processing below! ============== */
 
@@ -602,9 +582,6 @@ int main() {
 		if (AAType == MSAA) {
 			//Resolve multisampled framebuffer to antialiased framebuffer
 			sceneRenderer.resolveTo(&antiAliasedRenderer);
-		}
-		else if (AAType == SSAA) {
-			//TODO: Create a way to resolve a SuperSampled framebuffer
 		}
 		else if (AAType == FXAA) {
 			//Render image to antiAliased buffed with the FXAA Shader
@@ -636,31 +613,16 @@ int main() {
 		// Render GuiElements
 		guiRenderer.render(&GuiElements);
 
-		//Set health
-		std::string health = std::to_string((int)player.health);
-		for (int i = 0; i < health.size(); i++) {
-			const char temp = health[i];
-			numbers[atoi(&temp)].setPosition(glm::vec2(0.335f + i*0.07, 0.3f));
-			numbers[atoi(&temp)].Draw(guiRenderer.shader, guiRenderer.quad);
-		}
+		//Draw health text
+		DrawUINumbers(player.health, glm::vec2(0.335f, 0.3f));
 
-		//Set points
-		std::string points = std::to_string(player.points);
-		for (int i = 0; i < points.size(); i++) {
-			const char temp = points[i];
-			numbers[atoi(&temp)].setPosition(glm::vec2(0.335f + i*0.07, 0.2f));
-			numbers[atoi(&temp)].Draw(guiRenderer.shader, guiRenderer.quad);
-		}
+		//Draw points text
+		DrawUINumbers(player.points, glm::vec2(0.335f, 0.2f));
 
-		//Set ammo counter
-		std::string ammo = std::to_string(player.ammo);
-		for (int i = 0; i < ammo.size(); i++) {
-			const char temp = ammo[i];
-			numbers[atoi(&temp)].setPosition(glm::vec2(0.335f + i*0.07, 0.1f));
-			numbers[atoi(&temp)].Draw(guiRenderer.shader, guiRenderer.quad);
-		}
+		//Draw ammo counter text
+		DrawUINumbers(player.ammo, glm::vec2(0.335f, 0.1f));
 
-		//Swap Buffers (Send image to the screen)
+		// == Swap Buffers (Send image to the screen) ==
 		glfwSwapBuffers(window);
 
 		/* ================== End of rendering ======================= */
@@ -669,7 +631,6 @@ int main() {
 		modelRenderer.clearRenderPass();
 		normalModelRenderer.clearRenderPass();
 		terrainRenderer.clearRenderPass();
-		waterRenderer.clearRenderPass();
 		GuiElements.clear();
 
 
@@ -690,20 +651,39 @@ int main() {
 		// Update own animation
 		player.updateAnimation(player.networkAnimType);
 
+		// Check if own player is shooting
+		if (player.shooting && player.health > 0) {
+			player.playShootSound();
+
+			modelRenderer.addToRenderList(player.getGunMuzzleFlash()->getModel());
+		}
+
+		// Update all other players
 		for (int i = 0; i < MAX_LOBBYSIZE; i++) {
 			// Update all other player's animation
 			otherPlayers[i].updateAnimation(otherPlayers[i].networkAnimType);
 
-			if (otherPlayers[i].shooting) otherPlayers[i].shooting = false;
+			// Other player is shooting
+			if (otherPlayers[i].shooting) {
+				otherPlayers[i].shooting = false;
+			}
 		}
 
+		// Update enemies
 		for (int i = 0; i < MAX_ENEMIES; i++) {
 			// Update the enemy data with the data received from the server
 			client.getEnemyData(enemies[i], i);
 			// Update the enemy, this will also update the animation
 			enemies[i].update();
+
+			//for (unsigned int i = 0; i < MAX_LOBBYSIZE; i++) {
+			//	glm::vec3 p = enemies[i].getPosition();
+			//	glm::vec3 r = enemies[i].getRotation();
+			//	zombieGrawl[i]->setPosition(p.x, p.y, p.z);
+			//}
 		}
 
+		// Update players
 		// Get and update the player with its new position, it's health and the rest But not the rotation!!!
 		client.getPlayerData(player);
 		for (int i = 0; i < MAX_LOBBYSIZE; i++) {
@@ -719,8 +699,11 @@ int main() {
 		camera.position = player.getPosition();
 		camera.position.y = 6.0f;
 
+		audioSystem.setListenerPosition(camera.position.x, camera.position.y, camera.position.z);
+		ambient->setPosition(camera.position.x, camera.position.y, camera.position.z);
+
 		//Set title to hold fps info
-		std::string fpsStr = std::string(PROGRAM_NAME) + " FPS: " + std::to_string(fps) + " deltaTime: " + std::to_string(deltaTime * 100) /*+ " Mouse: x: " + std::to_string(rot.x) + " y: " + std::to_string(rot.y)*/;
+		std::string fpsStr = std::string(PROGRAM_NAME) + " FPS: " + std::to_string(fps) + " deltaTime: " + std::to_string(deltaTime * 100);
 		DisplayManager::setDisplayTitle(fpsStr.c_str());
 
 		if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) gameState = 0;
@@ -737,7 +720,6 @@ int main() {
 	modelRenderer.cleanUp();
 	normalModelRenderer.cleanUp();
 	terrainRenderer.cleanUp();
-	waterRenderer.cleanUp();
 	shadowRenderer.cleanUp();
 
 	loader.cleanUp();
@@ -749,14 +731,25 @@ int main() {
 	glfwTerminate();
 
 	// Clean up audio
-	for (unsigned int i = 0; i < MAX_LOBBYSIZE; i++) {
-		delete waltershoot[i];
-		waltershoot[i] = NULL;
-	}
+	player.cleanupSounds();
+
+	delete ambient;
+	ambient = NULL;
 
 	SimpleAudioLib::CoreSystem::release();
 }
 
+#pragma optimize("",off)
+void DrawUINumbers(int number,glm::vec2 pos) {
+	if (number < 0) number = 0;
+	std::string numb = std::to_string(number);
+	for (int i = 0; i < numb.size(); i++) {
+		const char temp3 = numb[i];
+		numbers[atoi(&temp3)].setPosition(glm::vec2(pos.x + i*0.07,pos.y));
+		numbers[atoi(&temp3)].Draw(guiRenderer.shader, guiRenderer.quad);
+	}
+}
+#pragma optimize("",on)
 
 // If trapMouseInWindow it returns the changed amount of pixels since last update
 // Else if returns the position the mouse is on
@@ -818,7 +811,11 @@ void handleGameInput()
 	if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) client.addActionType(USE);
 
 	// Handle input of reloading
-	if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) client.addActionType(RELOAD);
+	//if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) client.addActionType(RELOAD);
+}
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
+{
+	client.addActionType(SWITCH);
 }
 // Update time stuff
 void updateTime()
@@ -834,20 +831,41 @@ void updateTime()
 	frame++;
 }
 
-// Load and initialise all waterTiles
-void loadAndInitialiseWater()
+// Load and intialise the loadscreen images
+void loadAndInitialiseLoadScreen() {
+	// Load and initialise the loadscreen background
+	loadScreen_Background.loadImage("res/GUI/loadingscreenBackground.bmp", true, false);
+	loadScreen_Background.setScale(glm::vec2(1.0f));
+	loadScreen_Background.setPosition(glm::vec2(1.0f));
+	
+	// Load and initialise the loadicon image
+	loadScreen_LoaderIcon.loadImage("res/GUI/loadicon.bmp", true, false);
+	loadScreen_LoaderIcon.setScale(glm::vec2(0.15f));
+	loadScreen_LoaderIcon.setPosition(glm::vec2(1.83f, 0.17));
+	loadScreen_LoaderIcon.setRotation(0.0f);
+}
+void drawLoadingScreen()
 {
-	//Create a waterTile and set its attributes
-	water = WaterTile(glm::vec3(0, 2, -400), glm::vec3(0, 0, 0), glm::vec3(800, 500, 400));
-	water.setReflectionTexture(waterRenderer.getReflectionTexture());
-	water.setRefractionTexture(waterRenderer.getRefractionTexture());
-	water.setDuDvTexture(loader.loadTexture("res/Water/WaterDuDvMap.bmp", false));
-	water.setNormalMapTexture(loader.loadTexture("res/Water/WaterNormalMap.bmp", false));
-	water.setRefractionDepthTexture(waterRenderer.getRefractionDepthTexture());
-	water.getWaterTile()->setShineDamper(100);
-	water.getWaterTile()->setReflectivity(1);
-	water.getWaterTile()->setAmbientLight(0.5f);
-	water.getWaterTile()->setShadowMap(shadowRenderer.getShadowDepthTexture());
+	loadIconRotation += 2.5f;
+	loadIconScale += 5.0f;
+
+	float scale = 0.14f + (0.01 * ((sin(glm::radians(loadIconScale)) + 1.0f) / 2.0f));
+	float rotation = sin(glm::radians(loadIconRotation)) * 45.0f;
+	drawLoadScreen(rotation, scale);
+}
+void drawLoadScreen(float rotation, float scale) {
+	MasterRenderer::prepare();
+
+	// Draw the loading background at the back
+	loadScreen_Background.Draw(guiRenderer.shader, guiRenderer.quad);
+
+	// Set the loader icon rotation and draw this
+	loadScreen_LoaderIcon.setScale(glm::vec2(scale));
+	loadScreen_LoaderIcon.setRotation(rotation);
+	loadScreen_LoaderIcon.Draw(guiRenderer.shader, guiRenderer.quad);
+
+	// Send the image to the screen.
+	glfwSwapBuffers(window);
 }
 
 // Load and initialise all GUI elements
@@ -886,46 +904,6 @@ void loadAndInitialiseGUI()
 	crossHair.setPosition(glm::vec2(1.0f));
 }
 
-// Render water textures
-void renderWaterTextures()
-{
-	//Enable clipdistance 0
-	glEnable(GL_CLIP_DISTANCE0);
-
-	//Bind Reflection framebuffer
-	waterRenderer.bindReflectionFrameBuffer();
-	//Prepare rendering on the reflection framebuffer
-	MasterRenderer::prepare();
-
-	//Position the camera down to get the proper reflection
-	float distance = 2 * (camera.position.y - water.getWaterTile()->getPosition().y);
-	camera.position.y -= distance;
-	camera.rotation.x *= -1; //Invert pitch
-
-							 //Render all objects to the reflection of the water
-	skybox.render(&camera);
-	terrainRenderer.render(lights, &camera, glm::vec4(0, 1, 0, -water.getWaterTile()->getPosition().y + 1.0f));
-	//modelRenderer.render(lights, &camera, glm::vec4(0, 1, 0, -water.getWaterTile()->getPosition().y + 1.0f));
-	//normalModelRenderer.render(lights, &camera, glm::vec4(0, 1, 0, -water.getWaterTile()->getPosition().y));
-
-	camera.position.y += distance; //Position the camera back up
-	camera.rotation.x *= -1; //Invert pitch back to normal
-
-							 //Bind Refraction framebuffer
-	waterRenderer.bindRefractionFrameBuffer();
-	//Prepare rendering on the Refraction framebuffer
-	MasterRenderer::prepare();
-
-	//Render all elements to the refraction of the water
-	terrainRenderer.render(lights, &camera, glm::vec4(0, -1, 0, water.getWaterTile()->getPosition().y + 1.0f));
-	//modelRenderer.render(lights, &camera, glm::vec4(0, -1, 0, water.getWaterTile()->getPosition().y + 1.0f));
-	//normalModelRenderer.render(lights, &camera, glm::vec4(0, -1, 0, water.getWaterTile()->getPosition().y));
-
-	waterRenderer.unbindCurrentFrameBuffer();
-
-	//Disable clipdistance 0
-	glDisable(GL_CLIP_DISTANCE0);
-}
 // Render shadow textures
 void renderShadowTexture(Light *shadowLight)
 {
@@ -940,64 +918,12 @@ void renderShadowTexture(Light *shadowLight)
 	shadowRenderer.unbindCurrentFrameBuffer();
 }
 
-// Render water cubemap : WORK IN PROGRESS :
-void renderWaterCubeMap()
-{
-	/*
-	//Add normalmapped models to renderer list
-	normalModelRenderer.addToRenderList(model.getModel());
-	normalModelRenderer.addToRenderList(model2.getModel());
-	//Add terrain models to renderer list
-	terrainRenderer.addToRenderList(terrains[0].getModel());
-	terrainRenderer.addToRenderList(terrains[1].getModel());
-
-	glm::vec3 reflectionPosition = glm::vec3(0.0f, 10.0f, 0.0f); //Has to be a vec3 of the position
-	const glm::vec3 faceRotations[6] = {
-	glm::vec3(0, glm::radians(-90.0f), glm::radians(180.0f)),
-	glm::vec3(0, glm::radians(90.0f),  glm::radians(180.0f)),
-	glm::vec3(glm::radians(-90.0f), 0, 0),//
-	glm::vec3(glm::radians(90.0f),  0, 0),//
-	glm::vec3(0, glm::radians(180.0f), glm::radians(180.0f)),
-	glm::vec3(0, 0,	glm::radians(180.0f))
-	};
-
-	waterReflection.bindFrameBuffer();
-	for (unsigned int i = 0; i < 6; i++) {
-	//Bind the right side
-	waterReflection.bindFrameBufferRenderTexture(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i);
-	//Clear the buffer
-	MasterRenderer::prepare();
-	//Render
-
-	skybox.renderUpdated(&camera, 90.0f, reflectionPosition, faceRotations[i]);
-
-	//normalModelRenderer.renderUpdated(lights, &camera, glm::vec4(0, -1, 0, 100000), 90.0f, reflectionPosition, faceRotations[i]); //Normal render
-	terrainRenderer.renderUpdated(lights, &camera, glm::vec4(0, -1, 0, 100000), 90.0f, reflectionPosition, faceRotations[i]); //Normal render
-
-	//glEnable(GL_CLIP_DISTANCE0);
-	//normalModelRenderer.renderUpdated(lights, &camera, glm::vec4(0, 1, 0, -water.getWaterTile()->getPosition().y + 1.0f), 90.0f, reflectionPosition, faceRotations[i]); //Reflection render
-	//normalModelRenderer.renderUpdated(lights, &camera, glm::vec4(0, -1, 0, water.getWaterTile()->getPosition().y + 1.0f), 90.0f, reflectionPosition, faceRotations[i]); //Refraction render
-	//glDisable(GL_CLIP_DISTANCE0);
-	}
-	waterReflection.unbindFrameBuffer(SCREEN_WIDTH, SCREEN_HEIGHT);
-	//waterReflection.deleteBuffers(); //Only if we dont want to use the framebuffer ever again
-
-	normalModelRenderer.clearRenderPass();
-	terrainRenderer.clearRenderPass();
-	*/
-}
-
 // Load and initialise all framebuffers
 void loadAllFrameBuffers()
 {
 	//Load and intialise all postprocessors
 	if (AAType == MSAA) {
 		sceneRenderer.load(glm::vec2(SCREEN_WIDTH, SCREEN_HEIGHT), 8);
-		antiAliasedRenderer.load(glm::vec2(SCREEN_WIDTH, SCREEN_HEIGHT));
-	}
-	else if (AAType == SSAA) {
-		sceneRenderer.load(glm::vec2(SCREEN_WIDTH * 4, SCREEN_HEIGHT * 4));
-		//TODO: create a shader that downsamples the image created!
 		antiAliasedRenderer.load(glm::vec2(SCREEN_WIDTH, SCREEN_HEIGHT));
 	}
 	else if (AAType == FXAA) {
@@ -1025,7 +951,6 @@ void loadAndInitialiseRenderers()
 	modelRenderer.load("WEngine/Shaders/Default/Default.vs", "WEngine/Shaders/Default/Default.fs", &camera);
 	normalModelRenderer.load("WEngine/Shaders/NormalMaps/NormalMap.vs", "WEngine/Shaders/NormalMaps/NormalMap.fs", &camera);
 	terrainRenderer.load("WEngine/Shaders/Terrain/Terrain.vs", "WEngine/Shaders/Terrain/Terrain.fs", &camera);
-	waterRenderer.load("WEngine/Shaders/Water/WaterShader.vs", "WEngine/Shaders/Water/WaterShader.fs", &camera);
 	shadowRenderer.load("WEngine/Shaders/Shadows/ShadowShader.vs", "WEngine/Shaders/Shadows/ShadowShader.fs");
 }
 // Load and initialise the skybox
@@ -1053,7 +978,7 @@ void initLights()
 // ======  SERVER HANDLE FUNCTIONS  ======
 
 // Intialise the client and connect to the server on ipAddress and port
-void initialiseClient(char ipAddress[39], char port[5])
+void initialiseClient(const char ipAddress[39], char port[5])
 {
 	// Initialise the client, create a connection and try to connect to the ip and port of the server.
 	client = ClientGame(ipAddress, port);
@@ -1064,29 +989,29 @@ void initialiseClient(char ipAddress[39], char port[5])
 	for (unsigned int i = 0; i < clientErrors.size(); i++)
 	{
 		switch (clientErrors[i]) {
-		case WSA_STARTUP_ERROR:
-			printf("ERROR -- Creating client WSAStartup\n");
-			return;
-			break;
-		case GET_ADDR_INFO_ERROR:
-			printf("ERROR -- Creating client getaddrinfo\n");
-			return;
-			break;
-		case CREATE_SOCKET_ERROR:
-			printf("ERROR -- Creating client createSocket\n");
-			return;
-			break;
-		case CONNECT_SOCKET_ERROR:
-			printf("ERROR -- Creating client connectSocket\n");
-			break;
-		case ALL_CONNECTING_SOCKETS_ERROR:
-			printf("ERROR -- Creating client connecting all sockets\n");
-			return;
-			break;
-		case SET_NONBLOCKING_ERROR:
-			printf("ERROR -- Creating client nonblocking\n");
-			return;
-			break;
+			case WSA_STARTUP_ERROR:
+				printf("ERROR -- Creating client WSAStartup\n");
+				return;
+				break;
+			case GET_ADDR_INFO_ERROR:
+				printf("ERROR -- Creating client getaddrinfo\n");
+				return;
+				break;
+			case CREATE_SOCKET_ERROR:
+				printf("ERROR -- Creating client createSocket\n");
+				return;
+				break;
+			case CONNECT_SOCKET_ERROR:
+				printf("ERROR -- Creating client connectSocket\n");
+				break;
+			case ALL_CONNECTING_SOCKETS_ERROR:
+				printf("ERROR -- Creating client connecting all sockets\n");
+				return;
+				break;
+			case SET_NONBLOCKING_ERROR:
+				printf("ERROR -- Creating client nonblocking\n");
+				return;
+				break;
 		}
 	}
 
@@ -1137,21 +1062,10 @@ void SendInitData()
 // When in lobby
 void SendLobbyData()
 {
-	//if (/*want to start the game*/)
-	//{
 	// Add a action Start Game
 	client.addActionType(GAME_START);
 	// Send the packet to the server
 	client.sendLobbyUpdate();
-	//}
-
-	// If the lobbyTimer has started running
-	if (client.gameStarting)
-	{
-
-		client.lobbyTimer -= (float)clientLoopDeltaTime;
-		if (client.lobbyTimer <= 0.0f) client.lobbyTimer = 0.0f;
-	}
 }
 
 // Send game data
@@ -1161,14 +1075,12 @@ void SendGameData()
 	// Update key input
 	handleGameInput();
 
-	//if(client.hasActionType())
 	client.sendPlayerData();
 }
 
 // Load all graphics
 void loadGraphics()
 {
-
 	// Load all the graphics for the safe area.
 	LoadGraphics_SafeArea();
 
@@ -1343,6 +1255,7 @@ void anim5() {
 void anim6() {
 	playerAnimations[5] = Player::loadAnimations("res/PlayerAnimations/Run_Forward/", animobjs[5], 156, 16, 62, true);
 }
+
 void anim7()
 {
 	enemyAnimations[0] = Enemy::loadAnimations("res/EnemyAnimations/Walk_Forward/", animobjs[6], 0, 38, 45, true);
@@ -1409,13 +1322,19 @@ void loadModels()
 	// If loading the animations is not done yet, wait for it here and then create vao's for all objects
 	endLoadAnimations();
 
+	// Walter pistol
 	T_GUN_WALTER = loader.loadTexture("res/Gun/walter_pk_48/black.bmp", true);
 	loadModel(GUN_WALTER, "res/Gun/walter_pk_48/walter.obj", glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1.0f), T_GUN_WALTER, 100.0f, 0.1f, 0.4f);
 
 	T_MUZZLEFLASH_WALTER = loader.loadTexture("res/Gun/walter_pk_48/muzzleFlash.bmp", true);
-	for (unsigned int i = 0; i < MAX_LOBBYSIZE; i++) {
-		loadModel(MUZZLEFLASH_WALTER[i], "res/Gun/walter_pk_48/muzzleFlashObj.obj", glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1.0f), T_MUZZLEFLASH_WALTER, 100.0f, 0.1f, 0.4f);
-	}
+	loadModel(MUZZLEFLASH_WALTER, "res/Gun/walter_pk_48/muzzleFlashObj.obj", glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1.0f), T_MUZZLEFLASH_WALTER, 100.0f, 0.1f, 0.4f);
+
+	// AK47 rifle
+	T_GUN_AK47 = loader.loadTexture("res/Gun/ak-47/AK-47Texture.bmp", true);
+	loadModel(GUN_AK47, "res/Gun/ak-47/AK-47Model.obj", glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1.0f), T_GUN_AK47, 100.0f, 0.1f, 0.4f);
+
+	T_MUZZLEFLASH_AK47 = loader.loadTexture("res/Gun/ak-47/muzzleFlash.bmp", true);
+	loadModel(MUZZLEFLASH_AK47, "res/Gun/ak-47/muzzleFlashObj.obj", glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1.0f), T_MUZZLEFLASH_AK47, 100.0f, 0.1f, 0.4f);
 }
 // Load Safe Area Models
 void loadModels_SafeArea()
@@ -1425,7 +1344,7 @@ void loadModels_SafeArea()
 	// The position and Rotation Y and Z need to be swapped.
 	// Then the Z needs to be inverted on both the position and rotation
 
-	glm::vec3 offsetPos = glm::vec3(1300.0f, 2.824f, 0.0f);
+	glm::vec3 offsetPos = glm::vec3(1300.0f, 0.652f, 0.0f);
 	glm::vec3 additionalScale = glm::vec3(1.0f);
 
 	// Load Floor's moodels.
@@ -1438,6 +1357,7 @@ void loadModels_SafeArea()
 	loadModel(SA_M_Building[2], "res/Safe_Area/Building/Building_Wood.obj", glm::vec3(0, 0, 0) * additionalScale + offsetPos, glm::vec3(0, 0, 0), glm::vec3(1.0f) * additionalScale, SA_T_Building[2], 100.0f, 0.1f, 0.4f);
 	loadModel(SA_M_Building[3], "res/Safe_Area/Building/Building_Roof.obj", glm::vec3(0, 0, 0) * additionalScale + offsetPos, glm::vec3(0, 0, 0), glm::vec3(1.0f) * additionalScale, SA_T_Building[3], 100.0f, 0.1f, 0.4f);
 	loadModel(SA_M_Building[4], "res/Safe_Area/Building/Building_Wheel.obj", glm::vec3(0, 0, 0) * additionalScale + offsetPos, glm::vec3(0, 0, 0), glm::vec3(1.0f) * additionalScale, SA_T_Building[4], 100.0f, 0.1f, 0.4f);
+	for(unsigned int i = 0; i < 5; i++) SA_M_Building[i].getModel()->cullFaces = false;
 
 	// Load AmmoBoxes models.
 	// Front left
