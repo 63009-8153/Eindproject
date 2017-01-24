@@ -4,7 +4,7 @@ class ClientNetwork
 public:
 	//Constructor
 	//Initialise the clientNetwork and connect to server with ipAddress and port.
-	ClientNetwork(char _ipAddress[39], char _port[5]);
+	ClientNetwork(const char _ipAddress[39], char _port[5]);
 	//Destructor
 	~ClientNetwork();
 

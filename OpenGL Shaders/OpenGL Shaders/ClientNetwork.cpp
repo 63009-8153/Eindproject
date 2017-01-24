@@ -6,7 +6,7 @@
 
 //Constructor
 //Initialise the clientNetwork and connect to server with ipAddress and port.
-ClientNetwork::ClientNetwork(char _ipAddress[39], char _port[5])
+ClientNetwork::ClientNetwork(const char _ipAddress[39], char _port[5])
 {
 	// Create WSADATA object.
 	WSADATA wsaData;

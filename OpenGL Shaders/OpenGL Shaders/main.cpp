@@ -14,7 +14,6 @@
 #define WAVE_SPEED 0.03
 
 #define MSAA 1
-#define SSAA 2
 #define FXAA 3
 
 #define OPTIMIZE_SAFEAREA_DIST 50.0f
@@ -164,8 +163,8 @@ glm::vec3 clearColor = glm::vec3(0.32f, 0.32f, 0.32f);
 
 double last_render_time = 0;
 double deltaTime = 0,
-frameStartTime = 0,
-debugTime = 0;
+	   frameStartTime = 0,
+	   debugTime = 0;
 float fps = 0;
 int frame = 0;
 int gameState = 0;
@@ -231,7 +230,7 @@ void loadSkybox();
 void initLights();
 
 // Initialise the client
-void initialiseClient(char ipAddress[39], char port[5]);
+void initialiseClient(const char ipAddress[39], char port[5]);
 // Client loop
 void clientLoop(void *);
 
@@ -265,18 +264,19 @@ void loadArmyTent(int iteration, glm::vec3 pos, glm::vec3 rot);
 void loadArmyTruck(int iteration, glm::vec3 pos, glm::vec3 rot);
 // Load the tree models
 void loadTreeModels();
+// Draw ui numbers
+void DrawUINumbers(int number, glm::vec2 pos);
 
+std::string ipAddress = "127.0.0.1";
 
 int main() {
+	printf("Type the IPAddress of the server here. Enter 0 for localhost: ");
+	std::cin >> ipAddress;
+	if (ipAddress.size() < 6) ipAddress = "127.0.0.1";
+
 	// Initialise the audioSystem
 	SimpleAudioLib::CoreSystem& audioSystem = SimpleAudioLib::CoreSystem::getInstance();
 	audioSystem.initWithDefaultDevice();
-
-	// Load all sounds to be used for the zombies
-	for (unsigned int i = 0; i < MAX_LOBBYSIZE; i++) {
-		//zombieGrawl[i] = audioSystem.createAudioEntityFromFile("res/Sounds/.wav");
-		//zombieGrawl[i]->setGain(0.8f);
-	}
 
 	player.setGunSounds(0, audioSystem, "res/Sounds/WalterShoot.wav", 2, 0.8f);
 	player.setGunSounds(1, audioSystem, "res/Sounds/AK47Shoot.wav", 10, 0.4f);
@@ -349,7 +349,7 @@ int main() {
 	// ============  NETWORKING LOGIC =================
 
 	// Initialise, set the client and connect to the server.
-	initialiseClient("127.0.0.1", "6881");
+	initialiseClient(ipAddress.c_str(), "6881");
 
 	// ===  LIGHTS  ===
 	initLights();
@@ -583,9 +583,6 @@ int main() {
 			//Resolve multisampled framebuffer to antialiased framebuffer
 			sceneRenderer.resolveTo(&antiAliasedRenderer);
 		}
-		else if (AAType == SSAA) {
-			//TODO: Create a way to resolve a SuperSampled framebuffer
-		}
 		else if (AAType == FXAA) {
 			//Render image to antiAliased buffed with the FXAA Shader
 			antiAliasedRenderer.renderToFrameBuffer(sceneRenderer.getOutputTexture());
@@ -617,31 +614,13 @@ int main() {
 		guiRenderer.render(&GuiElements);
 
 		//Draw health text
-		if (player.health < 0) player.health = 0.0f;
-		std::string health = std::to_string((int)player.health);
-		for (int i = 0; i < health.size(); i++) {
-			const char temp = health[i];
-			numbers[atoi(&temp)].setPosition(glm::vec2(0.335f + i*0.07, 0.3f));
-			numbers[atoi(&temp)].Draw(guiRenderer.shader, guiRenderer.quad);
-		}
+		DrawUINumbers(player.health, glm::vec2(0.335f, 0.3f));
 
 		//Draw points text
-		if (player.points < 0) player.points = 0;
-		std::string points = std::to_string(player.points);
-		for (int i = 0; i < points.size(); i++) {
-			const char temp = points[i];
-			numbers[atoi(&temp)].setPosition(glm::vec2(0.335f + i*0.07, 0.2f));
-			numbers[atoi(&temp)].Draw(guiRenderer.shader, guiRenderer.quad);
-		}
+		DrawUINumbers(player.points, glm::vec2(0.335f, 0.2f));
 
 		//Draw ammo counter text
-		if (player.ammo < 0) player.ammo = 0;
-		std::string ammo = std::to_string(player.ammo);
-		for (int i = 0; i < ammo.size(); i++) {
-			const char temp = ammo[i];
-			numbers[atoi(&temp)].setPosition(glm::vec2(0.335f + i*0.07, 0.1f));
-			numbers[atoi(&temp)].Draw(guiRenderer.shader, guiRenderer.quad);
-		}
+		DrawUINumbers(player.ammo, glm::vec2(0.335f, 0.1f));
 
 		// == Swap Buffers (Send image to the screen) ==
 		glfwSwapBuffers(window);
@@ -760,6 +739,17 @@ int main() {
 	SimpleAudioLib::CoreSystem::release();
 }
 
+#pragma optimize("",off)
+void DrawUINumbers(int number,glm::vec2 pos) {
+	if (number < 0) number = 0;
+	std::string numb = std::to_string(number);
+	for (int i = 0; i < numb.size(); i++) {
+		const char temp3 = numb[i];
+		numbers[atoi(&temp3)].setPosition(glm::vec2(pos.x + i*0.07,pos.y));
+		numbers[atoi(&temp3)].Draw(guiRenderer.shader, guiRenderer.quad);
+	}
+}
+#pragma optimize("",on)
 
 // If trapMouseInWindow it returns the changed amount of pixels since last update
 // Else if returns the position the mouse is on
@@ -936,11 +926,6 @@ void loadAllFrameBuffers()
 		sceneRenderer.load(glm::vec2(SCREEN_WIDTH, SCREEN_HEIGHT), 8);
 		antiAliasedRenderer.load(glm::vec2(SCREEN_WIDTH, SCREEN_HEIGHT));
 	}
-	else if (AAType == SSAA) {
-		sceneRenderer.load(glm::vec2(SCREEN_WIDTH * 4, SCREEN_HEIGHT * 4));
-		//TODO: create a shader that downsamples the image created!
-		antiAliasedRenderer.load(glm::vec2(SCREEN_WIDTH, SCREEN_HEIGHT));
-	}
 	else if (AAType == FXAA) {
 		sceneRenderer.load(glm::vec2(SCREEN_WIDTH, SCREEN_HEIGHT));
 		antiAliasedRenderer.load("WEngine/Shaders/AntiAliasing/AAVertex.vs", "WEngine/Shaders/AntiAliasing/FXAA.fs", glm::vec2(SCREEN_WIDTH, SCREEN_HEIGHT));
@@ -993,7 +978,7 @@ void initLights()
 // ======  SERVER HANDLE FUNCTIONS  ======
 
 // Intialise the client and connect to the server on ipAddress and port
-void initialiseClient(char ipAddress[39], char port[5])
+void initialiseClient(const char ipAddress[39], char port[5])
 {
 	// Initialise the client, create a connection and try to connect to the ip and port of the server.
 	client = ClientGame(ipAddress, port);

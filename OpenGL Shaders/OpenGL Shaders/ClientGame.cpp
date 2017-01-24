@@ -12,7 +12,7 @@ ClientGame::ClientGame() {
 }
 // Constructor
 // Connect to the server on ipAddress and port
-ClientGame::ClientGame(char ipAddress[39], char port[5])
+ClientGame::ClientGame(const char ipAddress[39], char port[5])
 {
 	networkConnected = true;
 
